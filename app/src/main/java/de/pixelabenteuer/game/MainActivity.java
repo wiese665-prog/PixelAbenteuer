@@ -23,15 +23,23 @@ public class MainActivity extends Activity {
   Decoration(Bitmap b,Bitmap collision,float xx,float yy,float ww,float hh,boolean s){image=b;mask=collision==null?b:collision;x=xx;y=yy;w=ww;h=hh;solid=s;}
  }
  class Drop {String item;float x,y,bob;Drop(String i,float xx,float yy,float t){item=i;x=xx;y=yy;bob=t;}}
+ class Item {
+  String name,rarity,slot;int dmg,armor,hp,heal;
+  Item(String n,String rar,String sl,int d,int a,int h,int healing){name=n;rarity=rar;slot=sl;dmg=d;armor=a;hp=h;heal=healing;}
+  boolean equipment(){return !slot.equals("");}
+ }
  class Game extends View {
   final int WORLD_W=1600,WORLD_H=1000;
   Canvas canvas;Paint paint=new Paint();Random random=new Random(42);
-  ArrayList<Mob> mobs=new ArrayList<>();ArrayList<Decoration> decorations=new ArrayList<>();ArrayList<Drop> drops=new ArrayList<>();LinkedHashMap<String,Integer> inventory=new LinkedHashMap<>();boolean inventoryOpen=false;String pickupNotice="";float noticeTime=0;
+  ArrayList<Mob> mobs=new ArrayList<>();ArrayList<Decoration> decorations=new ArrayList<>();ArrayList<Drop> drops=new ArrayList<>();LinkedHashMap<String,Integer> inventory=new LinkedHashMap<>();HashMap<String,Bitmap> itemImages=new HashMap<>();
+  HashMap<String,Item> definitions=new HashMap<>();HashMap<String,String> equipped=new HashMap<>();
+  String[] hotbar=new String[5];int copper=0,silver=0,gold=0,hoverSlot=-1;float hoverX=0,hoverY=0;
+  boolean inventoryOpen=false;String pickupNotice="";float noticeTime=0;
   HashMap<String,Bitmap> sprites=new HashMap<>();
   float px=180,py=180,joyX=0,joyY=0,elapsed=0,attackAnim=0,hurtAnim=0,deathAnim=0,attackCooldown=0,playerHealthVisible=0;
   int hp=12,maxHp=12,kills=0,animalKills=0,playerDir=0,playerLevel=1,exp=0,attackPower=3,lastPlayerDamage=0;float playerDamageTime=0;float swordTimer=0;boolean sword=false;
   long previous=System.nanoTime();
-  Game(){super(MainActivity.this);setFocusable(true);setFocusableInTouchMode(true);paint.setFilterBitmap(false);loadSprites();loadDecorations();spawnMobs();}
+  Game(){super(MainActivity.this);setFocusable(true);setFocusableInTouchMode(true);paint.setFilterBitmap(false);loadSprites();loadItems();loadDecorations();spawnMobs();}
   void spawnMobs(){
    String[] animals={"boar","fox","deer","black_grouse"};
    for(int i=0;i<28;i++){float x=80+random.nextInt(1440),y=80+random.nextInt(840);if(!blocked(x,y))mobs.add(new Mob(animals[i%4],x,y));}
@@ -93,7 +101,7 @@ public class MainActivity extends Activity {
   void earnExp(int amount){
    exp+=amount;
    while(exp>=expNeeded()){
-    exp-=expNeeded();playerLevel++;maxHp+=4;hp=Math.min(maxHp,hp+4);attackPower++;
+    exp-=expNeeded();playerLevel++;recalcStats();hp=Math.min(maxHp,hp+4);
     playerHealthVisible=3f;
    }
   }
@@ -110,69 +118,99 @@ public class MainActivity extends Activity {
    paint.setColor(col("#fff2ae"));canvas.drawText(label,tx-1,ty-2,paint);
    paint.setTypeface(Typeface.DEFAULT);paint.setTextAlign(Paint.Align.LEFT);
   }
-  // 24x24 pixel-art item icons: layered outlines, highlights and earthy palette.
+  void define(String name,String rarity,String slot,int dmg,int armor,int bonusHp,int heal){
+   definitions.put(name,new Item(name,rarity,slot,dmg,armor,bonusHp,heal));
+  }
+  void loadItems(){
+   String[] filenames={"Healthpotion.png","Healthpotion large.png","Healpotion med.png","Green Apple.png","Ham.png","Apple.png","Mushroom.png","Cheese.png","Bag.png","Belt.png","Helm.png","Iron Armor.png","Iron Boot.png","Iron Helmet.png","Leather Armor.png","Leather Boot.png","Leather Helmet.png","Wizard Hat.png","Wooden Armor.png","Wood Log.png","Wool.png","Copper Coin.png","Gear.png","Golden Coin.png","Silver Coin.png","Rune Stone.png","Map.png","Bone.png","Egg.png","Feather.png","Monster Egg.png","Monster Eye.png","Monster Meat.png","Skull.png","Slime Gel.png","Coal.png","Copper Ingot.png","Copper Nugget.png","Crystal.png","Cut Emerald.png","Cut Ruby.png","Cut Sapphire.png","Cut Topaz.png","Diamond.png","Emerald.png","Gold Nugget.png","Golden Ingot.png","Obsidian.png","Pearl.png","Ruby.png","Sapphire.png","Silver Ingot.png","Silver Nugget.png","Topaz.png","Iron Sword.png","Silver Sword.png","Wooden Sword.png","Golden Sword.png"};
+   for(String filename:filenames){Bitmap b=asset(filename);if(b!=null)itemImages.put(filename.substring(0,filename.length()-4),b);}
+   define("Wooden Sword","Gewoehnlich","Waffe",1,0,0,0);
+   define("Iron Sword","Ungewoehnlich","Waffe",3,0,0,0);
+   define("Silver Sword","Selten","Waffe",5,0,0,0);
+   define("Golden Sword","Episch","Waffe",8,0,0,0);
+   define("Wooden Armor","Gewoehnlich","Brust",0,1,1,0);
+   define("Leather Armor","Ungewoehnlich","Brust",0,2,3,0);
+   define("Iron Armor","Selten","Brust",0,4,5,0);
+   define("Leather Helmet","Gewoehnlich","Kopf",0,1,1,0);
+   define("Iron Helmet","Selten","Kopf",0,3,3,0);
+   define("Wizard Hat","Episch","Kopf",2,1,4,0);
+   define("Leather Boot","Gewoehnlich","Fuesse",0,1,0,0);
+   define("Iron Boot","Selten","Fuesse",0,3,2,0);
+   define("Belt","Ungewoehnlich","Guertel",0,1,2,0);
+   define("Helm","Ungewoehnlich","Kopf",0,2,2,0);
+   define("Bag","Gewoehnlich","Guertel",0,0,2,0);
+   define("Apple","Gewoehnlich","",0,0,0,3);
+   define("Green Apple","Gewoehnlich","",0,0,0,4);
+   define("Mushroom","Gewoehnlich","",0,0,0,2);
+   define("Cheese","Gewoehnlich","",0,0,0,5);
+   define("Ham","Ungewoehnlich","",0,0,0,8);
+   define("Monster Meat","Ungewoehnlich","",0,0,0,6);
+   define("Healthpotion","Ungewoehnlich","",0,0,0,10);
+   define("Healpotion med","Selten","",0,0,0,20);
+   define("Healthpotion large","Episch","",0,0,0,40);
+  }
   void itemIcon(String item,float x,float y,float scale){
-   canvas.save();canvas.translate(x,y);canvas.scale(scale,scale);
-   int outline=col("#292634"),shadow=col("#58404a"),bone=col("#f2dfb3"),cream=col("#fff1cc");
-   int meat=col("#b94d54"),meatHi=col("#ec8a72"),leather=col("#986344"),leatherHi=col("#d49b64");
-   int steel=col("#94b8bf"),steelHi=col("#e3f0df"),steelDark=col("#506d7c"),gold=col("#e2b75f");
-   if(item.equals("Fleisch")){
-    drawRect(outline,3,8,14,11);drawRect(outline,7,5,9,14);
-    drawRect(meat,4,8,12,9);drawRect(meat,8,6,7,11);
-    drawRect(meatHi,6,8,7,4);drawRect(col("#f4b08a"),8,7,4,2);
-    drawRect(shadow,7,15,8,2);drawRect(bone,14,15,5,3);drawRect(cream,18,13,3,4);drawRect(cream,18,17,3,3);
-   }else if(item.equals("Leder")){
-    drawRect(outline,4,3,15,19);drawRect(leather,5,4,13,17);
-    drawRect(leatherHi,7,5,9,14);drawRect(col("#b47d51"),8,7,7,9);
-    drawRect(outline,5,3,4,4);drawRect(outline,15,3,4,4);drawRect(outline,5,18,4,4);drawRect(outline,15,18,4,4);
-    drawRect(cream,8,7,2,2);drawRect(shadow,14,14,2,3);drawRect(leather,10,11,4,6);
-   }else if(item.equals("Feder")){
-    drawRect(outline,12,2,5,3);drawRect(outline,8,5,10,12);drawRect(outline,5,9,9,9);
-    drawRect(steelHi,12,3,4,5);drawRect(col("#c9d7c3"),9,6,7,9);drawRect(steel,6,10,8,6);
-    drawRect(cream,12,5,2,9);drawRect(shadow,9,14,4,3);drawRect(bone,9,14,2,7);drawRect(cream,10,13,2,9);
-   }else if(item.equals("Knochen")){
-    drawRect(outline,4,4,7,7);drawRect(outline,13,13,7,7);drawRect(outline,8,8,9,9);
-    drawRect(bone,5,5,5,5);drawRect(bone,14,14,5,5);drawRect(bone,9,8,5,9);
-    drawRect(cream,6,5,3,3);drawRect(cream,10,8,3,7);drawRect(shadow,14,15,3,2);
-    drawRect(cream,3,7,4,3);drawRect(cream,17,16,4,3);
-   }else if(item.equals("Horn")){
-    drawRect(outline,3,15,15,6);drawRect(outline,7,10,12,7);drawRect(outline,12,5,8,7);
-    drawRect(leather,4,16,13,4);drawRect(bone,8,11,10,6);drawRect(cream,13,6,6,6);
-    drawRect(shadow,6,17,9,2);drawRect(gold,9,12,5,2);drawRect(cream,17,3,3,5);drawRect(steelHi,18,2,2,3);
-   }else if(item.equals("Schwert")){
-    drawRect(outline,4,17,6,6);drawRect(leather,5,17,4,5);drawRect(gold,3,14,12,3);
-    drawRect(outline,10,4,7,12);drawRect(steelDark,11,5,5,10);drawRect(steel,12,4,4,10);
-    drawRect(steelHi,14,3,3,9);drawRect(cream,15,2,2,3);drawRect(gold,6,16,2,3);
-   }else if(item.equals("Ruestung")){
-    drawRect(outline,5,3,14,19);drawRect(outline,2,6,6,11);drawRect(outline,16,6,6,11);
-    drawRect(steelDark,6,4,12,17);drawRect(steel,8,5,8,15);
-    drawRect(steelDark,3,7,5,9);drawRect(steelDark,16,7,5,9);
-    drawRect(steelHi,9,6,6,3);drawRect(gold,10,10,4,5);drawRect(steelHi,10,16,4,3);
-    drawRect(shadow,7,20,10,2);
-   }else if(item.equals("Axt")){
-    drawRect(outline,12,3,5,19);drawRect(leather,13,5,3,16);drawRect(leatherHi,14,6,1,13);
-    drawRect(outline,3,4,12,12);drawRect(steelDark,4,5,10,10);
-    drawRect(steel,4,6,8,8);drawRect(steelHi,4,7,3,6);drawRect(gold,11,10,4,2);
-    drawRect(outline,3,8,2,4);
-   }
-   canvas.restore();
+   Bitmap b=itemImages.get(item);
+   if(b==null)return;
+   paint.setColor(Color.WHITE);paint.setFilterBitmap(false);
+   canvas.drawBitmap(b,null,new RectF(x,y,x+24*scale,y+24*scale),paint);
+  }
+  int armorValue(){int total=0;for(String name:equipped.values()){Item i=definitions.get(name);if(i!=null)total+=i.armor;}return total;}
+  int bonusHealth(){int total=0;for(String name:equipped.values()){Item i=definitions.get(name);if(i!=null)total+=i.hp;}return total;}
+  void recalcStats(){
+   int oldMax=maxHp;maxHp=12+(playerLevel-1)*4+bonusHealth();
+   hp=Math.min(maxHp,hp+Math.max(0,maxHp-oldMax));
+   attackPower=3+(playerLevel-1);
+   Item weapon=definitions.get(equipped.get("Waffe"));if(weapon!=null)attackPower+=weapon.dmg;
+   for(String name:equipped.values()){Item i=definitions.get(name);if(i!=null&&!i.slot.equals("Waffe"))attackPower+=i.dmg;}
+  }
+  void equip(String name){
+   Item item=definitions.get(name);if(item==null||!item.equipment()||inventory.getOrDefault(name,0)<=0)return;
+   String old=equipped.get(item.slot);if(name.equals(old))return;
+   inventory.put(name,inventory.get(name)-1);if(inventory.get(name)<=0)inventory.remove(name);
+   if(old!=null)inventory.put(old,inventory.getOrDefault(old,0)+1);
+   equipped.put(item.slot,name);recalcStats();
+   pickupNotice=name+" angelegt";noticeTime=2f;
+  }
+  void useItem(String name){
+   Item item=definitions.get(name);
+   if(item==null||item.heal<=0||inventory.getOrDefault(name,0)<=0||hp<=0||hp>=maxHp)return;
+   hp=Math.min(maxHp,hp+item.heal);inventory.put(name,inventory.get(name)-1);
+   if(inventory.get(name)<=0)inventory.remove(name);
+   pickupNotice="+"+item.heal+" HP";noticeTime=1.6f;playerHealthVisible=3f;
+  }
+  void useHotbar(int index){if(index>=0&&index<hotbar.length&&hotbar[index]!=null)useItem(hotbar[index]);}
+  void giveCoins(Mob m){
+   int value=(m.hostile()?5:1)+m.level*(m.hostile()?4:2)+random.nextInt(m.hostile()?12:5);
+   copper+=value;silver+=copper/100;copper%=100;gold+=silver/100;silver%=100;
   }
   void addDrop(String item,float x,float y){
    drops.add(new Drop(item,x+(random.nextFloat()-.5f)*22,y+(random.nextFloat()-.5f)*22,random.nextFloat()*6f));
   }
   void loot(Mob m){
+   giveCoins(m);
    if(m.kind.equals("black_grouse")){
-    addDrop("Feder",m.x,m.y);if(random.nextFloat()<.8f)addDrop("Fleisch",m.x,m.y);
+    addDrop("Feather",m.x,m.y);if(random.nextFloat()<.7f)addDrop("Egg",m.x,m.y);
    }else if(!m.hostile()){
-    addDrop("Fleisch",m.x,m.y);
-    if(random.nextFloat()<(m.kind.equals("boar")?.85f:.6f))addDrop("Leder",m.x,m.y);
-    if(m.kind.equals("boar")&&random.nextFloat()<.3f)addDrop("Horn",m.x,m.y);
+    addDrop("Ham",m.x,m.y);
+    if(random.nextFloat()<.65f)addDrop("Wool",m.x,m.y);
+    if(m.kind.equals("boar")&&random.nextFloat()<.3f)addDrop("Bone",m.x,m.y);
    }else{
-    if(random.nextFloat()<.65f)addDrop("Knochen",m.x,m.y);
-    if(random.nextFloat()<.3f)addDrop("Horn",m.x,m.y);
-    if(random.nextFloat()<.18f)addDrop("Schwert",m.x,m.y);
-    if(random.nextFloat()<.12f)addDrop("Ruestung",m.x,m.y);
-    if(random.nextFloat()<.12f)addDrop("Axt",m.x,m.y);
+    String[] materials={"Bone","Skull","Monster Eye","Monster Meat","Rune Stone","Copper Nugget","Slime Gel"};
+    addDrop(materials[random.nextInt(materials.length)],m.x,m.y);
+    if(random.nextFloat()<.32f){
+     String[] weapons={"Wooden Sword","Iron Sword","Silver Sword","Golden Sword"};
+     float chance=random.nextFloat();
+     addDrop(weapons[chance<.58f?0:chance<.85f?1:chance<.97f?2:3],m.x,m.y);
+    }
+    if(random.nextFloat()<.28f){
+     String[] armor={"Wooden Armor","Leather Armor","Iron Armor","Leather Helmet","Iron Helmet","Leather Boot","Iron Boot","Wizard Hat","Belt","Helm","Bag"};
+     addDrop(armor[random.nextInt(armor.length)],m.x,m.y);
+    }
+    if(random.nextFloat()<.23f){
+     String[] food={"Apple","Green Apple","Cheese","Mushroom","Healthpotion","Healpotion med","Healthpotion large"};
+     addDrop(food[random.nextInt(food.length)],m.x,m.y);
+    }
    }
   }
   Drop nearestDrop(){
@@ -186,23 +224,55 @@ public class MainActivity extends Activity {
    inventory.put(d.item,inventory.containsKey(d.item)?inventory.get(d.item)+1:1);
    pickupNotice="+1 "+d.item;noticeTime=1.8f;drops.remove(d);
   }
+  String[] inventoryNames(){return inventory.keySet().toArray(new String[0]);}
   void drawInventory(float vw,float vh){
-   drawRect(col("#151b20"),vw/2-235,vh/2-170,470,340);
-   drawRect(col("#a78b61"),vw/2-231,vh/2-166,462,332);
-   drawRect(col("#292f34"),vw/2-225,vh/2-160,450,320);
-   paint.setColor(col("#f5deb0"));paint.setTextSize(25);paint.setTypeface(Typeface.DEFAULT_BOLD);
-   canvas.drawText("INVENTAR",vw/2-205,vh/2-123,paint);
-   paint.setTextSize(14);canvas.drawText("I - Schliessen",vw/2+112,vh/2-128,paint);
-   String[] items={"Fleisch","Leder","Feder","Knochen","Horn","Schwert","Ruestung","Axt"};
-   for(int i=0;i<items.length;i++){
-    float x=vw/2-205+(i%4)*105,y=vh/2-102+(i/4)*100;
-    drawRect(col("#121b20"),x,y,91,88);drawRect(col("#46515a"),x+3,y+3,85,82);
-    itemIcon(items[i],x+22,y+8,1.9f);
-    paint.setColor(Color.WHITE);paint.setTextSize(11);canvas.drawText(items[i],x+7,y+66,paint);
-    int amount=inventory.containsKey(items[i])?inventory.get(items[i]):0;
-    paint.setTextSize(14);paint.setColor(col("#f8db94"));canvas.drawText("x"+amount,x+62,y+20,paint);
+   float left=vw/2-290,top=vh/2-193;
+   drawRect(col("#a78b61"),left-4,top-4,588,388);
+   drawRect(col("#222b32"),left,top,580,380);
+   paint.setColor(col("#f5deb0"));paint.setTextSize(23);paint.setTypeface(Typeface.DEFAULT_BOLD);
+   canvas.drawText("INVENTAR",left+18,top+32,paint);
+   paint.setTextSize(12);canvas.drawText("I: Schliessen   Klick: Anlegen   1-5: Hotbar",left+200,top+30,paint);
+   String[] names=inventoryNames();
+   for(int i=0;i<Math.min(24,names.length);i++){
+    float x=left+16+(i%8)*69,y=top+46+(i/8)*75;
+    drawRect(col("#121b20"),x,y,63,68);drawRect(col("#48545b"),x+3,y+3,57,62);
+    itemIcon(names[i],x+13,y+4,1.5f);
+    paint.setColor(Color.WHITE);paint.setTextSize(9);
+    String label=names[i];if(label.length()>11)label=label.substring(0,10)+".";
+    canvas.drawText(label,x+3,y+54,paint);
+    paint.setColor(col("#ffe1a0"));paint.setTextSize(11);
+    canvas.drawText("x"+inventory.get(names[i]),x+44,y+13,paint);
+   }
+   paint.setColor(col("#f1d7a4"));paint.setTextSize(13);
+   canvas.drawText("Ausgeruestet:",left+17,top+293,paint);
+   int i=0;for(String slot:new String[]{"Waffe","Kopf","Brust","Fuesse","Guertel"}){
+    String name=equipped.get(slot);paint.setTextSize(11);
+    canvas.drawText(slot+": "+(name==null?"-":name),left+17+(i%3)*186,top+315+(i/3)*20,paint);i++;
+   }
+   if(hoverSlot>=0&&hoverSlot<names.length){
+    Item item=definitions.get(names[hoverSlot]);
+    if(item!=null){
+     float tx=Math.min(vw-214,hoverX+14),ty=Math.min(vh-118,hoverY+10);
+     drawRect(col("#10171e"),tx,ty,208,105);drawRect(col("#6d6b5d"),tx+2,ty+2,204,101);
+     drawRect(col("#202a33"),tx+4,ty+4,200,97);
+     paint.setTextSize(13);paint.setColor(col("#fff1c9"));canvas.drawText(item.name,tx+10,ty+20,paint);
+     paint.setTextSize(12);paint.setColor(item.rarity.equals("Episch")?col("#d69af4"):item.rarity.equals("Selten")?col("#76b7f7"):col("#d6e3d0"));
+     canvas.drawText(item.rarity,tx+10,ty+38,paint);paint.setColor(Color.WHITE);
+     canvas.drawText(item.equipment()?"Slot: "+item.slot:"Verbrauchbar",tx+10,ty+55,paint);
+     canvas.drawText(item.equipment()?"DMG +"+item.dmg+"  DEF +"+item.armor+"  HP +"+item.hp:"Heilung: +"+item.heal+" HP",tx+10,ty+75,paint);
+     canvas.drawText(item.equipment()?"Klicken: Anlegen":item.heal>0?"Klicken: Hotbar zuweisen":"Material",tx+10,ty+92,paint);
+    }
    }
    paint.setTypeface(Typeface.DEFAULT);
+  }
+  void drawHotbar(float vw,float vh){
+   for(int i=0;i<5;i++){
+    float x=vw/2-128+i*53,y=vh-53;
+    drawRect(col("#141c23"),x-2,y-2,50,48);drawRect(col("#4d5b62"),x,y,46,44);
+    if(hotbar[i]!=null)itemIcon(hotbar[i],x+7,y+2,1.3f);
+    paint.setColor(Color.WHITE);paint.setTextSize(12);canvas.drawText(""+(i+1),x+3,y+41,paint);
+    if(hotbar[i]!=null){paint.setTextSize(11);canvas.drawText(""+inventory.getOrDefault(hotbar[i],0),x+32,y+41,paint);}
+   }
   }
   void healthBar(float x,float y,float width,int current,int maximum){
    float ratio=Math.max(0,Math.min(1,current/(float)Math.max(1,maximum)));
@@ -245,7 +315,7 @@ public class MainActivity extends Activity {
     else if(m.hostile()&&distance<330){
      m.dir=direction(px-m.x,py-m.y);
      if(distance>43){vx=(px-m.x)/Math.max(1,distance)*75;vy=(py-m.y)/Math.max(1,distance)*75;action="run";}
-     else {action="attack";if(m.attackTimer<=0){int dealt=Math.max(1,m.damage);hp=Math.max(0,hp-dealt);lastPlayerDamage=dealt;playerDamageTime=.9f;hurtAnim=.32f;playerHealthVisible=3f;m.attackTimer=1.3f;}}
+     else {action="attack";if(m.attackTimer<=0){int dealt=Math.max(1,m.damage);hp=Math.max(0,hp-Math.max(1,dealt-armorValue()));lastPlayerDamage=dealt;playerDamageTime=.9f;hurtAnim=.32f;playerHealthVisible=3f;m.attackTimer=1.3f;}}
     }else if(!m.hostile()&&distance<110){
      vx=(m.x-px)/Math.max(1,distance)*105;vy=(m.y-py)/Math.max(1,distance)*105;
      action=m.kind.equals("black_grouse")?"flight":"run";
@@ -283,7 +353,7 @@ public class MainActivity extends Activity {
    }
   }
   void restart(){
-   playerLevel=1;exp=0;attackPower=3;maxHp=12;hp=maxHp;playerDamageTime=0;px=180;py=180;joyX=joyY=0;deathAnim=0;swordTimer=0;sword=false;attackAnim=0;playerHealthVisible=0;kills=animalKills=0;mobs.clear();drops.clear();inventory.clear();inventoryOpen=false;spawnMobs();
+   playerLevel=1;exp=0;attackPower=3;maxHp=12;hp=maxHp;equipped.clear();copper=silver=gold=0;java.util.Arrays.fill(hotbar,null);playerDamageTime=0;px=180;py=180;joyX=joyY=0;deathAnim=0;swordTimer=0;sword=false;attackAnim=0;playerHealthVisible=0;kills=animalKills=0;mobs.clear();drops.clear();inventory.clear();inventoryOpen=false;spawnMobs();
   }
   @Override protected void onDraw(Canvas c){
    canvas=c;float dt=Math.min(.05f,(System.nanoTime()-previous)/1000000000f);previous=System.nanoTime();update(dt);
@@ -322,16 +392,33 @@ public class MainActivity extends Activity {
     canvas.drawText("E  "+nearby.item+" aufheben",px,py-60,paint);paint.setTextAlign(Paint.Align.LEFT);}
    c.restore();
    drawRect(col("#142b24"),0,0,vw,37);paint.setColor(Color.WHITE);paint.setTextSize(18);
-   c.drawText("Lv. "+playerLevel+"  EXP "+exp+"/"+expNeeded()+"  DMG "+attackPower+"  Orks "+kills+"  Tiere "+animalKills,12,25,paint);
+   c.drawText("Lv. "+playerLevel+" EXP "+exp+"/"+expNeeded()+" DMG "+attackPower+" DEF "+armorValue(),12,25,paint);
+   itemIcon("Copper Coin",vw-202,7,.85f);itemIcon("Silver Coin",vw-137,7,.85f);itemIcon("Golden Coin",vw-72,7,.85f);
+   paint.setColor(Color.WHITE);paint.setTextSize(15);c.drawText(""+copper,vw-178,25,paint);c.drawText(""+silver,vw-113,25,paint);c.drawText(""+gold,vw-48,25,paint);
+   drawHotbar(vw,vh);
    if(noticeTime>0){paint.setColor(col("#f7e0a6"));paint.setTextSize(17);c.drawText(pickupNotice,12,60,paint);}
    if(inventoryOpen)drawInventory(vw,vh);
    if(hp<=0){drawRect(col("#111111"),vw/2-180,vh/2-45,360,90);paint.setColor(Color.WHITE);paint.setTextSize(24);c.drawText("GAME OVER - Tippen",vw/2-145,vh/2+7,paint);}
    c.restore();postInvalidateDelayed(16);
   }
+  int inventoryIndex(float x,float y,float vw,float vh){
+   float left=vw/2-290,top=vh/2-193;
+   float dx=x-left-16,dy=y-top-46;
+   if(dx<0||dy<0||dx>=8*69||dy>=3*75)return -1;
+   int col=(int)(dx/69),row=(int)(dy/75);
+   if(dx%69>=63||dy%75>=68)return -1;
+   return row*8+col;
+  }
+  @Override public boolean onHoverEvent(MotionEvent e){
+   if(inventoryOpen){float sc=Math.min(getWidth()/800f,getHeight()/450f),vw=getWidth()/sc,vh=getHeight()/sc;
+    hoverX=e.getX()/sc;hoverY=e.getY()/sc;hoverSlot=inventoryIndex(hoverX,hoverY,vw,vh);invalidate();return true;}
+   return super.onHoverEvent(e);
+  }
   @Override public boolean onTouchEvent(MotionEvent e){
    int type=e.getActionMasked();
    if(type==MotionEvent.ACTION_DOWN){
-    if(inventoryOpen){inventoryOpen=false;return true;}
+    if(inventoryOpen){float sc=Math.min(getWidth()/800f,getHeight()/450f),xx=e.getX()/sc,yy=e.getY()/sc,vw=getWidth()/sc,vh=getHeight()/sc;
+     int idx=inventoryIndex(xx,yy,vw,vh);if(idx>=0){String[] names=inventoryNames();if(idx<names.length){String name=names[idx];Item item=definitions.get(name);if(item!=null){if(item.equipment())equip(name);else if(item.heal>0){int slot=0;while(slot<4&&hotbar[slot]!=null)slot++;hotbar[slot]=name;pickupNotice=name+" auf Hotbar "+(slot+1);noticeTime=2f;}}}}return true;}
     if(hp<=0){restart();return true;}
     // In BlueStacks, a left mouse click arrives as a primary mouse/touch press.
     if((e.getSource()&InputDevice.SOURCE_MOUSE)==InputDevice.SOURCE_MOUSE){
@@ -352,7 +439,12 @@ public class MainActivity extends Activity {
     case KeyEvent.KEYCODE_S:case KeyEvent.KEYCODE_DPAD_DOWN:joyY=1;break;
     case KeyEvent.KEYCODE_SPACE:attack();break;
     case KeyEvent.KEYCODE_E:pickup();break;
-    case KeyEvent.KEYCODE_I:inventoryOpen=!inventoryOpen;break;
+    case KeyEvent.KEYCODE_I:inventoryOpen=!inventoryOpen;hoverSlot=-1;break;
+    case KeyEvent.KEYCODE_1:useHotbar(0);break;
+    case KeyEvent.KEYCODE_2:useHotbar(1);break;
+    case KeyEvent.KEYCODE_3:useHotbar(2);break;
+    case KeyEvent.KEYCODE_4:useHotbar(3);break;
+    case KeyEvent.KEYCODE_5:useHotbar(4);break;
     case KeyEvent.KEYCODE_ENTER:if(hp<=0)restart();break;
    }return true;
   }
