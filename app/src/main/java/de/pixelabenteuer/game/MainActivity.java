@@ -174,23 +174,23 @@ public class MainActivity extends Activity {
    Bitmap furnace=buildingSprites.get("Forge");
    if(furnace!=null)tile("Forge",0,0,Math.max(1,furnace.getWidth()/3),
      Math.max(1,furnace.getHeight()/2),l+94,t+73,104,111);
-   tile("Interior_objects",173,226,34,36,l+216,t+107,57,54);
+   tile("Interior_objects",174,202,32,35,l+216,t+107,57,54);
    tile("Interior_objects",10,194,27,34,l+66,t+263,44,52);
    tile("Interior_objects",47,194,27,34,l+119,t+263,44,52);
    // Shop: only the original two rear wall shelves and one painting.
-   tile("Interior_objects",7,101,56,63,l+355,t+74,91,110);
-   tile("Interior_objects",109,101,53,63,l+554,t+74,91,110);
-   tile("Interior_objects",116,264,68,39,l+451,t+79,103,58);
+   tile("Interior_objects",7,130,42,62,l+355,t+74,91,110);
+   tile("Interior_objects",109,130,43,62,l+554,t+74,91,110);
+   tile("Interior_objects",85,263,83,55,l+451,t+79,103,58);
    // One carpet sprite per position: previous crop accidentally contained two.
-   tile("Interior_objects",6,397,82,44,l+430,t+157,186,71);
-   tile("Interior_objects",6,397,82,44,l+430,t+255,186,71);
+   tile("Interior_objects",6,398,51,37,l+430,t+157,186,71);
+   tile("Interior_objects",6,398,51,37,l+430,t+255,186,71);
    // Preserve the full shop counter.
-   tile("Interior_objects",15,8,161,22,l+345,t+212,310,43);
+   tile("Interior_objects",15,9,161,19,l+345,t+212,310,43);
    // Complete entrance stair-shelves, both moved toward the doorway.
 
 
    characterTile("Master_Idle",3,2,(int)(elapsed*2)%3,l+236,t+175,71);
-   characterTile("Seller",3,2,0,l+497,t+182,68);
+   characterTile("Seller",3,2,0,l+497,t+198,68);
    characterTile("Customer",3,2,(int)(elapsed*2)%3,l+507,t+288,49);
    float cx=l+340+(px-400),cy=t+176+(py-350);
    drawSprite(sword?"player_sword":"player_unarmed","idle",playerDir,cx,cy,94,94,elapsed,false);
