@@ -133,48 +133,56 @@ public class MainActivity extends Activity {
   }
   void drawInterior(float vw,float vh){
    float l=vw/2-340,t=vh/2-176;
-   drawRect(col("#17131b"),0,0,vw,vh);
-   // Original atlas: stone plaster wall (upper 48 px), stonework border.
-   // Floor sections are taken from actual clean tiles, not furniture atlas cells.
-   for(int i=0;i<17;i++){
-    tile("Walls_interior",50,0,16,16,l+i*40,t,40,62);
-    tile("Walls_interior",50,0,16,16,l+i*40,t+331,40,21);
+   drawRect(col("#161219"),0,0,vw,vh);
+   // The wall atlas is a collection of transparent wall sections, NOT floor tiles.
+   // Build a continuous floor first so transparent gaps cannot appear as black stripes.
+   drawRect(col("#9d8b82"),l,t,680,352);
+   drawRect(col("#827a90"),l+15,t+58,309,279); // stone forge floor
+   drawRect(col("#89604d"),l+339,t+58,326,279); // timber shop floor
+   for(int ix=0;ix<8;ix++)for(int iy=0;iy<7;iy++){
+    float x=l+16+ix*38,y=t+60+iy*39;
+    drawRect(col(((ix+iy)%2==0)?"#898299":"#797389"),x,y,37,38);
    }
-   for(int i=0;i<9;i++){
-    tile("Walls_interior",50,0,16,16,l,t+i*39,19,39);
-    tile("Walls_interior",50,0,16,16,l+661,t+i*39,19,39);
+   for(int iy=0;iy<10;iy++)for(int ix=0;ix<8;ix++){
+    float x=l+340+ix*40,y=t+59+iy*28;
+    drawRect(col(((ix+iy)%3==0)?"#956d55":"#866049"),x,y,39,27);
    }
-   // Separate the grey-stone forge on the left from the timber-floored shop.
-   for(int ix=0;ix<8;ix++)for(int iy=0;iy<8;iy++)
-    tile("Walls_interior",17,1,16,16,l+20+ix*40,t+62+iy*34,40,34);
-   for(int ix=0;ix<9;ix++)for(int iy=0;iy<8;iy++)
-    tile("Walls_interior",112,49,16,16,l+340+ix*36,t+62+iy*34,36,34);
-   // Solid wall with a wide pass-through at the lower half.
-   for(int iy=0;iy<4;iy++)tile("Walls_interior",0,0,16,32,l+320,t+58+iy*37,20,37);
-   tile("Walls_interior",0,0,16,32,l+320,t+282,20,70);
-   // Furnace on the workshop side, with a separate ore bin.
+   // Stone wall panels from the original Walls_interior atlas.
+   for(int ix=0;ix<12;ix++)tile("Walls_interior",48,0,32,32,l+ix*57,t,57,58);
+   for(int iy=0;iy<6;iy++){
+    tile("Walls_interior",0,192,32,32,l,t+58+iy*46,17,46);
+    tile("Walls_interior",0,192,32,32,l+663,t+58+iy*46,17,46);
+   }
+   // Partition between forge and sales room: walkable opening y=175..270.
+   tile("Walls_interior",0,192,32,32,l+320,t+55,20,119);
+   tile("Walls_interior",0,192,32,32,l+320,t+271,20,65);
+   // Forge and material storage stay entirely left of the partition.
    Bitmap furnace=buildingSprites.get("Forge");
-   if(furnace!=null)tile("Forge",0,0,Math.max(1,furnace.getWidth()/3),Math.max(1,furnace.getHeight()/2),l+108,t+63,102,111);
-   tile("Interior_objects",158,389,48,53,l+210,t+96,57,58);
-   // Two original display shelves remain on the back wall of the sales area.
-   tile("Interior_objects",0,86,105,111,l+357,t+63,115,119);
-   tile("Interior_objects",0,199,104,96,l+555,t+63,100,119);
-   // Painting mounted ONLY on the back wall, between the shelves.
-   tile("Interior_objects",105,275,101,85,l+468,t+65,86,77);
-   // Original counter and two purple rugs, left behind the counter and right in front.
-   tile("Interior_objects",0,0,176,28,l+348,t+189,304,43);
-   tile("Interior_objects",0,388,103,53,l+353,t+143,286,54);
-   tile("Interior_objects",104,388,102,53,l+394,t+239,242,79);
-   // Workshop goods, with a clear central passage.
-   tile("Interior_objects",0,295,102,94,l+68,t+227,127,95);
-   tile("Interior_objects",0,445,104,51,l+211,t+267,83,52);
-   characterTile("Master_Idle",3,2,(int)(elapsed*3),l+234,t+163,54);
-   characterTile("Seller",3,2,(int)(elapsed*2),l+495,t+175,52);
-   characterTile("Customer",3,2,(int)(elapsed*2),l+505,t+279,50);
+   if(furnace!=null)tile("Forge",0,0,Math.max(1,furnace.getWidth()/3),
+     Math.max(1,furnace.getHeight()/2),l+100,t+65,106,111);
+   tile("Interior_objects",155,442,50,45,l+205,t+102,59,54);
+   tile("Interior_objects",0,445,100,49,l+70,t+264,132,65);
+   // The two shelf sprites are separate objects mounted on the shop's back wall.
+   tile("Interior_objects",0,91,49,104,l+364,t+65,86,109);
+   tile("Interior_objects",52,91,50,104,l+558,t+65,85,109);
+   // Only one dragon picture, fixed to the rear wall between shelves.
+   tile("Interior_objects",104,279,102,46,l+455,t+74,97,63);
+   // Purple rug behind the counter and a second rug in front.
+   tile("Interior_objects",0,388,103,53,l+390,t+152,216,65);
+   tile("Interior_objects",0,388,103,53,l+390,t+250,216,70);
+   // Counter: only the top counter row, not the entire furniture atlas.
+   tile("Interior_objects",0,0,176,29,l+345,t+209,310,44);
+   // Stair-step corner displays at the shop entrance.
+   tile("Interior_objects",0,198,104,92,l+350,t+253,74,79);
+   tile("Interior_objects",104,198,104,92,l+586,t+253,72,79);
+   // NPCs use one animation row, so idle cannot jump to an unrelated pose.
+   characterTile("Master_Idle",3,2,(int)(elapsed*2)%3,l+238,t+170,68);
+   characterTile("Seller",3,2,(int)(elapsed*2)%3,l+502,t+181,68);
+   characterTile("Customer",3,2,(int)(elapsed*2)%3,l+511,t+291,68);
    float cx=l+340+(px-400),cy=t+176+(py-350);
    drawSprite(sword?"player_sword":"player_unarmed","idle",playerDir,cx,cy,68,68,elapsed,false);
    paint.setColor(col("#fff2d5"));paint.setTextSize(13);
-   canvas.drawText("SCHMIEDE  |  Ausgang unten mittig",l+222,t+343,paint);
+   canvas.drawText("SCHMIEDE  |  Ausgang unten mittig",l+220,t+344,paint);
   }
   void loadSprites(){
    String[] kinds={"boar","fox","deer","black_grouse","orc1","orc2","orc3","player_sword","player_unarmed"};
