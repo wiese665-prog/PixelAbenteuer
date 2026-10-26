@@ -64,7 +64,7 @@ public class MainActivity extends Activity {
     }
    }catch(Exception ignored){}
    for(int i=0;i<19;i++){float x=300+(i*251)%1200,y=90+(i*197)%810;Bitmap b=ruins.isEmpty()?null:ruins.get(i%ruins.size());decorations.add(new Decoration(b,b,x,y,94,90,true));}
-   for(int i=0;i<85;i++){float x=60+(i*167)%1480,y=65+(i*283)%870;if(Math.hypot(x-180,y-180)<140)continue;Bitmap b=rocks.isEmpty()?null:rocks.get(i%rocks.size());decorations.add(new Decoration(b,rockMasks.isEmpty()?b:rockMasks.get(i%rockMasks.size()),x,y,28+(i%3)*8,25+(i%4)*6,true));}
+   for(int i=0;i<85;i++){float x=60+(i*167)%1480,y=65+(i*283)%870;if(Math.hypot(x-180,y-180)<140)continue;Bitmap b=rocks.isEmpty()?null:rocks.get(i%rocks.size());decorations.add(new Decoration(b,rockMasks.isEmpty()?b:rockMasks.get(i%rockMasks.size()),x,y,20+(i%3)*4,19+(i%4)*4,true));}
    for(int i=0;i<70&&!plants.isEmpty();i++){float x=30+(i*131)%1540,y=40+(i*223)%920;decorations.add(new Decoration(plants.get(i%plants.size()),plants.get(i%plants.size()),x,y,34+(i%3)*12,40+(i%3)*10,true));}
   }
   // Per-pixel collisions use the very same destination rectangle as rendering.
@@ -110,36 +110,50 @@ public class MainActivity extends Activity {
    paint.setColor(col("#fff2ae"));canvas.drawText(label,tx-1,ty-2,paint);
    paint.setTypeface(Typeface.DEFAULT);paint.setTextAlign(Paint.Align.LEFT);
   }
-  // Small hand-drawn pixel icons, using the same hard edges as the game's sprites.
-  void iconPixel(int color,float x,float y,float size){drawRect(color,x,y,size,size);}
+  // 24x24 pixel-art item icons: layered outlines, highlights and earthy palette.
   void itemIcon(String item,float x,float y,float scale){
    canvas.save();canvas.translate(x,y);canvas.scale(scale,scale);
-   int dark=col("#352a32"),light=col("#f3dfac"),red=col("#b9514b"),brown=col("#9e6845"),metal=col("#a7b8bc");
-   // 16x16 grid, drawn with unfiltered rectangular pixels.
+   int outline=col("#292634"),shadow=col("#58404a"),bone=col("#f2dfb3"),cream=col("#fff1cc");
+   int meat=col("#b94d54"),meatHi=col("#ec8a72"),leather=col("#986344"),leatherHi=col("#d49b64");
+   int steel=col("#94b8bf"),steelHi=col("#e3f0df"),steelDark=col("#506d7c"),gold=col("#e2b75f");
    if(item.equals("Fleisch")){
-    drawRect(dark,2,5,12,8);drawRect(red,3,4,10,8);drawRect(col("#e78268"),4,5,7,4);
-    drawRect(light,11,10,4,3);drawRect(light,13,9,2,5);
+    drawRect(outline,3,8,14,11);drawRect(outline,7,5,9,14);
+    drawRect(meat,4,8,12,9);drawRect(meat,8,6,7,11);
+    drawRect(meatHi,6,8,7,4);drawRect(col("#f4b08a"),8,7,4,2);
+    drawRect(shadow,7,15,8,2);drawRect(bone,14,15,5,3);drawRect(cream,18,13,3,4);drawRect(cream,18,17,3,3);
    }else if(item.equals("Leder")){
-    drawRect(dark,2,2,12,13);drawRect(brown,3,3,10,11);drawRect(col("#c99465"),5,4,6,8);
-    iconPixel(dark,4,4,2);iconPixel(dark,10,10,2);
+    drawRect(outline,4,3,15,19);drawRect(leather,5,4,13,17);
+    drawRect(leatherHi,7,5,9,14);drawRect(col("#b47d51"),8,7,7,9);
+    drawRect(outline,5,3,4,4);drawRect(outline,15,3,4,4);drawRect(outline,5,18,4,4);drawRect(outline,15,18,4,4);
+    drawRect(cream,8,7,2,2);drawRect(shadow,14,14,2,3);drawRect(leather,10,11,4,6);
    }else if(item.equals("Feder")){
-    drawRect(dark,6,2,5,11);drawRect(col("#e4dfc5"),7,2,4,9);drawRect(col("#8ea8b2"),4,5,3,5);
-    drawRect(light,8,8,1,7);
+    drawRect(outline,12,2,5,3);drawRect(outline,8,5,10,12);drawRect(outline,5,9,9,9);
+    drawRect(steelHi,12,3,4,5);drawRect(col("#c9d7c3"),9,6,7,9);drawRect(steel,6,10,8,6);
+    drawRect(cream,12,5,2,9);drawRect(shadow,9,14,4,3);drawRect(bone,9,14,2,7);drawRect(cream,10,13,2,9);
    }else if(item.equals("Knochen")){
-    drawRect(light,3,3,4,4);drawRect(light,10,10,4,4);drawRect(dark,5,5,7,7);
-    drawRect(col("#eee2c7"),6,5,3,6);drawRect(light,5,10,5,2);
+    drawRect(outline,4,4,7,7);drawRect(outline,13,13,7,7);drawRect(outline,8,8,9,9);
+    drawRect(bone,5,5,5,5);drawRect(bone,14,14,5,5);drawRect(bone,9,8,5,9);
+    drawRect(cream,6,5,3,3);drawRect(cream,10,8,3,7);drawRect(shadow,14,15,3,2);
+    drawRect(cream,3,7,4,3);drawRect(cream,17,16,4,3);
    }else if(item.equals("Horn")){
-    drawRect(dark,3,10,10,4);drawRect(col("#d6bc8e"),4,9,9,4);drawRect(light,7,5,6,6);
-    drawRect(light,10,2,3,5);iconPixel(col("#fff1cf"),11,1,2);
+    drawRect(outline,3,15,15,6);drawRect(outline,7,10,12,7);drawRect(outline,12,5,8,7);
+    drawRect(leather,4,16,13,4);drawRect(bone,8,11,10,6);drawRect(cream,13,6,6,6);
+    drawRect(shadow,6,17,9,2);drawRect(gold,9,12,5,2);drawRect(cream,17,3,3,5);drawRect(steelHi,18,2,2,3);
    }else if(item.equals("Schwert")){
-    drawRect(dark,3,11,5,4);drawRect(brown,4,11,3,4);drawRect(col("#dfc079"),3,9,8,2);
-    drawRect(metal,7,3,3,8);drawRect(light,8,2,2,6);
+    drawRect(outline,4,17,6,6);drawRect(leather,5,17,4,5);drawRect(gold,3,14,12,3);
+    drawRect(outline,10,4,7,12);drawRect(steelDark,11,5,5,10);drawRect(steel,12,4,4,10);
+    drawRect(steelHi,14,3,3,9);drawRect(cream,15,2,2,3);drawRect(gold,6,16,2,3);
    }else if(item.equals("Ruestung")){
-    drawRect(dark,2,3,12,12);drawRect(metal,4,3,8,11);drawRect(col("#637d86"),2,5,3,6);
-    drawRect(col("#637d86"),11,5,3,6);drawRect(light,7,5,2,4);
+    drawRect(outline,5,3,14,19);drawRect(outline,2,6,6,11);drawRect(outline,16,6,6,11);
+    drawRect(steelDark,6,4,12,17);drawRect(steel,8,5,8,15);
+    drawRect(steelDark,3,7,5,9);drawRect(steelDark,16,7,5,9);
+    drawRect(steelHi,9,6,6,3);drawRect(gold,10,10,4,5);drawRect(steelHi,10,16,4,3);
+    drawRect(shadow,7,20,10,2);
    }else if(item.equals("Axt")){
-    drawRect(brown,7,3,3,12);drawRect(dark,3,3,8,7);drawRect(metal,3,4,7,5);
-    drawRect(light,3,5,2,3);
+    drawRect(outline,12,3,5,19);drawRect(leather,13,5,3,16);drawRect(leatherHi,14,6,1,13);
+    drawRect(outline,3,4,12,12);drawRect(steelDark,4,5,10,10);
+    drawRect(steel,4,6,8,8);drawRect(steelHi,4,7,3,6);drawRect(gold,11,10,4,2);
+    drawRect(outline,3,8,2,4);
    }
    canvas.restore();
   }
@@ -183,7 +197,7 @@ public class MainActivity extends Activity {
    for(int i=0;i<items.length;i++){
     float x=vw/2-205+(i%4)*105,y=vh/2-102+(i/4)*100;
     drawRect(col("#121b20"),x,y,91,88);drawRect(col("#46515a"),x+3,y+3,85,82);
-    itemIcon(items[i],x+28,y+10,2.3f);
+    itemIcon(items[i],x+22,y+8,1.9f);
     paint.setColor(Color.WHITE);paint.setTextSize(11);canvas.drawText(items[i],x+7,y+66,paint);
     int amount=inventory.containsKey(items[i])?inventory.get(items[i]):0;
     paint.setTextSize(14);paint.setColor(col("#f8db94"));canvas.drawText("x"+amount,x+62,y+20,paint);
@@ -287,7 +301,7 @@ public class MainActivity extends Activity {
     else drawRect(col("#82776b"),d.x-d.w/2,d.y-d.h/2,d.w,d.h);
    }
    for(Drop d:drops){float bob=(float)Math.sin(elapsed*3+d.bob)*2;
-    drawRect(col("#28342b"),d.x-11,d.y+7,22,5);itemIcon(d.item,d.x-12,d.y-16+bob,1.5f);
+    drawRect(col("#28342b"),d.x-11,d.y+7,22,5);itemIcon(d.item,d.x-12,d.y-17+bob,1f);
    }
    for(Mob m:mobs){
     if(m.dead&&m.deathTimer>2.5f)continue;
