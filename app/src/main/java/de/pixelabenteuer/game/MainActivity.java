@@ -186,8 +186,8 @@ public class MainActivity extends Activity {
     tile("Walls_interior",193,128,23,42,l+658,t+67+iy*44,22,44);
    }
    // Divider: two original stone piers with a broad passable gap.
-   tile("Walls_interior",49,128,23,42,l+316,t+52,22,126);
-   tile("Walls_interior",49,128,23,42,l+316,t+295,22,42);
+   tile("Walls_interior",49,128,23,42,l+316,t+52,22,161);
+   // No lower partition: leave the forge/shop walkway open.
    // Floors meet directly beneath the stone divider; no overlaid floor strip.
    // Forge: show one complete furnace cell, not half an animation sheet.
    Bitmap furnace=buildingSprites.get("Forge");
@@ -205,7 +205,7 @@ public class MainActivity extends Activity {
     }
     if(right>=left&&bottom>=top){
      int cw=right-left+1,ch=bottom-top+1;
-     float scale=Math.min(114f/cw,122f/ch);
+     float scale=Math.min(102.6f/cw,109.8f/ch);
      float dw=cw*scale,dh=ch*scale;
      tile("Forge",left,top,cw,ch,l+75+(114-dw)/2,t+40+(122-dh),dw,dh);
     }
@@ -214,16 +214,19 @@ public class MainActivity extends Activity {
    
    // Two complete rear display shelves and one dragon picture.
    tile("Interior_objects",13,128,34,51,l+381,t+95,53,68);
-   tile("Interior_objects",113,128,34,51,l+570,t+95,53,68);
+   tile("Interior_objects",63,128,34,51,l+570,t+95,53,68);
    tile("Interior_objects",114,257,59,49,l+451,t+82,106,59);
    // Two separate COMPLETE purple rugs (source x=6..60, y=397..421).
    tile("Interior_objects",0,385,59,40,l+415,t+156,205,72);
-   tile("Interior_objects",70,385,55,40,l+415,t+256,205,72);
+   tile("Interior_objects",70,385,55,36,l+415,t+256,205,72);
    // The complete counter with its decorative vases, cropped as one object.
    tile("Interior_objects",16,0,160,27,l+345.5f,t+213,309,46);
    // Two complete decorative original sprites at the bottom of the forge.
    tile("Interior_objects",0,328,65,60,l+69,t+265,64,65);
-   tile("Interior_objects",0,328,65,60,l+211,t+267,61,65);
+   tile("Interior_objects",104,328,58,58,l+211,t+267,61,65);
+   // Additional forge details from distinct atlas cells, not duplicated crates.
+   tile("Interior_objects",156,328,51,54,l+135,t+268,47,53);
+   tile("Interior_objects",0,440,50,46,l+271,t+268,47,53);
    // The seller is drawn only once, using a single stable pose.
    characterTile("Master_Idle",3,2,(int)(elapsed*2)%3,l+236,t+175,81.4f);
    sellerPortrait(l+497,t+236);
@@ -696,7 +699,7 @@ public class MainActivity extends Activity {
     float ny=Math.max(205,Math.min(492,py+my*140*dt));
     // Partition occupies x=375..402 in interior player coordinates.
     // The middle opening (y=354..444) is deliberately passable.
-    if(!((nx>=378&&nx<=401)&&(ny<354||ny>467)))px=nx;
+    if(!((nx>=378&&nx<=401)&&(ny<389)))px=nx;
     py=ny;
     if(py>482&&Math.abs(px-DOOR_IN_X)<38&&my>0)enterOrLeave();
     return;
