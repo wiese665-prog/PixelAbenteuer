@@ -227,6 +227,10 @@ public class MainActivity extends Activity {
    // Additional forge details from distinct atlas cells, not duplicated crates.
    tile("Interior_objects",158,328,46,51,l+135,t+273,46,51);
    tile("Interior_objects",2,440,46,44,l+271,t+275,46,48);
+   // Complete stair-display shelves on the bottom wall, flanking the entry.
+   // Door is at interior x=555 (screen x=l+495); keep a clear central aisle.
+   tile("Interior_objects",0,198,100,90,l+356,t+263,85,72);
+   tile("Interior_objects",106,198,100,90,l+554,t+263,85,72);
    // The seller is drawn only once, using a single stable pose.
    characterTile("Master_Idle",3,2,(int)(elapsed*2)%3,l+236,t+175,81.4f);
    sellerPortrait(l+497,t+236);
