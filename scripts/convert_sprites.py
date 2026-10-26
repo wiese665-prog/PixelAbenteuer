@@ -30,13 +30,13 @@ def convert(path):
  for i,im in enumerate(frames):sheet.paste(im,(i*w,0))
  name=path.stem.lower()
  parts=path.parts
- animal=next((v for v in ("boar","deer","fox","black_grouse") if v.lower() in str(path).lower()),None)
+ animal=next((v for v in ("boar","deer","fox","black_grouse","orc1","orc2","orc3") if v.lower() in str(path).lower()),None)
  if not animal:return
- action=next((a for a in ("idle","walk","run","flight","attack","hurt","death") if a in name),None)
+ action=next((a for a in ("run_attack","walk_attack","idle","walk","run","flight","attack","hurt","death") if a in name),None)
  direction=next((d for d in ("front","back","left","right") if d in name),None)
  if action and direction:
   sheet.save(out/(animal+"_"+action+"_"+direction+".png"))
   print(animal,action,direction,len(frames))
-for path in root.rglob("*.aseprite"):
+for path in sorted(root.rglob("*.aseprite")):
  try:convert(path)
  except Exception as e:print("Could not convert",path,e)
