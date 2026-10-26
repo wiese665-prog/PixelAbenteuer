@@ -124,41 +124,46 @@ public class MainActivity extends Activity {
   void enterOrLeave(){
    if(indoors){indoors=false;px=forgeX;py=forgeY+107;joyX=joyY=0;return;}
    if(Math.abs(px-forgeX)<45&&py>forgeY+38&&py<forgeY+115){
-    indoors=true;currentHouse=1;px=400;py=350;joyX=joyY=0;
+    indoors=true;currentHouse=1;px=400;py=425;joyX=joyY=0;
    }
   }
   void drawInterior(float vw,float vh){
-   float left=vw/2-350,top=vh/2-190;
-   drawRect(col("#171419"),0,0,vw,vh);
-   // Keep atlas sections intact instead of repeating arbitrary 32px samples.
-   Bitmap walls=buildingSprites.get("Walls_interior");
-   if(walls!=null){
-    int sectionW=Math.min(walls.getWidth(),320),sectionH=Math.min(walls.getHeight(),180);
-    tile("Walls_interior",0,0,sectionW,sectionH,left,top,700,375);
-   }else drawRect(col("#806749"),left,top,700,375);
-   if(currentHouse==1){
-    // Workshop: fireplace, shop counter, display shelves, smith and visitors.
-    tile("Forge",0,0,Math.max(1,buildingSprites.get("Forge").getWidth()/3),buildingSprites.get("Forge").getHeight(),left+62,top+38,110,118);
-    tile("Light_animation",0,0,Math.max(1,buildingSprites.get("Light_animation").getWidth()/2),Math.max(1,buildingSprites.get("Light_animation").getHeight()/4),left+92,top+88,48,30);
-    tile("Interior_objects",0,0,Math.min(128,buildingSprites.get("Interior_objects").getWidth()),Math.min(100,buildingSprites.get("Interior_objects").getHeight()),left+405,top+42,210,120);
-    tile("Interior_objects",0,Math.min(100,buildingSprites.get("Interior_objects").getHeight()-1),Math.min(128,buildingSprites.get("Interior_objects").getWidth()),90,left+380,top+195,230,120);
-    characterTile("Master_Idle",3,2,(int)(elapsed*3),left+220,top+150,52);
-    characterTile("Seller",3,2,(int)(elapsed*2),left+475,top+200,52);
-    characterTile("Customer",3,2,(int)(elapsed*2),left+525,top+275,52);
-   }else{
-    // Home: furnished, but deliberately no furnace or NPCs.
-    Bitmap objects=buildingSprites.get("Interior_objects");
-    if(objects!=null){
-     tile("Interior_objects",0,0,Math.min(130,objects.getWidth()),Math.min(110,objects.getHeight()),left+75,top+68,230,150);
-     tile("Interior_objects",0,Math.min(115,objects.getHeight()-1),Math.min(130,objects.getWidth()),Math.min(110,objects.getHeight()),left+390,top+60,220,150);
-     tile("Interior_objects",0,Math.min(230,objects.getHeight()-1),Math.min(130,objects.getWidth()),Math.min(110,objects.getHeight()),left+320,top+220,185,115);
-    }
+   float left=vw/2-340,top=vh/2-174;
+   drawRect(col("#16131a"),0,0,vw,vh);
+   // A consistent room, not a stretched image of the entire tileset.
+   drawRect(col("#b8a59a"),left,top,680,348);
+   drawRect(col("#776b83"),left+15,top+75,650,258);
+   for(int ix=0;ix<13;ix++)for(int iy=0;iy<5;iy++){
+    drawRect(col(((ix+iy)%2==0)?"#81758f":"#776b85"),left+16+ix*50,top+78+iy*50,49,49);
    }
-   paint.setColor(col("#fff0cc"));paint.setTextSize(16);
-   canvas.drawText(currentHouse==1?"SCHMIEDE":"DEIN ZUHAUSE",left+40,top+25,paint);
-   drawSprite(sword?"player_sword":"player_unarmed","idle",0,vw/2,vh/2+83,65,65,elapsed,false);
+   drawRect(col("#8b7169"),left+16,top+12,648,67);
+   for(int ix=0;ix<16;ix++)drawRect(col("#b6a399"),left+18+ix*40,top+12,38,9);
+   // Shop counter and shelves, kept clear of the doorway.
+   drawRect(col("#775043"),left+353,top+105,277,32);
+   drawRect(col("#ae7953"),left+353,top+101,277,13);
+   drawRect(col("#765447"),left+365,top+141,253,14);
+   Bitmap furniture=buildingSprites.get("Interior_objects");
+   if(furniture!=null){
+    int w=Math.min(96,furniture.getWidth()),h=Math.min(112,furniture.getHeight());
+    tile("Interior_objects",0,0,w,h,left+365,top+24,145,96);
+    tile("Interior_objects",Math.min(100,furniture.getWidth()-1),0,w,h,left+513,top+24,135,96);
+   }
+   // Furnace sprite: crop one furnace, never the full animation strip.
+   Bitmap furnace=buildingSprites.get("Forge");
+   if(furnace!=null){
+    int fw=Math.max(1,furnace.getWidth()/3),fh=Math.max(1,furnace.getHeight()/2);
+    tile("Forge",0,0,fw,fh,left+82,top+48,100,105);
+   }
+   // Three separate characters: each frame is a single cell, not a moving strip.
+   characterTile("Master_Idle",3,2,(int)(elapsed*3),left+240,top+174,55);
+   characterTile("Seller",3,2,(int)(elapsed*2),left+487,top+160,54);
+   characterTile("Customer",3,2,(int)(elapsed*2),left+523,top+258,54);
+   // Interior position is stored in world coordinates; map to a fixed room.
+   float cx=left+340+(px-400),cy=top+180+(py-350);
+   drawSprite(sword?"player_sword":"player_unarmed","idle",playerDir,cx,cy,68,68,elapsed,false);
    paint.setColor(col("#fff2d5"));paint.setTextSize(13);
-   canvas.drawText("E - durch die Tuer nach draussen",vw/2-112,vh-12,paint);
+   canvas.drawText("SCHMIEDE",left+28,top+28,paint);
+   canvas.drawText("Ausgang: unten mittig",left+265,top+339,paint);
   }
   void loadSprites(){
    String[] kinds={"boar","fox","deer","black_grouse","orc1","orc2","orc3","player_sword","player_unarmed"};
@@ -616,7 +621,7 @@ public class MainActivity extends Activity {
    if(hp<=0){deathAnim+=dt;return;}if(inventoryOpen||shopOpen||pauseMenu||startScreen)return;
    float mx=joyX,my=joyY,length=(float)Math.hypot(mx,my);
    if(length>1){mx/=length;my/=length;}
-   if(indoors){px=Math.max(110,Math.min(690,px+mx*140*dt));py=Math.max(220,Math.min(370,py+my*140*dt));if(py>365&&Math.abs(px-400)<42&&my>0)enterOrLeave();return;}
+   if(indoors){if(Math.abs(mx)+Math.abs(my)>.08f)playerDir=direction(mx,my);px=Math.max(105,Math.min(695,px+mx*140*dt));py=Math.max(205,Math.min(492,py+my*140*dt));if(py>482&&Math.abs(px-400)<45&&my>0)enterOrLeave();return;}
    if(Math.abs(mx)+Math.abs(my)>.08f){
     playerDir=Math.abs(mx)>Math.abs(my)?(mx<0?2:3):(my<0?1:0);
     float step=140*dt/3f;
