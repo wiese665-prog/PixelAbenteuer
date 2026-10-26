@@ -141,7 +141,7 @@ public class MainActivity extends Activity {
      maxX=Math.max(maxX,xx);maxY=Math.max(maxY,yy);
     }
    if(maxX>=minX&&maxY>=minY){
-    float h=49,w=Math.min(38,h*(maxX-minX+1)/(float)(maxY-minY+1));
+    float h=43,w=Math.min(35,h*(maxX-minX+1)/(float)(maxY-minY+1));
     tile("Seller",sx+minX,sy+minY,maxX-minX+1,maxY-minY+1,x-w/2,y-h,w,h);
    }
   }
@@ -150,8 +150,8 @@ public class MainActivity extends Activity {
    // The facade is a complete single sprite in x=0..145, y=0..162.
    tile("Exterior_house",0,0,145,163,x-116,y-140,232,261);
    // The loose props are separate cells on the bottom of the same atlas.
-   tile("Exterior_house",70,162,32,38,x-117,y+113,53,55); // crates
-   tile("Exterior_house",116,160,34,34,x+97,y+66,61,61); // complete cart
+   tile("Exterior_house",70,162,32,38,x-117,y+113,50,52); // crates
+   tile("Exterior_house",116,160,34,34,x+97,y+66,55,55); // complete cart
    paint.setColor(col("#fff0ce"));paint.setTextAlign(Paint.Align.CENTER);paint.setTextSize(13);
    canvas.drawText("SCHMIEDE",x,y-150,paint);paint.setTextAlign(Paint.Align.LEFT);
   }
@@ -178,31 +178,33 @@ public class MainActivity extends Activity {
     tile("Walls_interior",177,128,32,42,l+649,t+67+iy*44,31,44);
    }
    // Divider: two original stone piers with a broad passable gap.
-   tile("Walls_interior",16,128,32,42,l+312,t+69,28,109);
-   tile("Walls_interior",16,128,32,42,l+312,t+295,28,42);
+   tile("Walls_interior",48,128,24,42,l+312,t+52,28,126);
+   tile("Walls_interior",48,128,24,42,l+312,t+295,28,42);
+   // Stone floor transition: cover the transparent black edge with actual floor cells.
+   for(int iy=0;iy<18;iy++)tile("Walls_interior",240,128,16,16,l+324,t+52+iy*16,16,16);
    // Forge: show one complete furnace cell, not half an animation sheet.
    Bitmap furnace=buildingSprites.get("Forge");
    if(furnace!=null){
     int fw=Math.max(1,furnace.getWidth()/2),fh=Math.max(1,furnace.getHeight()/3);
-    tile("Forge",0,0,fw,fh,l+94,t+73,104,111);
+    tile("Forge",0,0,fw,fh,l+89,t+67,114,122);
    }
    // One complete original ore crate, no clipped fragments at entrance.
    
    // Two complete rear display shelves and one dragon picture.
    tile("Interior_objects",13,128,34,51,l+378,t+92,59,76);
-   tile("Interior_objects",112,127,42,54,l+567,t+92,64,78);
+   tile("Interior_objects",13,128,34,51,l+567,t+92,59,76);
    tile("Interior_objects",114,257,59,49,l+451,t+82,106,59);
    // Two separate COMPLETE purple rugs (source x=6..60, y=397..421).
    tile("Interior_objects",0,385,59,40,l+415,t+156,205,72);
    tile("Interior_objects",70,385,55,40,l+415,t+256,205,72);
    // The complete counter with its decorative vases, cropped as one object.
-   tile("Interior_objects",16,0,160,27,l+345,t+212,310,49);
+   tile("Interior_objects",16,0,160,27,l+353,t+213,294,47);
    // Two complete decorative original sprites at the bottom of the forge.
-   tile("Interior_objects",7,328,42,49,l+71,t+270,56,58);
-   tile("Interior_objects",111,328,42,49,l+213,t+270,56,58);
+   tile("Interior_objects",7,328,51,55,l+71,t+265,61,65);
+   tile("Interior_objects",169,439,39,44,l+213,t+267,55,61);
    // The seller is drawn only once, using a single stable pose.
-   characterTile("Master_Idle",3,2,(int)(elapsed*2)%3,l+236,t+175,77);
-   sellerPortrait(l+497,t+217);
+   characterTile("Master_Idle",3,2,(int)(elapsed*2)%3,l+236,t+175,79);
+   sellerPortrait(l+497,t+216);
    characterTile("Customer",3,2,0,l+507,t+288,52);
    float cx=l+340+(px-400),cy=t+176+(py-350);
    drawSprite(sword?"player_sword":"player_unarmed","idle",playerDir,cx,cy,94,94,elapsed,false);
