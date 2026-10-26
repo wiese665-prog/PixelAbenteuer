@@ -66,23 +66,16 @@ public class MainActivity extends Activity {
    for(int i=0;i<85;i++){float x=60+(i*167)%1480,y=65+(i*283)%870;if(Math.hypot(x-180,y-180)<140)continue;Bitmap b=rocks.isEmpty()?null:rocks.get(i%rocks.size());decorations.add(new Decoration(b,x,y,42+(i%3)*12,38+(i%4)*9,true));}
    for(int i=0;i<70&&!plants.isEmpty();i++){float x=30+(i*131)%1540,y=40+(i*223)%920;decorations.add(new Decoration(plants.get(i%plants.size()),x,y,34+(i%3)*12,40+(i%3)*10,true));}
   }
-  // Collision uses the actual non-transparent pixels near each object's base.
-  // Tall foliage has a narrower base than its visible crown.
+  // Solid objects use a broad footprint. Alpha only refines the silhouette;
+  // transparent shadows or gaps must never make a rock/ruin passable.
   boolean collides(Decoration d,float x,float y){
-   float left=d.x-d.w/2,top=d.y-d.h*.8f;
-   if(x<left-9||x>left+d.w+9||y<top-9||y>top+d.h+9)return false;
-   if(d.image==null)return Math.abs(x-d.x)<d.w*.3f+7&&Math.abs(y-d.y)<d.h*.18f+7;
-   int bw=d.image.getWidth(),bh=d.image.getHeight();
-   // Use a lower slice of the sprite, so branches and upper ruins do not block movement.
-   float baseStart=d.h>=75?.53f:.48f;
-   for(int ix=-1;ix<=1;ix++)for(int iy=-1;iy<=1;iy++){
-    float sx=x+ix*5,sy=y+iy*5;
-    float u=(sx-left)/d.w,v=(sy-top)/d.h;
-    if(u<0||u>=1||v<baseStart||v>=1)continue;
-    int bx=Math.min(bw-1,(int)(u*bw)),by=Math.min(bh-1,(int)(v*bh));
-    if(Color.alpha(d.image.getPixel(bx,by))>=160)return true;
-   }
-   return false;
+   float dx=x-d.x,dy=y-d.y;
+   float radiusX=d.w*(d.h>=75?.43f:.42f)+11f;
+   float radiusY=d.h*(d.h>=75?.33f:.38f)+11f;
+   // A rounded rectangle covers the solid base of the object, including its edges.
+   float coreX=Math.max(0,Math.abs(dx)-(radiusX-9));
+   float coreY=Math.max(0,Math.abs(dy)-(radiusY-9));
+   return coreX*coreX+coreY*coreY<=81f;
   }
   boolean blocked(float x,float y){
    if(x<18||y<18||x>WORLD_W-18||y>WORLD_H-18)return true;
@@ -114,9 +107,12 @@ public class MainActivity extends Activity {
    if(length>1){mx/=length;my/=length;}
    if(Math.abs(mx)+Math.abs(my)>.08f){
     playerDir=Math.abs(mx)>Math.abs(my)?(mx<0?2:3):(my<0?1:0);
-    float nx=px+mx*140*dt,ny=py+my*140*dt;
-    if(!blocked(nx,py))px=nx;
-    if(!blocked(px,ny))py=ny;
+    float step=140*dt/3f;
+    for(int sub=0;sub<3;sub++){
+     float nx=px+mx*step,ny=py+my*step;
+     if(!blocked(nx,py))px=nx;
+     if(!blocked(px,ny))py=ny;
+    }
    }
    for(Mob m:mobs){
     if(m.dead){m.deathTimer+=dt;continue;}
@@ -139,9 +135,12 @@ public class MainActivity extends Activity {
      vx=m.vx;vy=m.vy;action=Math.abs(vx)+Math.abs(vy)<1?"idle":"walk";
     }
     if(Math.abs(vx)+Math.abs(vy)>1){
-     float nx=m.x+vx*dt,ny=m.y+vy*dt;
-     if(!blocked(nx,m.y))m.x=nx;else m.decision=0;
-     if(!blocked(m.x,ny))m.y=ny;else m.decision=0;
+     float step=dt/3f;
+     for(int sub=0;sub<3;sub++){
+      float nx=m.x+vx*step,ny=m.y+vy*step;
+      if(!blocked(nx,m.y))m.x=nx;else m.decision=0;
+      if(!blocked(m.x,ny))m.y=ny;else m.decision=0;
+     }
      m.dir=direction(vx,vy);
     }
     if(!m.action.equals(action)){m.action=action;m.anim=0;}
