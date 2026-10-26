@@ -132,14 +132,14 @@ public class MainActivity extends Activity {
    // The facade is a complete single sprite in x=0..145, y=0..162.
    tile("Exterior_house",0,0,145,163,x-116,y-140,232,261);
    // The loose props are separate cells on the bottom of the same atlas.
-   tile("Exterior_house",44,165,50,41,x-122,y+63,66,55); // crates
+   tile("Exterior_house",44,165,50,41,x-117,y+113,66,55); // crates
    tile("Exterior_house",107,164,47,43,x+97,y+66,72,60); // complete cart
    paint.setColor(col("#fff0ce"));paint.setTextAlign(Paint.Align.CENTER);paint.setTextSize(13);
    canvas.drawText("SCHMIEDE",x,y-150,paint);paint.setTextAlign(Paint.Align.LEFT);
   }
   void enterOrLeave(){
    if(indoors){indoors=false;px=forgeX;py=forgeY+141;joyX=joyY=0;return;}
-   if(Math.abs(px-forgeX)<30&&py>forgeY+36&&py<forgeY+115){
+   if(Math.abs(px-(forgeX-8))<30&&py>forgeY+36&&py<forgeY+115){
     indoors=true;currentHouse=1;px=400;py=425;joyX=joyY=0;
    }
   }
@@ -155,40 +155,44 @@ public class MainActivity extends Activity {
    for(int iy=0;iy<18;iy++)for(int ix=0;ix<20;ix++){
     tile("Walls_interior",145,21,12,12,l+340+ix*16,t+52+iy*16,16,16);
    }
-   // Rear stone walls: the two blue-marked sections of the original atlas.
-   // Their entire masonry bands are kept intact (not sampled as 32px fragments).
-   tile("Walls_interior",14,127,80,47,l+16,t,310,74);
-   tile("Walls_interior",145,127,78,47,l+339,t,325,74);
-   // Left/right perimeter, assembled from the matching original stone wall cell.
-   for(int iy=0;iy<7;iy++){
-    tile("Walls_interior",14,128,16,36,l,t+67+iy*39,17,39);
-    tile("Walls_interior",202,128,16,36,l+664,t+67+iy*39,16,39);
+   // Repeated small original stone wall units, not stretched facade strips.
+   for(int ix=0;ix<17;ix++){
+    int sx=(ix%2==0)?14:49;
+    tile("Walls_interior",sx,127,24,47,l+16+ix*38,t,38,74);
    }
-   // The separating wall is interrupted in the middle: passable from forge to shop.
-   tile("Walls_interior",14,128,16,36,l+322,t+68,17,112);
-   tile("Walls_interior",14,128,16,36,l+322,t+278,17,59);
+   // Wider stone side walls, original full-height units.
+   for(int iy=0;iy<7;iy++){
+    tile("Walls_interior",14,128,24,36,l,t+65+iy*39,26,39);
+    tile("Walls_interior",49,128,24,36,l+654,t+65+iy*39,26,39);
+   }
+   // Partition: two stone piers and a real walk-through opening.
+   for(int iy=0;iy<3;iy++)
+    tile("Walls_interior",14,128,24,36,l+315,t+65+iy*39,27,39);
+   for(int iy=0;iy<2;iy++)
+    tile("Walls_interior",14,128,24,36,l+315,t+270+iy*39,27,39);
    // Forge: furnace and supplies, only on the left side.
    Bitmap furnace=buildingSprites.get("Forge");
    if(furnace!=null)tile("Forge",0,0,Math.max(1,furnace.getWidth()/3),
      Math.max(1,furnace.getHeight()/2),l+94,t+73,104,111);
    tile("Interior_objects",155,442,50,45,l+216,t+107,57,54);
    tile("Interior_objects",0,445,100,49,l+66,t+263,129,66);
-   // Sales room: two wall shelves and one painting between them.
-   tile("Interior_objects",0,91,49,104,l+353,t+69,94,108);
-   tile("Interior_objects",52,91,50,104,l+555,t+69,94,108);
-   tile("Interior_objects",104,279,102,46,l+450,t+80,104,59);
-   // Two rugs, one behind and one in front of the original counter.
-   tile("Interior_objects",6,398,92,44,l+405,t+159,224,68);
-   tile("Interior_objects",6,398,92,44,l+405,t+257,224,69);
+   // Shop: only the original two rear wall shelves and one painting.
+   tile("Interior_objects",0,91,49,104,l+355,t+74,91,110);
+   tile("Interior_objects",52,91,50,104,l+554,t+74,91,110);
+   tile("Interior_objects",104,279,102,46,l+451,t+79,103,58);
+   // One carpet sprite per position: previous crop accidentally contained two.
+   tile("Interior_objects",6,398,49,40,l+430,t+157,186,71);
+   tile("Interior_objects",6,398,49,40,l+430,t+255,186,71);
+   // Preserve the full shop counter.
    tile("Interior_objects",0,0,176,29,l+345,t+212,310,43);
-   // Stair-shaped display shelves at the sales room entrance.
-   tile("Interior_objects",0,198,104,92,l+345,t+264,75,67);
-   tile("Interior_objects",104,198,104,92,l+580,t+264,75,67);
+   // Complete entrance stair-shelves, both moved toward the doorway.
+   tile("Interior_objects",0,198,104,92,l+342,t+256,98,80);
+   tile("Interior_objects",104,198,104,92,l+558,t+256,98,80);
    characterTile("Master_Idle",3,2,(int)(elapsed*2)%3,l+236,t+175,68);
    characterTile("Seller",3,2,0,l+497,t+182,68);
-   characterTile("Customer",3,2,(int)(elapsed*2)%3,l+507,t+288,68);
+   characterTile("Customer",3,2,(int)(elapsed*2)%3,l+507,t+288,49);
    float cx=l+340+(px-400),cy=t+176+(py-350);
-   drawSprite(sword?"player_sword":"player_unarmed","idle",playerDir,cx,cy,68,68,elapsed,false);
+   drawSprite(sword?"player_sword":"player_unarmed","idle",playerDir,cx,cy,94,94,elapsed,false);
    paint.setColor(col("#fff2d5"));paint.setTextSize(13);
    canvas.drawText("SCHMIEDE  |  Ausgang unten mittig",l+221,t+345,paint);
   }
@@ -243,8 +247,8 @@ public class MainActivity extends Activity {
    if(x<18||y<18||x>WORLD_W-18||y>WORLD_H-18)return true;
    for(Decoration d:decorations)if(d.solid&&Math.hypot(d.x-forgeX,d.y-forgeY)>185&&collides(d,x,y))return true;
    float dx=x-forgeX,dy=y-forgeY;
-   if(Math.abs(dx)<110&&dy>-63&&dy<65&&!(Math.abs(dx)<25&&dy>37))return true;
-   if(dx>-122&&dx<-66&&dy>49&&dy<107)return true;
+   if(Math.abs(dx)<110&&dy>-63&&dy<65&&!(Math.abs(dx+8)<25&&dy>37))return true;
+   if(dx>-122&&dx<-66&&dy>111&&dy<168)return true;
    if(dx>-7&&dx<17&&dy>84&&dy<115)return true;
    if(dx>12&&dx<44&&dy>79&&dy<110)return true;
    if(dx>3&&dx<36&&dy>109&&dy<127)return true;
@@ -657,7 +661,7 @@ public class MainActivity extends Activity {
      float nx=px+mx*step,ny=py+my*step;
      if(!blocked(nx,py))px=nx;
      if(!blocked(px,ny))py=ny;
-     if(Math.abs(px-forgeX)<26&&py>forgeY+38&&py<forgeY+91&&my<0){enterOrLeave();break;}
+     if(Math.abs(px-(forgeX-8))<26&&py>forgeY+38&&py<forgeY+91&&my<0){enterOrLeave();break;}
     }
    }
    if(indoors)return;
@@ -730,7 +734,7 @@ public class MainActivity extends Activity {
     else drawRect(col("#82776b"),d.x-d.w/2,d.y-d.h/2,d.w,d.h);
    }
    drawHouse(forgeX,forgeY,true);
-   drawSprite("orc2","idle",0,merchantX,merchantY,68,68,elapsed,false);
+   drawSprite("orc2","idle",0,merchantX,merchantY,79,79,elapsed,false);
    paint.setTextAlign(Paint.Align.CENTER);paint.setColor(col("#ffe7aa"));paint.setTextSize(13);
    canvas.drawText("HAENDLER",merchantX,merchantY-45,paint);paint.setTextAlign(Paint.Align.LEFT);
    if(Math.hypot(px-merchantX,py-merchantY)<100&&!shopOpen){paint.setColor(Color.WHITE);paint.setTextSize(12);
@@ -746,7 +750,7 @@ public class MainActivity extends Activity {
    for(Mob m:mobs){
     if(m.dead&&m.deathTimer>2.5f)continue;
     String action=m.dead?"death":m.hurtTimer>0?"hurt":m.action;
-    float size=m.hostile()?65:m.kind.equals("boar")?45:m.kind.equals("deer")?43:36;
+    float size=m.hostile()?79:m.kind.equals("boar")?45:m.kind.equals("deer")?43:36;
     drawSprite(m.kind,action,m.dir,m.x,m.y,size,size,m.dead?m.deathTimer:m.anim,m.dead&&m.deathTimer>.7f);
     if(!m.dead){paint.setColor(Color.WHITE);paint.setTextSize(12);paint.setTextAlign(Paint.Align.CENTER);canvas.drawText("Lv. "+m.level,m.x,m.y-size*.64f,paint);paint.setTextAlign(Paint.Align.LEFT);}
     if(m.healthVisible>0&&(!m.dead||m.deathTimer<1f))healthBar(m.x,m.y-size*.65f-12,42,m.hp,m.maxHp);
@@ -754,7 +758,7 @@ public class MainActivity extends Activity {
    }
    String playerKind=sword?"player_sword":"player_unarmed";
    String playerAction=hp<=0?"death":hurtAnim>0?"hurt":attackAnim>0&&sword?"attack":Math.abs(joyX)+Math.abs(joyY)>.08f?"run":"idle";
-   drawSprite(playerKind,playerAction,playerDir,px,py,80,80,hp<=0?deathAnim:attackAnim>0?.4f-attackAnim:elapsed,hp<=0&&deathAnim>.8f);
+   drawSprite(playerKind,playerAction,playerDir,px,py,94,94,hp<=0?deathAnim:attackAnim>0?.4f-attackAnim:elapsed,hp<=0&&deathAnim>.8f);
    if(playerHealthVisible>0)healthBar(px,py-56,52,hp,maxHp);
    damageText(px,py-66,lastPlayerDamage,playerDamageTime);
    Drop nearby=nearestDrop();
