@@ -66,7 +66,8 @@ public class MainActivity extends Activity {
    if(cloudAnimations[0].isEmpty()&&cloudAnimations[1].isEmpty()&&cloudAnimations[2].isEmpty())return;
    float phase=(worldTime%240f)/240f;
    float night=(float)Math.max(0,Math.min(1,(-Math.cos(phase*6.2831853f)-.10f)/.85f));
-   int alpha=(int)(175-night*65);
+   // Clouds always have 30% transparency (70% opacity), regardless of time of day.
+   final int alpha=179;
    // Screen-space cloud shadows drift across the landscape independently of the camera.
    for(int i=0;i<11;i++){
     // Day: white Cloud + grey Cloud2. Night: black Cloud1 + grey Cloud2.
@@ -81,7 +82,11 @@ public class MainActivity extends Activity {
     height=Math.min(95,height);
     float x=((i*173+worldTime*(8+i%3*3))%(vw+width*2))-width;
     float y=38+(i*79)%(int)Math.max(70,vh-95);
-    paint.setColor(Color.WHITE);paint.setAlpha((int)(alpha*familyOpacity));paint.setColorFilter(null);
+    // Screen center is the player position; soften clouds when covering the character.
+    float playerLeft=vw/2-28,playerTop=vh/2-44;
+    boolean overPlayer=x<playerLeft+56&&x+width>playerLeft&&y<playerTop+88&&y+height>playerTop;
+    float overlapOpacity=overPlayer?.20f:1f; // 80% more transparent on contact.
+    paint.setColor(Color.WHITE);paint.setAlpha((int)(alpha*familyOpacity*overlapOpacity));paint.setColorFilter(null);
     canvas.drawBitmap(cloud,null,new RectF(x,y,x+width,y+height),paint);
    }
    paint.setAlpha(255);
