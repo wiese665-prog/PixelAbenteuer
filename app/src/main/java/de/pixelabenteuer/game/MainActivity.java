@@ -217,16 +217,16 @@ public class MainActivity extends Activity {
    tile("Interior_objects",63,128,34,51,l+570,t+95,53,68);
    tile("Interior_objects",114,257,59,49,l+451,t+82,106,59);
    // Two separate COMPLETE purple rugs (source x=6..60, y=397..421).
-   tile("Interior_objects",0,385,59,40,l+435,t+156,205,72);
+   tile("Interior_objects",0,385,59,40,l+415,t+156,205,72);
    tile("Interior_objects",70,385,55,40,l+415,t+256,205,72);
    // The complete counter with its decorative vases, cropped as one object.
    tile("Interior_objects",16,0,160,27,l+345.5f,t+213,309,46);
    // Two complete decorative original sprites at the bottom of the forge.
    tile("Interior_objects",0,328,65,60,l+69,t+265,64,65);
-   tile("Interior_objects",104,328,58,58,l+211,t+267,61,65);
+   tile("Interior_objects",104,328,52,54,l+211,t+271,55,57);
    // Additional forge details from distinct atlas cells, not duplicated crates.
-   tile("Interior_objects",156,328,51,54,l+135,t+268,47,53);
-   tile("Interior_objects",0,440,50,46,l+271,t+268,47,53);
+   tile("Interior_objects",158,328,46,51,l+135,t+273,46,51);
+   tile("Interior_objects",2,440,46,44,l+271,t+275,46,48);
    // The seller is drawn only once, using a single stable pose.
    characterTile("Master_Idle",3,2,(int)(elapsed*2)%3,l+236,t+175,81.4f);
    sellerPortrait(l+497,t+236);
