@@ -653,7 +653,17 @@ public class MainActivity extends Activity {
    if(hp<=0){deathAnim+=dt;return;}if(inventoryOpen||shopOpen||pauseMenu||startScreen)return;
    float mx=joyX,my=joyY,length=(float)Math.hypot(mx,my);
    if(length>1){mx/=length;my/=length;}
-   if(indoors){if(Math.abs(mx)+Math.abs(my)>.08f)playerDir=direction(mx,my);px=Math.max(105,Math.min(695,px+mx*140*dt));py=Math.max(205,Math.min(492,py+my*140*dt));if(py>482&&Math.abs(px-400)<45&&my>0)enterOrLeave();return;}
+   if(indoors){
+    if(Math.abs(mx)+Math.abs(my)>.08f)playerDir=direction(mx,my);
+    float nx=Math.max(105,Math.min(695,px+mx*140*dt));
+    float ny=Math.max(205,Math.min(492,py+my*140*dt));
+    // Partition occupies x=375..402 in interior player coordinates.
+    // The middle opening (y=354..444) is deliberately passable.
+    if(!((nx>=375&&nx<=402)&&(ny<354||ny>444)))px=nx;
+    py=ny;
+    if(py>482&&Math.abs(px-400)<45&&my>0)enterOrLeave();
+    return;
+   }
    if(Math.abs(mx)+Math.abs(my)>.08f){
     playerDir=Math.abs(mx)>Math.abs(my)?(mx<0?2:3):(my<0?1:0);
     float step=140*dt/3f;
