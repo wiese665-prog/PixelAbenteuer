@@ -91,65 +91,78 @@ public class MainActivity extends Activity {
   final float forgeX=550,forgeY=300,homeX=300,homeY=500;
   boolean safeZone(float x,float y){return Math.hypot(x-forgeX,y-forgeY)<235||Math.hypot(x-homeX,y-homeY)<195;}
   void loadBuildings(){
-   for(String name:new String[]{"forge","doors_windows","light_animation","master","master_idle","seller","customer"}){
-    try(InputStream in=getAssets().open("generated/"+name+".png")){
+   for(String name:new String[]{"Exterior_house","Walls_interior","Walls_street","Interior_objects","Doors_windows_animations","Decorative_cracks","Forge","Light_animation","Master_Idle","Master","Seller","Customer"}){
+    try(InputStream in=getAssets().open("sprites/"+name+".png")){
      Bitmap b=BitmapFactory.decodeStream(in);if(b!=null)buildingSprites.put(name,b);
     }catch(Exception ignored){}
    }
   }
-  void buildingSprite(String name,float x,float y,float width,float height,int frame){
-   Bitmap b=buildingSprites.get(name);if(b==null)return;
-   int fw=b.getHeight(),count=Math.max(1,b.getWidth()/Math.max(1,fw));
-   int index=Math.floorMod(frame,count);
+  void tile(String name,int sx,int sy,int sw,int sh,float x,float y,float w,float h){
+   Bitmap bitmap=buildingSprites.get(name);if(bitmap==null)return;
+   sx=Math.max(0,Math.min(sx,bitmap.getWidth()-1));sy=Math.max(0,Math.min(sy,bitmap.getHeight()-1));
+   sw=Math.min(sw,bitmap.getWidth()-sx);sh=Math.min(sh,bitmap.getHeight()-sy);
    paint.setColor(Color.WHITE);paint.setAlpha(255);paint.setColorFilter(null);
-   canvas.drawBitmap(b,new Rect(index*fw,0,Math.min(b.getWidth(),(index+1)*fw),b.getHeight()),new RectF(x-width/2,y-height/2,x+width/2,y+height/2),paint);
+   canvas.drawBitmap(bitmap,new Rect(sx,sy,sx+sw,sy+sh),new RectF(x,y,x+w,y+h),paint);
+  }
+  void characterTile(String name,int columns,int rows,int frame,float x,float y,float size){
+   Bitmap bitmap=buildingSprites.get(name);if(bitmap==null)return;
+   int fw=bitmap.getWidth()/columns,fh=bitmap.getHeight()/rows;
+   int index=Math.floorMod(frame,columns*rows);
+   tile(name,(index%columns)*fw,(index/columns)*fh,fw,fh,x-size/2,y-size/2,size,size);
   }
   void drawHouse(float x,float y,boolean smithy){
-   float w=smithy?190:150,h=smithy?145:125;
-   drawRect(col("#3b342e"),x-w/2-5,y-h/2-5,w+10,h+10);
-   drawRect(col(smithy?"#73594a":"#806b4b"),x-w/2,y-h/2,w,h);
-   drawRect(col("#493b38"),x-w/2-12,y-h/2-20,w+24,38);
-   for(int i=0;i<7;i++)drawRect(col("#765047"),x-w/2-7+i*(w+14)/7,y-h/2-16,(w+14)/7-3,24);
-   drawRect(col("#c4a36c"),x-23,y+h/2-32,46,33);
-   drawRect(col("#27272c"),x-17,y+h/2-29,34,29);
-   drawRect(col("#d2b779"),x-12,y+h/2-25,3,18);
-   drawRect(col("#a4c2bf"),x-w/2+18,y-14,24,23);
-   drawRect(col("#a4c2bf"),x+w/2-42,y-14,24,23);
-   paint.setColor(col("#fff0ce"));paint.setTextAlign(Paint.Align.CENTER);paint.setTextSize(14);
-   canvas.drawText(smithy?"SCHMIEDE":"DEIN HAUS",x,y-h/2-26,paint);
-   paint.setTextAlign(Paint.Align.LEFT);
+   // The atlas contains three separate complete houses, not animation frames.
+   Bitmap atlas=buildingSprites.get("Exterior_house");
+   if(atlas==null)return;
+   int third=atlas.getWidth()/3;
+   int index=smithy?0:1;
+   tile("Exterior_house",third*index,0,third,atlas.getHeight(),x-130,y-146,260,230);
+   paint.setColor(col("#fff0ce"));paint.setTextAlign(Paint.Align.CENTER);paint.setTextSize(13);
+   canvas.drawText(smithy?"SCHMIEDE":"DEIN HAUS",x,y-157,paint);paint.setTextAlign(Paint.Align.LEFT);
   }
   void enterOrLeave(){
-   if(indoors){indoors=false;px=currentHouse==1?forgeX:homeX;py=(currentHouse==1?forgeY:homeY)+105;joyX=joyY=0;return;}
-   if(Math.hypot(px-forgeX,py-(forgeY+77))<65){indoors=true;currentHouse=1;px=400;py=330;joyX=joyY=0;}
-   else if(Math.hypot(px-homeX,py-(homeY+66))<65){indoors=true;currentHouse=2;px=400;py=330;joyX=joyY=0;}
+   if(indoors){indoors=false;px=currentHouse==1?forgeX:homeX;py=(currentHouse==1?forgeY:homeY)+112;joyX=joyY=0;return;}
+   if(Math.hypot(px-forgeX,py-(forgeY+84))<62){indoors=true;currentHouse=1;px=400;py=330;joyX=joyY=0;}
+   else if(Math.hypot(px-homeX,py-(homeY+84))<62){indoors=true;currentHouse=2;px=400;py=330;joyX=joyY=0;}
   }
   void drawInterior(float vw,float vh){
-   drawRect(col("#201c20"),0,0,vw,vh);
-   drawRect(col("#866a4c"),65,40,vw-130,vh-75);
-   for(int x=70;x<vw-70;x+=45)for(int y=48;y<vh-40;y+=45)
-    drawRect(col(((x+y)/45)%2==0?"#917654":"#806749"),x,y,43,43);
-   drawRect(col("#44312b"),vw/2-55,vh-67,110,38);
-   drawRect(col("#c4a56b"),vw/2-25,vh-67,50,32);
-   if(currentHouse==1){
-    drawRect(col("#55443a"),100,88,135,110);drawRect(col("#211e1e"),115,100,105,84);
-    drawRect(col("#ec8b32"),139,125,56,54);
-    drawRect(col("#ffcc67"),151,137,32,36);
-    buildingSprite("light_animation",165,151,80,80,(int)(elapsed*6));
-    buildingSprite("master_idle",300,172,68,68,(int)(elapsed*4));
-    buildingSprite("seller",vw-175,180,64,64,(int)(elapsed*3));
-    buildingSprite("customer",vw-280,270,60,60,(int)(elapsed*3));
-    buildingSprite("forge",165,105,110,90,0);
-    paint.setColor(col("#fff0cc"));paint.setTextSize(15);canvas.drawText("SCHMIEDE  |  Meister und Haendler",85,66,paint);
-   }else{
-    drawRect(col("#4b3630"),105,105,175,94);drawRect(col("#d1b38a"),112,112,160,78);
-    drawRect(col("#49362e"),vw-240,108,130,80);
-    drawRect(col("#a88a5b"),vw-230,114,110,68);
-    paint.setColor(col("#fff0cc"));paint.setTextSize(15);canvas.drawText("DEIN ZUHAUSE",85,66,paint);
+   float left=vw/2-350,top=vh/2-190;
+   drawRect(col("#171419"),0,0,vw,vh);
+   // Use real wall and floor textures from the supplied atlas.
+   for(int ix=0;ix<14;ix++)for(int iy=0;iy<8;iy++){
+    tile("Walls_interior",0,0,32,32,left+ix*50,top+iy*47,50,47);
    }
+   for(int ix=0;ix<14;ix++){
+    tile("Walls_interior",32,0,32,32,left+ix*50,top,50,46);
+    tile("Walls_interior",32,0,32,32,left+ix*50,top+329,50,46);
+   }
+   for(int iy=0;iy<8;iy++){
+    tile("Walls_interior",64,0,32,32,left,top+iy*47,35,47);
+    tile("Walls_interior",64,0,32,32,left+665,top+iy*47,35,47);
+   }
+   if(currentHouse==1){
+    // Workshop: fireplace, shop counter, display shelves, smith and visitors.
+    tile("Forge",0,0,Math.max(1,buildingSprites.get("Forge").getWidth()/3),buildingSprites.get("Forge").getHeight(),left+62,top+38,110,118);
+    tile("Light_animation",0,0,Math.max(1,buildingSprites.get("Light_animation").getWidth()/2),Math.max(1,buildingSprites.get("Light_animation").getHeight()/4),left+92,top+88,48,30);
+    tile("Interior_objects",0,0,Math.min(128,buildingSprites.get("Interior_objects").getWidth()),Math.min(100,buildingSprites.get("Interior_objects").getHeight()),left+405,top+42,210,120);
+    tile("Interior_objects",0,Math.min(100,buildingSprites.get("Interior_objects").getHeight()-1),Math.min(128,buildingSprites.get("Interior_objects").getWidth()),90,left+380,top+195,230,120);
+    characterTile("Master_Idle",3,2,(int)(elapsed*3),left+220,top+150,52);
+    characterTile("Seller",3,2,(int)(elapsed*2),left+475,top+200,52);
+    characterTile("Customer",3,2,(int)(elapsed*2),left+525,top+275,52);
+   }else{
+    // Home: furnished, but deliberately no furnace or NPCs.
+    Bitmap objects=buildingSprites.get("Interior_objects");
+    if(objects!=null){
+     tile("Interior_objects",0,0,Math.min(130,objects.getWidth()),Math.min(110,objects.getHeight()),left+75,top+68,230,150);
+     tile("Interior_objects",0,Math.min(115,objects.getHeight()-1),Math.min(130,objects.getWidth()),Math.min(110,objects.getHeight()),left+390,top+60,220,150);
+     tile("Interior_objects",0,Math.min(230,objects.getHeight()-1),Math.min(130,objects.getWidth()),Math.min(110,objects.getHeight()),left+320,top+220,185,115);
+    }
+   }
+   paint.setColor(col("#fff0cc"));paint.setTextSize(16);
+   canvas.drawText(currentHouse==1?"SCHMIEDE":"DEIN ZUHAUSE",left+40,top+25,paint);
+   drawSprite(sword?"player_sword":"player_unarmed","idle",0,vw/2,vh/2+83,65,65,elapsed,false);
    paint.setColor(col("#fff2d5"));paint.setTextSize(13);
-   canvas.drawText("E - durch die Tuer nach draussen",vw/2-117,vh-18,paint);
-   drawSprite(sword?"player_sword":"player_unarmed","idle",0,vw/2,vh/2+65,72,72,elapsed,false);
+   canvas.drawText("E - durch die Tuer nach draussen",vw/2-112,vh-12,paint);
   }
   void loadSprites(){
    String[] kinds={"boar","fox","deer","black_grouse","orc1","orc2","orc3","player_sword","player_unarmed"};
@@ -786,7 +799,7 @@ public class MainActivity extends Activity {
     case KeyEvent.KEYCODE_W:case KeyEvent.KEYCODE_DPAD_UP:joyY=-1;break;
     case KeyEvent.KEYCODE_S:case KeyEvent.KEYCODE_DPAD_DOWN:joyY=1;break;
     case KeyEvent.KEYCODE_SPACE:attack();break;
-    case KeyEvent.KEYCODE_E:if(shopOpen)shopOpen=false;else if(indoors||Math.hypot(px-forgeX,py-(forgeY+77))<65||Math.hypot(px-homeX,py-(homeY+66))<65)enterOrLeave();else if(Math.hypot(px-merchantX,py-merchantY)<100)openShop();else pickup();break;
+    case KeyEvent.KEYCODE_E:if(shopOpen)shopOpen=false;else if(indoors||Math.hypot(px-forgeX,py-(forgeY+84))<65||Math.hypot(px-homeX,py-(homeY+84))<65)enterOrLeave();else if(Math.hypot(px-merchantX,py-merchantY)<100)openShop();else pickup();break;
     case KeyEvent.KEYCODE_I:if(shopOpen)shopOpen=false;else inventoryOpen=!inventoryOpen;hoverSlot=-1;break;
     case KeyEvent.KEYCODE_1:useHotbar(0);break;
     case KeyEvent.KEYCODE_2:useHotbar(1);break;
