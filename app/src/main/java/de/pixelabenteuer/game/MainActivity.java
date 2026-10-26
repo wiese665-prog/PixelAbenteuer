@@ -47,10 +47,11 @@ public class MainActivity extends Activity {
    for(int i=0;i<28;i++){float x=80+random.nextInt(1440),y=80+random.nextInt(840);if(!blocked(x,y)&&Math.hypot(x-merchantX,y-merchantY)>110)mobs.add(new Mob(animals[i%4],x,y));}
    for(int i=0;i<18;i++){float x=380+random.nextInt(1100),y=80+random.nextInt(840);if(!blocked(x,y)&&Math.hypot(x-merchantX,y-merchantY)>110)mobs.add(new Mob("orc"+(1+i%3),x,y));}
   }
-  final ArrayList<Bitmap[]> cloudAnimations=new ArrayList<>();
+  final ArrayList<Bitmap[]>[] cloudAnimations=new ArrayList[]{new ArrayList<Bitmap[]>(),new ArrayList<Bitmap[]>(),new ArrayList<Bitmap[]>()};
   void loadClouds(){
    String[] families={"Cloud","Cloud1","Cloud2"};
-   for(String family:families)for(int shape=2;shape<=5;shape++){
+   for(int familyIndex=0;familyIndex<families.length;familyIndex++)for(int shape=2;shape<=5;shape++){
+    String family=families[familyIndex];
     Bitmap[] frames=new Bitmap[5];boolean valid=true;
     for(int f=1;f<=5;f++){
      String file="sprites/"+family+"Shape"+shape+"/cloud_shape"+shape+"_"+f+".png";
@@ -58,24 +59,29 @@ public class MainActivity extends Activity {
      catch(Exception ex){valid=false;break;}
      if(frames[f-1]==null){valid=false;break;}
     }
-    if(valid)cloudAnimations.add(frames);
+    if(valid)cloudAnimations[familyIndex].add(frames);
    }
   }
   void drawClouds(float vw,float vh){
-   if(cloudAnimations.isEmpty())return;
+   if(cloudAnimations[0].isEmpty()&&cloudAnimations[1].isEmpty()&&cloudAnimations[2].isEmpty())return;
    float phase=(worldTime%240f)/240f;
    float night=(float)Math.max(0,Math.min(1,(-Math.cos(phase*6.2831853f)-.10f)/.85f));
-   int alpha=(int)(175-night*100);
+   int alpha=(int)(175-night*65);
    // Screen-space cloud shadows drift across the landscape independently of the camera.
    for(int i=0;i<11;i++){
-    Bitmap[] frames=cloudAnimations.get(i%cloudAnimations.size());
+    // Day: white Cloud + grey Cloud2. Night: black Cloud1 + grey Cloud2.
+    // Fade the changing family smoothly at sunrise and sunset.
+    int family=(i%2==0)?2:(night>=.5f?1:0);
+    float familyOpacity=(i%2==0)?1f:(night>=.5f?night:1f-night);
+    if(cloudAnimations[family].isEmpty())continue;
+    Bitmap[] frames=cloudAnimations[family].get((i/2)%cloudAnimations[family].size());
     int frame=(int)(worldTime*.9f+i*2)%frames.length;
     Bitmap cloud=frames[frame];if(cloud==null)continue;
     float width=100+(i%4)*35,height=width*cloud.getHeight()/Math.max(1f,cloud.getWidth());
     height=Math.min(95,height);
     float x=((i*173+worldTime*(8+i%3*3))%(vw+width*2))-width;
     float y=38+(i*79)%(int)Math.max(70,vh-95);
-    paint.setColor(Color.WHITE);paint.setAlpha(alpha);paint.setColorFilter(null);
+    paint.setColor(Color.WHITE);paint.setAlpha((int)(alpha*familyOpacity));paint.setColorFilter(null);
     canvas.drawBitmap(cloud,null,new RectF(x,y,x+width,y+height),paint);
    }
    paint.setAlpha(255);
