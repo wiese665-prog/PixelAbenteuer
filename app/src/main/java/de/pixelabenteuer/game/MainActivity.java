@@ -45,7 +45,7 @@ public class MainActivity extends Activity {
   void spawnMobs(){
    String[] animals={"boar","fox","deer","black_grouse"};
    for(int i=0;i<28;i++){float x=80+random.nextInt(1440),y=80+random.nextInt(840);if(!blocked(x,y)&&!safeZone(x,y)&&Math.hypot(x-merchantX,y-merchantY)>110)mobs.add(new Mob(animals[i%4],x,y));}
-   for(int i=0;i<18;i++){float x=380+random.nextInt(1100),y=80+random.nextInt(840);if(!blocked(x,y)&&Math.hypot(x-merchantX,y-merchantY)>110)mobs.add(new Mob("orc"+(1+i%3),x,y));}
+   for(int i=0;i<18;i++){float x=380+random.nextInt(1100),y=80+random.nextInt(840);if(!blocked(x,y)&&!safeZone(x,y)&&Math.hypot(x-merchantX,y-merchantY)>110)mobs.add(new Mob("orc"+(1+i%3),x,y));}
   }
   final ArrayList<Bitmap[]>[] cloudAnimations=new ArrayList[]{new ArrayList<Bitmap[]>(),new ArrayList<Bitmap[]>(),new ArrayList<Bitmap[]>()};
   void loadClouds(){
@@ -87,6 +87,7 @@ public class MainActivity extends Activity {
     boolean overPlayer=x<playerLeft+56&&x+width>playerLeft&&y<playerTop+88&&y+height>playerTop;
     float overlapOpacity=overPlayer?.20f:1f; // 80% more transparent on contact.
     paint.setColor(Color.WHITE);paint.setAlpha((int)(alpha*familyOpacity*overlapOpacity));paint.setColorFilter(null);
+    if(!indoors&&Math.hypot(px-forgeX,py-(forgeY+85))<160)paint.setAlpha(Math.round(paint.getAlpha()*.30f));
     canvas.drawBitmap(cloud,null,new RectF(x,y,x+width,y+height),paint);
    }
    paint.setAlpha(255);
@@ -94,7 +95,7 @@ public class MainActivity extends Activity {
   final HashMap<String,Bitmap> buildingSprites=new HashMap<>();
   boolean indoors=false;int currentHouse=0;
   final float forgeX=550,forgeY=300,homeX=300,homeY=500;
-  boolean safeZone(float x,float y){return Math.hypot(x-forgeX,y-forgeY)<235;}
+  boolean safeZone(float x,float y){return Math.hypot(x-forgeX,y-forgeY)<340;}
   void loadBuildings(){
    for(String name:new String[]{"Exterior_house","Walls_interior","Walls_street","Interior_objects","Doors_windows_animations","Decorative_cracks","Forge","Light_animation","Master_Idle","Master","Seller","Customer"}){
     try(InputStream in=getAssets().open("sprites/"+name+".png")){
@@ -132,8 +133,8 @@ public class MainActivity extends Activity {
    // The facade is a complete single sprite in x=0..145, y=0..162.
    tile("Exterior_house",0,0,145,163,x-116,y-140,232,261);
    // The loose props are separate cells on the bottom of the same atlas.
-   tile("Exterior_house",64,165,39,42,x-117,y+113,66,55); // crates
-   tile("Exterior_house",108,164,46,43,x+97,y+66,72,60); // complete cart
+   tile("Exterior_house",70,162,32,38,x-117,y+113,66,69); // crates
+   tile("Exterior_house",116,160,34,34,x+97,y+66,76,76); // complete cart
    paint.setColor(col("#fff0ce"));paint.setTextAlign(Paint.Align.CENTER);paint.setTextSize(13);
    canvas.drawText("SCHMIEDE",x,y-150,paint);paint.setTextAlign(Paint.Align.LEFT);
   }
@@ -146,22 +147,22 @@ public class MainActivity extends Activity {
   void drawInterior(float vw,float vh){
    float l=vw/2-340,t=vh/2-176;
    drawRect(col("#18141a"),0,0,vw,vh);
-   // Real gray stone tile from the Walls_interior atlas, left workshop.
+   // Gray square paving from the dedicated right-hand tile strip of Walls_interior.
    for(int iy=0;iy<18;iy++)for(int ix=0;ix<20;ix++)
-    tile("Walls_interior",15,65,16,16,l+16+ix*16,t+52+iy*16,16,16);
+    tile("Walls_interior",240,128,16,16,l+16+ix*16,t+52+iy*16,16,16);
    // Keep the approved wooden sales floor.
    for(int iy=0;iy<18;iy++)for(int ix=0;ix<20;ix++)
     tile("Walls_interior",145,21,12,12,l+340+ix*16,t+52+iy*16,16,16);
    // Original wall blocks at their native proportions; no stretched long strip.
    for(int ix=0;ix<14;ix++)
-    tile("Walls_interior",49+(ix%3)*32,0,32,48,l+16+ix*46,t,46,70);
+    tile("Walls_interior",48+(ix%2)*32,0,32,32,l+16+ix*46,t,46,70);
    for(int iy=0;iy<6;iy++){
-    tile("Walls_interior",49,0,32,48,l,t+67+iy*44,26,44);
-    tile("Walls_interior",81,0,32,48,l+654,t+67+iy*44,26,44);
+    tile("Walls_interior",0,128,32,42,l,t+67+iy*44,31,44);
+    tile("Walls_interior",193,128,32,42,l+649,t+67+iy*44,31,44);
    }
    // Divider: two original stone piers with a broad passable gap.
-   tile("Walls_interior",49,0,32,48,l+312,t+69,28,109);
-   tile("Walls_interior",49,0,32,48,l+312,t+272,28,65);
+   tile("Walls_interior",0,128,32,42,l+312,t+69,28,109);
+   tile("Walls_interior",0,128,32,42,l+312,t+272,28,65);
    // Forge: show one complete furnace cell, not half an animation sheet.
    Bitmap furnace=buildingSprites.get("Forge");
    if(furnace!=null){
@@ -169,20 +170,20 @@ public class MainActivity extends Activity {
     tile("Forge",0,0,fw,fh,l+94,t+73,104,111);
    }
    // One complete original ore crate, no clipped fragments at entrance.
-   tile("Interior_objects",168,200,37,39,l+217,t+111,54,56);
+   tile("Interior_objects",174,200,34,40,l+217,t+111,54,56);
    // Two complete rear display shelves and one dragon picture.
-   tile("Interior_objects",10,100,36,61,l+356,t+76,90,111);
-   tile("Interior_objects",111,100,35,61,l+556,t+76,90,111);
-   tile("Interior_objects",84,261,89,39,l+451,t+82,106,59);
+   tile("Interior_objects",13,127,33,52,l+356,t+76,90,111);
+   tile("Interior_objects",113,127,33,52,l+556,t+76,90,111);
+   tile("Interior_objects",114,257,59,49,l+451,t+82,106,59);
    // Two separate COMPLETE purple rugs (source x=6..60, y=397..421).
-   tile("Interior_objects",6,397,54,25,l+415,t+156,205,72);
-   tile("Interior_objects",6,397,54,25,l+415,t+256,205,72);
+   tile("Interior_objects",1,388,58,34,l+415,t+156,205,72);
+   tile("Interior_objects",1,388,58,34,l+415,t+256,205,72);
    // The complete counter with its decorative vases, cropped as one object.
-   tile("Interior_objects",15,10,162,19,l+345,t+212,310,43);
+   tile("Interior_objects",16,9,160,21,l+345,t+212,310,43);
    // The seller is drawn only once, using a single stable pose.
    characterTile("Master_Idle",3,2,(int)(elapsed*2)%3,l+236,t+175,71);
-   characterTile("Seller",3,2,0,l+497,t+198,68);
-   characterTile("Customer",3,2,0,l+507,t+288,49);
+   characterTile("Seller",3,2,0,l+497,t+198,78);
+   characterTile("Customer",3,2,0,l+507,t+288,68);
    float cx=l+340+(px-400),cy=t+176+(py-350);
    drawSprite(sword?"player_sword":"player_unarmed","idle",playerDir,cx,cy,94,94,elapsed,false);
    paint.setColor(col("#fff2d5"));paint.setTextSize(13);
@@ -673,7 +674,7 @@ public class MainActivity extends Activity {
     float distance=(float)Math.hypot(px-m.x,py-m.y);
     float vx=0,vy=0;String action="idle";
     if(m.hurtTimer>0){action="hurt";}
-    else if(m.hostile()&&distance<285){
+    else if(m.hostile()&&distance<285&&!safeZone(m.x,m.y)&&!safeZone(px,py)){
      m.dir=direction(px-m.x,py-m.y);
      if(distance>43){vx=(px-m.x)/Math.max(1,distance)*75;vy=(py-m.y)/Math.max(1,distance)*75;action="run";}
      else {action="attack";if(m.attackTimer<=0){int dealt=Math.max(1,m.damage);hp=Math.max(0,hp-Math.max(1,dealt-armorValue()));lastPlayerDamage=dealt;playerDamageTime=.9f;hurtAnim=.32f;playerHealthVisible=3f;m.attackTimer=1.3f;}}
@@ -692,8 +693,8 @@ public class MainActivity extends Activity {
      float step=dt/3f;
      for(int sub=0;sub<3;sub++){
       float nx=m.x+vx*step,ny=m.y+vy*step;
-      if(!blocked(nx,m.y))m.x=nx;else m.decision=0;
-      if(!blocked(m.x,ny))m.y=ny;else m.decision=0;
+      if(!blocked(nx,m.y)&&(!m.hostile()||!safeZone(nx,m.y)))m.x=nx;else m.decision=0;
+      if(!blocked(m.x,ny)&&(!m.hostile()||!safeZone(m.x,ny)))m.y=ny;else m.decision=0;
      }
      m.dir=direction(vx,vy);
     }
