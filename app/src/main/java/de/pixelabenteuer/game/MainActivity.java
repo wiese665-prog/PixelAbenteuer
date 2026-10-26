@@ -141,7 +141,7 @@ public class MainActivity extends Activity {
      maxX=Math.max(maxX,xx);maxY=Math.max(maxY,yy);
     }
    if(maxX>=minX&&maxY>=minY){
-    float h=56,w=Math.min(42,h*(maxX-minX+1)/(float)(maxY-minY+1));
+    float h=49,w=Math.min(38,h*(maxX-minX+1)/(float)(maxY-minY+1));
     tile("Seller",sx+minX,sy+minY,maxX-minX+1,maxY-minY+1,x-w/2,y-h,w,h);
    }
   }
@@ -150,15 +150,15 @@ public class MainActivity extends Activity {
    // The facade is a complete single sprite in x=0..145, y=0..162.
    tile("Exterior_house",0,0,145,163,x-116,y-140,232,261);
    // The loose props are separate cells on the bottom of the same atlas.
-   tile("Exterior_house",70,162,32,38,x-117,y+113,66,69); // crates
-   tile("Exterior_house",116,160,34,34,x+97,y+66,76,76); // complete cart
+   tile("Exterior_house",70,162,32,38,x-117,y+113,53,55); // crates
+   tile("Exterior_house",116,160,34,34,x+97,y+66,61,61); // complete cart
    paint.setColor(col("#fff0ce"));paint.setTextAlign(Paint.Align.CENTER);paint.setTextSize(13);
    canvas.drawText("SCHMIEDE",x,y-150,paint);paint.setTextAlign(Paint.Align.LEFT);
   }
   void enterOrLeave(){
    if(indoors){indoors=false;px=forgeX;py=forgeY+141;joyX=joyY=0;return;}
-   if(Math.abs(px-forgeX)<30&&py>forgeY+36&&py<forgeY+115){
-    indoors=true;currentHouse=1;px=400;py=425;joyX=joyY=0;
+   if(Math.abs(px-(forgeX+7))<25&&py>forgeY+68&&py<forgeY+130){
+    indoors=true;currentHouse=1;px=555;py=452;joyX=joyY=0;
    }
   }
   void drawInterior(float vw,float vh){
@@ -179,7 +179,7 @@ public class MainActivity extends Activity {
    }
    // Divider: two original stone piers with a broad passable gap.
    tile("Walls_interior",16,128,32,42,l+312,t+69,28,109);
-   tile("Walls_interior",16,128,32,42,l+312,t+272,28,65);
+   tile("Walls_interior",16,128,32,42,l+312,t+295,28,42);
    // Forge: show one complete furnace cell, not half an animation sheet.
    Bitmap furnace=buildingSprites.get("Forge");
    if(furnace!=null){
@@ -189,17 +189,20 @@ public class MainActivity extends Activity {
    // One complete original ore crate, no clipped fragments at entrance.
    
    // Two complete rear display shelves and one dragon picture.
-   tile("Interior_objects",13,128,34,51,l+369,t+87,70,87);
-   tile("Interior_objects",114,128,34,51,l+569,t+87,70,87);
+   tile("Interior_objects",13,128,34,51,l+378,t+92,59,76);
+   tile("Interior_objects",112,127,42,54,l+567,t+92,64,78);
    tile("Interior_objects",114,257,59,49,l+451,t+82,106,59);
    // Two separate COMPLETE purple rugs (source x=6..60, y=397..421).
    tile("Interior_objects",0,385,59,40,l+415,t+156,205,72);
    tile("Interior_objects",70,385,55,40,l+415,t+256,205,72);
    // The complete counter with its decorative vases, cropped as one object.
    tile("Interior_objects",16,0,160,27,l+345,t+212,310,49);
+   // Two complete decorative original sprites at the bottom of the forge.
+   tile("Interior_objects",7,328,42,49,l+71,t+270,56,58);
+   tile("Interior_objects",111,328,42,49,l+213,t+270,56,58);
    // The seller is drawn only once, using a single stable pose.
    characterTile("Master_Idle",3,2,(int)(elapsed*2)%3,l+236,t+175,77);
-   sellerPortrait(l+497,t+198);
+   sellerPortrait(l+497,t+217);
    characterTile("Customer",3,2,0,l+507,t+288,52);
    float cx=l+340+(px-400),cy=t+176+(py-350);
    drawSprite(sword?"player_sword":"player_unarmed","idle",playerDir,cx,cy,94,94,elapsed,false);
@@ -257,7 +260,7 @@ public class MainActivity extends Activity {
    if(x<18||y<18||x>WORLD_W-18||y>WORLD_H-18)return true;
    for(Decoration d:decorations)if(d.solid&&Math.hypot(d.x-forgeX,d.y-forgeY)>185&&collides(d,x,y))return true;
    float dx=x-forgeX,dy=y-forgeY;
-   if(Math.abs(dx)<110&&dy>-63&&dy<65&&!(Math.abs(dx)<25&&dy>37))return true;
+   if(Math.abs(dx)<110&&dy>-63&&dy<65&&!(Math.abs(dx-7)<25&&dy>37))return true;
    if(dx>-122&&dx<-66&&dy>111&&dy<168)return true;
    if(dx>-7&&dx<17&&dy>84&&dy<115)return true;
    if(dx>12&&dx<44&&dy>79&&dy<110)return true;
@@ -669,7 +672,7 @@ public class MainActivity extends Activity {
     float ny=Math.max(205,Math.min(492,py+my*140*dt));
     // Partition occupies x=375..402 in interior player coordinates.
     // The middle opening (y=354..444) is deliberately passable.
-    if(!((nx>=375&&nx<=402)&&(ny<354||ny>444)))px=nx;
+    if(!((nx>=375&&nx<=402)&&(ny<354||ny>467)))px=nx;
     py=ny;
     if(py>482&&Math.abs(px-400)<45&&my>0)enterOrLeave();
     return;
@@ -681,7 +684,7 @@ public class MainActivity extends Activity {
      float nx=px+mx*step,ny=py+my*step;
      if(!blocked(nx,py))px=nx;
      if(!blocked(px,ny))py=ny;
-     if(Math.abs(px-forgeX)<26&&py>forgeY+38&&py<forgeY+91&&my<0){enterOrLeave();break;}
+     if(Math.abs(px-(forgeX+7))<26&&py>forgeY+68&&py<forgeY+130&&my<0){enterOrLeave();break;}
     }
    }
    if(indoors)return;
