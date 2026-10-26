@@ -33,7 +33,7 @@ public class MainActivity extends Activity {
   Canvas canvas;Paint paint=new Paint();Random random=new Random(42);
   ArrayList<Mob> mobs=new ArrayList<>();ArrayList<Decoration> decorations=new ArrayList<>();ArrayList<Drop> drops=new ArrayList<>();LinkedHashMap<String,Integer> inventory=new LinkedHashMap<>();HashMap<String,Bitmap> itemImages=new HashMap<>();
   HashMap<String,Item> definitions=new HashMap<>();HashMap<String,String> equipped=new HashMap<>();
-  String[] hotbar=new String[5];int copper=0,silver=0,gold=0,hoverSlot=-1;float hoverX=0,hoverY=0;
+  String[] hotbar=new String[5];int selectedHotbar=-1;int copper=0,silver=0,gold=0,hoverSlot=-1;float hoverX=0,hoverY=0;
   boolean inventoryOpen=false,shopOpen=false,startScreen=true,pauseMenu=false;float merchantX=265,merchantY=215;
   String[] shopStock={"Apple","Ham","Healthpotion","Healpotion med","Iron Sword","Silver Sword","Leather Armor","Iron Armor","Iron Helmet","Golden Sword"};
   String pickupNotice="";float noticeTime=0;
@@ -179,7 +179,7 @@ public class MainActivity extends Activity {
     pickupNotice=name+" gekauft";
    }else{if(inventory.getOrDefault(name,0)<1)return;
     inventory.put(name,inventory.get(name)-1);if(inventory.get(name)<=0)inventory.remove(name);
-    setWealth(wealth()+Math.max(1,cost/2));pickupNotice=name+" verkauft";
+    setWealth(wealth()+Math.max(1,cost/2));cleanupHotbar();pickupNotice=name+" verkauft";
    }
    noticeTime=2;
   }
@@ -193,12 +193,28 @@ public class MainActivity extends Activity {
    Item weapon=definitions.get(equipped.get("Waffe"));if(weapon!=null)attackPower+=weapon.dmg;
    for(String name:equipped.values()){Item i=definitions.get(name);if(i!=null&&!i.slot.equals("Waffe"))attackPower+=i.dmg;}
   }
+  void cleanupHotbar(){
+   for(int i=0;i<hotbar.length;i++)if(hotbar[i]!=null&&inventory.getOrDefault(hotbar[i],0)<=0)hotbar[i]=null;
+  }
+  void assignHotbar(String name){
+   Item item=definitions.get(name);if(item==null||item.heal<=0||inventory.getOrDefault(name,0)<=0)return;
+   int slot=selectedHotbar;
+   if(slot<0){for(int i=0;i<hotbar.length;i++)if(name.equals(hotbar[i])){slot=i;break;}}
+   if(slot<0){for(int i=0;i<hotbar.length;i++)if(hotbar[i]==null){slot=i;break;}}
+   if(slot<0)slot=0;
+   hotbar[slot]=name;selectedHotbar=-1;pickupNotice=name+" auf Hotbar "+(slot+1);noticeTime=2f;
+  }
+  int hotbarIndexAt(float x,float y,float vw,float vh){
+   float dx=x-(vw/2-130),dy=y-(vh-55);
+   if(dx<0||dy<0||dy>50||dx>=265)return -1;
+   int slot=(int)(dx/53);return dx%53<50?slot:-1;
+  }
   void equip(String name){
    Item item=definitions.get(name);if(item==null||!item.equipment()||inventory.getOrDefault(name,0)<=0)return;
    String old=equipped.get(item.slot);if(name.equals(old))return;
    inventory.put(name,inventory.get(name)-1);if(inventory.get(name)<=0)inventory.remove(name);
    if(old!=null)inventory.put(old,inventory.getOrDefault(old,0)+1);
-   equipped.put(item.slot,name);recalcStats();
+   equipped.put(item.slot,name);cleanupHotbar();recalcStats();
    pickupNotice=name+" angelegt";noticeTime=2f;
   }
   void unequip(String slot){
@@ -217,6 +233,7 @@ public class MainActivity extends Activity {
    if(item==null||item.heal<=0||inventory.getOrDefault(name,0)<=0||hp<=0||hp>=maxHp)return;
    hp=Math.min(maxHp,hp+item.heal);inventory.put(name,inventory.get(name)-1);
    if(inventory.get(name)<=0)inventory.remove(name);
+   cleanupHotbar();
    pickupNotice="+"+item.heal+" HP";noticeTime=1.6f;playerHealthVisible=3f;
   }
   void useHotbar(int index){if(index>=0&&index<hotbar.length&&hotbar[index]!=null)useItem(hotbar[index]);}
@@ -286,7 +303,7 @@ public class MainActivity extends Activity {
    panel(left,top,750,402);
    paint.setTypeface(Typeface.DEFAULT_BOLD);paint.setColor(col("#f3d7a1"));paint.setTextSize(22);
    canvas.drawText("ABENTEURER  /  INVENTAR",left+18,top+30,paint);
-   paint.setTextSize(11);paint.setColor(col("#9fc2c0"));canvas.drawText("I schliessen  |  Klick anlegen / Hotbar",left+18,top+48,paint);
+   paint.setTextSize(11);paint.setColor(col("#9fc2c0"));canvas.drawText("Hotbar anklicken: Platz waehlen / leeren  |  Item anklicken: zuweisen",left+18,top+48,paint);
    panel(left+14,top+65,285,313);
    paint.setTextSize(14);paint.setColor(col("#f5d7a5"));canvas.drawText("CHARAKTER",left+28,top+87,paint);
    drawRect(col("#1b302e"),left+82,top+115,140,171);
@@ -396,7 +413,7 @@ public class MainActivity extends Activity {
     gold=root.getInt("gold");silver=root.getInt("silver");copper=root.getInt("copper");kills=root.optInt("kills");animalKills=root.optInt("animalKills");
     inventory.clear();org.json.JSONObject bag=root.getJSONObject("inventory");java.util.Iterator<String> keys=bag.keys();while(keys.hasNext()){String k=keys.next();inventory.put(k,bag.getInt(k));}
     equipped.clear();org.json.JSONObject gear=root.getJSONObject("equipped");keys=gear.keys();while(keys.hasNext()){String k=keys.next();equipped.put(k,gear.getString(k));}
-    java.util.Arrays.fill(hotbar,null);org.json.JSONArray bar=root.getJSONArray("hotbar");for(int i=0;i<Math.min(5,bar.length());i++)if(!bar.isNull(i))hotbar[i]=bar.getString(i);
+    java.util.Arrays.fill(hotbar,null);selectedHotbar=-1;org.json.JSONArray bar=root.getJSONArray("hotbar");for(int i=0;i<Math.min(5,bar.length());i++)if(!bar.isNull(i))hotbar[i]=bar.getString(i);
     recalcStats();hp=Math.min(maxHp,root.getInt("hp"));
     mobs.clear();org.json.JSONArray enemies=root.getJSONArray("mobs");for(int i=0;i<enemies.length();i++){org.json.JSONObject o=enemies.getJSONObject(i);
      Mob m=new Mob(o.getString("kind"),(float)o.getDouble("x"),(float)o.getDouble("y"));m.hp=o.getInt("hp");m.maxHp=o.getInt("maxHp");m.level=o.getInt("level");m.damage=o.getInt("damage");m.dead=o.getBoolean("dead");mobs.add(m);}
@@ -437,7 +454,7 @@ public class MainActivity extends Activity {
   void drawHotbar(float vw,float vh){
    for(int i=0;i<5;i++){
     float x=vw/2-128+i*53,y=vh-53;
-    drawRect(col("#141c23"),x-2,y-2,50,48);drawRect(col("#4d5b62"),x,y,46,44);
+    drawRect(inventoryOpen&&selectedHotbar==i?col("#f0ca78"):col("#141c23"),x-2,y-2,50,48);drawRect(col("#4d5b62"),x,y,46,44);
     if(hotbar[i]!=null)itemIcon(hotbar[i],x+7,y+2,1.3f);
     paint.setColor(Color.WHITE);paint.setTextSize(12);canvas.drawText(""+(i+1),x+3,y+41,paint);
     if(hotbar[i]!=null){paint.setTextSize(11);canvas.drawText(""+inventory.getOrDefault(hotbar[i],0),x+32,y+41,paint);}
@@ -522,7 +539,7 @@ public class MainActivity extends Activity {
    }
   }
   void restart(){
-   playerLevel=1;exp=0;attackPower=3;maxHp=12;hp=maxHp;equipped.clear();copper=silver=gold=0;java.util.Arrays.fill(hotbar,null);playerDamageTime=0;px=180;py=180;joyX=joyY=0;deathAnim=0;swordTimer=0;sword=false;attackAnim=0;playerHealthVisible=0;kills=animalKills=0;mobs.clear();drops.clear();inventory.clear();inventoryOpen=false;shopOpen=false;pauseMenu=false;spawnMobs();
+   playerLevel=1;exp=0;attackPower=3;maxHp=12;hp=maxHp;equipped.clear();copper=silver=gold=0;java.util.Arrays.fill(hotbar,null);selectedHotbar=-1;playerDamageTime=0;px=180;py=180;joyX=joyY=0;deathAnim=0;swordTimer=0;sword=false;attackAnim=0;playerHealthVisible=0;kills=animalKills=0;mobs.clear();drops.clear();inventory.clear();inventoryOpen=false;shopOpen=false;pauseMenu=false;spawnMobs();
   }
   @Override protected void onDraw(Canvas c){
    canvas=c;float dt=Math.min(.05f,(System.nanoTime()-previous)/1000000000f);previous=System.nanoTime();update(dt);
@@ -612,8 +629,10 @@ public class MainActivity extends Activity {
      return true;
     }
     if(inventoryOpen){float sc=Math.min(getWidth()/800f,getHeight()/450f),xx=e.getX()/sc,yy=e.getY()/sc,vw=getWidth()/sc,vh=getHeight()/sc;
+     int barSlot=hotbarIndexAt(xx,yy,vw,vh);
+     if(barSlot>=0){if(selectedHotbar==barSlot){hotbar[barSlot]=null;selectedHotbar=-1;}else selectedHotbar=barSlot;return true;}
      int equippedIndex=equippedSlotAt(xx,yy,vw,vh);if(equippedIndex>=0){unequip(new String[]{"Kopf","Waffe","Brust","Fuesse","Guertel"}[equippedIndex]);return true;}
-     int idx=inventoryIndex(xx,yy,vw,vh);if(idx>=0){String[] names=inventoryNames();if(idx<names.length){String name=names[idx];Item item=definitions.get(name);if(item!=null){if(item.equipment())equip(name);else if(item.heal>0){int slot=0;while(slot<4&&hotbar[slot]!=null)slot++;hotbar[slot]=name;pickupNotice=name+" auf Hotbar "+(slot+1);noticeTime=2f;}}}}return true;}
+     int idx=inventoryIndex(xx,yy,vw,vh);if(idx>=0){String[] names=inventoryNames();if(idx<names.length){String name=names[idx];Item item=definitions.get(name);if(item!=null){if(item.equipment())equip(name);else if(item.heal>0)assignHotbar(name);}}}return true;}
     if(hp<=0){restart();return true;}
     // In BlueStacks, a left mouse click arrives as a primary mouse/touch press.
     if((e.getSource()&InputDevice.SOURCE_MOUSE)==InputDevice.SOURCE_MOUSE){
