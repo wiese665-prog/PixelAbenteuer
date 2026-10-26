@@ -184,8 +184,23 @@ public class MainActivity extends Activity {
    // Forge: show one complete furnace cell, not half an animation sheet.
    Bitmap furnace=buildingSprites.get("Forge");
    if(furnace!=null){
-    int fw=Math.max(1,furnace.getWidth()/2),fh=Math.max(1,furnace.getHeight()/3);
-    tile("Forge",0,0,fw,fh,l+75,t+40,114,122);
+    // Forge.png is a 128x192 sheet of six 64x64 frames.
+    // Crop exactly one frame, trimming transparent margins without crossing
+    // into adjacent frames or cutting off any opaque furnace pixels.
+    int fw=Math.min(64,furnace.getWidth()),fh=Math.min(64,furnace.getHeight());
+    int left=fw,top=fh,right=-1,bottom=-1;
+    for(int fy=0;fy<fh;fy++)for(int fx=0;fx<fw;fx++){
+     if(Color.alpha(furnace.getPixel(fx,fy))>0){
+      left=Math.min(left,fx);top=Math.min(top,fy);
+      right=Math.max(right,fx);bottom=Math.max(bottom,fy);
+     }
+    }
+    if(right>=left&&bottom>=top){
+     int cw=right-left+1,ch=bottom-top+1;
+     float scale=Math.min(114f/cw,122f/ch);
+     float dw=cw*scale,dh=ch*scale;
+     tile("Forge",left,top,cw,ch,l+75+(114-dw)/2,t+40+(122-dh),dw,dh);
+    }
    }
    // One complete original ore crate, no clipped fragments at entrance.
    
