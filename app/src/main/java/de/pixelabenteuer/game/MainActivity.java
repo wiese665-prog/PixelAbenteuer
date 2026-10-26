@@ -24,8 +24,8 @@ public class MainActivity extends Activity {
  }
  class Drop {String item;float x,y,bob;Drop(String i,float xx,float yy,float t){item=i;x=xx;y=yy;bob=t;}}
  class Item {
-  String name,rarity,slot;int dmg,armor,hp,heal;
-  Item(String n,String rar,String sl,int d,int a,int h,int healing){name=n;rarity=rar;slot=sl;dmg=d;armor=a;hp=h;heal=healing;}
+  String name,rarity,slot;int dmg,armor,hp,heal,mana;
+  Item(String n,String rar,String sl,int d,int a,int h,int healing){name=n;rarity=rar;slot=sl;dmg=d;armor=a;hp=h;heal=healing;mana=0;}
   boolean equipment(){return !slot.equals("");}
  }
  class Game extends View {
@@ -38,7 +38,7 @@ public class MainActivity extends Activity {
   String[] shopStock={"Apple","Ham","Healthpotion","Healpotion med","Iron Sword","Silver Sword","Leather Armor","Iron Armor","Iron Helmet","Golden Sword"};
   String pickupNotice="";float noticeTime=0;
   HashMap<String,Bitmap> sprites=new HashMap<>();
-  float px=180,py=180,joyX=0,joyY=0,elapsed=0,attackAnim=0,hurtAnim=0,deathAnim=0,attackCooldown=0,playerHealthVisible=0;
+  float px=180,py=180,joyX=0,joyY=0,elapsed=0,worldTime=0,attackAnim=0,hurtAnim=0,deathAnim=0,attackCooldown=0,playerHealthVisible=0;
   int hp=12,maxHp=12,kills=0,animalKills=0,playerDir=0,playerLevel=1,exp=0,attackPower=3,lastPlayerDamage=0;float playerDamageTime=0;float swordTimer=0;boolean sword=false;
   long previous=System.nanoTime();
   Game(){super(MainActivity.this);setFocusable(true);setFocusableInTouchMode(true);paint.setFilterBitmap(false);loadSprites();loadItems();loadDecorations();spawnMobs();}
@@ -157,6 +157,7 @@ public class MainActivity extends Activity {
    define("Healthpotion","Uncommon","",0,0,0,10);
    define("Healpotion med","Rare","",0,0,0,20);
    define("Healthpotion large","Super Rare","",0,0,0,40);
+   setManaBonuses();
   }
   void itemIcon(String item,float x,float y,float scale){
    Bitmap b=itemImages.get(item);
@@ -178,7 +179,7 @@ public class MainActivity extends Activity {
     setWealth(wealth()-cost);inventory.put(name,inventory.getOrDefault(name,0)+1);
     pickupNotice=name+" gekauft";
    }else{if(inventory.getOrDefault(name,0)<1)return;
-    inventory.put(name,inventory.get(name)-1);if(inventory.get(name)<=0)inventory.remove(name);
+    int count=inventory.get(name)-1;if(count<=0)inventory.remove(name);else inventory.put(name,count);
     setWealth(wealth()+Math.max(1,cost/2));cleanupHotbar();pickupNotice=name+" verkauft";
    }
    noticeTime=2;
@@ -186,8 +187,17 @@ public class MainActivity extends Activity {
   void openShop(){if(Math.hypot(px-merchantX,py-merchantY)<100){shopOpen=true;inventoryOpen=false;hoverSlot=-1;}}
   int armorValue(){int total=0;for(String name:equipped.values()){Item i=definitions.get(name);if(i!=null)total+=i.armor;}return total;}
   int bonusHealth(){int total=0;for(String name:equipped.values()){Item i=definitions.get(name);if(i!=null)total+=i.hp;}return total;}
+  int maxMana=20,mana=20;
+  int bonusMana(){int total=0;for(String name:equipped.values()){Item i=definitions.get(name);if(i!=null)total+=i.mana;}return total;}
+  void setManaBonuses(){
+   definitions.get("Wizard Hat").mana=20;
+   definitions.get("Helm").mana=5;
+   definitions.get("Iron Helmet").mana=3;
+   definitions.get("Belt").mana=4;
+   definitions.get("Bag").mana=2;
+  }
   void recalcStats(){
-   int oldMax=maxHp;maxHp=12+(playerLevel-1)*4+bonusHealth();
+   int oldMax=maxHp,oldMana=maxMana;maxHp=12+(playerLevel-1)*4+bonusHealth();maxMana=20+(playerLevel-1)*2+bonusMana();mana=Math.min(maxMana,mana+Math.max(0,maxMana-oldMana));
    hp=Math.min(maxHp,hp+Math.max(0,maxHp-oldMax));
    attackPower=3+(playerLevel-1);
    Item weapon=definitions.get(equipped.get("Waffe"));if(weapon!=null)attackPower+=weapon.dmg;
@@ -214,7 +224,7 @@ public class MainActivity extends Activity {
    String old=equipped.get(item.slot);if(name.equals(old))return;
    inventory.put(name,inventory.get(name)-1);if(inventory.get(name)<=0)inventory.remove(name);
    if(old!=null)inventory.put(old,inventory.getOrDefault(old,0)+1);
-   equipped.put(item.slot,name);cleanupHotbar();recalcStats();
+   equipped.put(item.slot,name);cleanupHotbar();recalcStats();hoverSlot=-1;
    pickupNotice=name+" angelegt";noticeTime=2f;
   }
   void unequip(String slot){
@@ -300,7 +310,7 @@ public class MainActivity extends Activity {
   float invTop(float vh){return vh/2-204;}
   void drawInventory(float vw,float vh){
    float left=invLeft(vw),top=invTop(vh);
-   panel(left,top,750,402);
+   panel(left,top,750,402);drawRect(col("#c6a66c"),left+10,top+56,730,2);drawRect(col("#8c754d"),left+304,top+67,2,300);
    paint.setTypeface(Typeface.DEFAULT_BOLD);paint.setColor(col("#f3d7a1"));paint.setTextSize(22);
    canvas.drawText("ABENTEURER  /  INVENTAR",left+18,top+30,paint);
    paint.setTextSize(11);paint.setColor(col("#9fc2c0"));canvas.drawText("Hotbar anklicken: Platz waehlen / leeren  |  Item anklicken: zuweisen",left+18,top+48,paint);
@@ -318,8 +328,10 @@ public class MainActivity extends Activity {
     paint.setColor(name==null?col("#b7c1bf"):rarityColor(definitions.get(name).rarity));
     paint.setTextSize(9);canvas.drawText(slots[i],sx,sy-5,paint);
    }
-   paint.setColor(col("#e2c78f"));paint.setTextSize(11);
-   canvas.drawText("DMG "+attackPower+"   DEF "+armorValue(),left+30,top+358,paint);
+   drawRect(col("#121d24"),left+24,top+330,267,39);
+   paint.setColor(col("#e2c78f"));paint.setTextSize(12);
+   canvas.drawText("SCHADEN "+attackPower+"    RUESTUNG "+armorValue(),left+32,top+346,paint);
+   paint.setColor(col("#91c8ed"));canvas.drawText("HP "+hp+"/"+maxHp+"    MANA "+mana+"/"+maxMana,left+32,top+362,paint);
    panel(left+315,top+65,419,313);
    paint.setColor(col("#f1d5a5"));paint.setTextSize(14);canvas.drawText("RUCKSACK",left+330,top+87,paint);
    String[] names=inventoryNames();
@@ -350,11 +362,11 @@ public class MainActivity extends Activity {
    canvas.drawText("Slot: "+item.slot,tx+10,ty+63,paint);
    paint.setColor(col("#8ee4a0"));canvas.drawText("Schaden +"+item.dmg,tx+10,ty+83,paint);
    canvas.drawText("Verteidigung +"+item.armor,tx+10,ty+102,paint);
-   canvas.drawText("Max. HP +"+item.hp,tx+10,ty+121,paint);
+   canvas.drawText("Max. HP +"+item.hp+"     Mana +"+item.mana,tx+10,ty+121,paint);
   }
   void drawShop(float vw,float vh){
    float left=vw/2-365,top=vh/2-185;
-   panel(left,top,730,370);
+   panel(left,top,730,370);drawRect(col("#c5a36a"),left+365,top+48,2,302);
    paint.setColor(col("#f6dbab"));paint.setTypeface(Typeface.DEFAULT_BOLD);paint.setTextSize(21);
    canvas.drawText("ORK-HAENDLER",left+17,top+30,paint);
    paint.setTextSize(12);canvas.drawText("E / I schliessen   |   Klick: Kaufen / Verkaufen",left+302,top+28,paint);
@@ -375,6 +387,7 @@ public class MainActivity extends Activity {
      paint.setTextSize(10);paint.setColor(item!=null&&item.equipment()?rarityColor(item.rarity):col("#f1eee1"));
      String label=names[i];if(label.length()>13)label=label.substring(0,12)+".";
      canvas.drawText(label,x+38,y+20,paint);
+     if(side==1){paint.setColor(col("#ffffff"));paint.setTextSize(11);canvas.drawText("x"+inventory.getOrDefault(names[i],0),x+7,y+17,paint);}
      paint.setColor(col("#eac582"));paint.setTextSize(11);
      canvas.drawText((side==0?price(names[i]):Math.max(1,price(names[i])/2))+" Kupfer",x+38,y+40,paint);
     }
@@ -392,7 +405,7 @@ public class MainActivity extends Activity {
   void saveGame(){
    try{
     org.json.JSONObject root=new org.json.JSONObject();
-    root.put("px",px);root.put("py",py);root.put("hp",hp);root.put("level",playerLevel);root.put("exp",exp);
+    root.put("px",px);root.put("py",py);root.put("worldTime",worldTime);root.put("mana",mana);root.put("hp",hp);root.put("level",playerLevel);root.put("exp",exp);
     root.put("gold",gold);root.put("silver",silver);root.put("copper",copper);root.put("kills",kills);root.put("animalKills",animalKills);
     org.json.JSONObject bag=new org.json.JSONObject();for(String name:inventory.keySet())bag.put(name,inventory.get(name));root.put("inventory",bag);
     org.json.JSONObject gear=new org.json.JSONObject();for(String slot:equipped.keySet())gear.put(slot,equipped.get(slot));root.put("equipped",gear);
@@ -409,12 +422,12 @@ public class MainActivity extends Activity {
     String json=getContext().getSharedPreferences("pixel_save",MODE_PRIVATE).getString("save",null);
     if(json==null){pickupNotice="Kein Spielstand";noticeTime=3f;return;}
     org.json.JSONObject root=new org.json.JSONObject(json);
-    px=(float)root.getDouble("px");py=(float)root.getDouble("py");playerLevel=root.getInt("level");exp=root.getInt("exp");
+    px=(float)root.getDouble("px");py=(float)root.getDouble("py");worldTime=(float)root.optDouble("worldTime",0);playerLevel=root.getInt("level");exp=root.getInt("exp");
     gold=root.getInt("gold");silver=root.getInt("silver");copper=root.getInt("copper");kills=root.optInt("kills");animalKills=root.optInt("animalKills");
     inventory.clear();org.json.JSONObject bag=root.getJSONObject("inventory");java.util.Iterator<String> keys=bag.keys();while(keys.hasNext()){String k=keys.next();inventory.put(k,bag.getInt(k));}
     equipped.clear();org.json.JSONObject gear=root.getJSONObject("equipped");keys=gear.keys();while(keys.hasNext()){String k=keys.next();equipped.put(k,gear.getString(k));}
     java.util.Arrays.fill(hotbar,null);selectedHotbar=-1;org.json.JSONArray bar=root.getJSONArray("hotbar");for(int i=0;i<Math.min(5,bar.length());i++)if(!bar.isNull(i))hotbar[i]=bar.getString(i);
-    recalcStats();hp=Math.min(maxHp,root.getInt("hp"));
+    recalcStats();hp=Math.min(maxHp,root.getInt("hp"));mana=Math.min(maxMana,root.optInt("mana",maxMana));cleanupHotbar();
     mobs.clear();org.json.JSONArray enemies=root.getJSONArray("mobs");for(int i=0;i<enemies.length();i++){org.json.JSONObject o=enemies.getJSONObject(i);
      Mob m=new Mob(o.getString("kind"),(float)o.getDouble("x"),(float)o.getDouble("y"));m.hp=o.getInt("hp");m.maxHp=o.getInt("maxHp");m.level=o.getInt("level");m.damage=o.getInt("damage");m.dead=o.getBoolean("dead");mobs.add(m);}
     drops.clear();org.json.JSONArray ground=root.getJSONArray("drops");for(int i=0;i<ground.length();i++){org.json.JSONObject o=ground.getJSONObject(i);drops.add(new Drop(o.getString("item"),(float)o.getDouble("x"),(float)o.getDouble("y"),0));}
@@ -425,7 +438,7 @@ public class MainActivity extends Activity {
   void drawMenu(float vw,float vh){
    drawRect(col("#101820"),0,0,vw,vh);
    float left=vw/2-250,top=vh/2-208;
-   panel(left,top,500,416);
+   panel(left,top,500,416);drawRect(col("#c6a66c"),left+16,top+77,468,2);drawRect(col("#b38d54"),left+16,top+296,468,2);
    paint.setTypeface(Typeface.DEFAULT_BOLD);paint.setTextAlign(Paint.Align.CENTER);
    paint.setColor(col("#f2cf8b"));paint.setTextSize(30);canvas.drawText("PIXEL ABENTEUER",vw/2,top+47,paint);
    paint.setColor(col("#b6c8c2"));paint.setTextSize(13);
@@ -479,6 +492,7 @@ public class MainActivity extends Activity {
    canvas.drawBitmap(b,new Rect(frame*frameWidth,0,(frame+1)*frameWidth,b.getHeight()),new RectF(x-w/2,y-h/2,x+w/2,y+h/2),paint);
   }
   void update(float dt){
+   if(!startScreen&&!pauseMenu&&!inventoryOpen&&!shopOpen)worldTime+=dt;
    elapsed+=dt;noticeTime=Math.max(0,noticeTime-dt);swordTimer=Math.max(0,swordTimer-dt);sword=swordTimer>0;attackCooldown=Math.max(0,attackCooldown-dt);attackAnim=Math.max(0,attackAnim-dt);hurtAnim=Math.max(0,hurtAnim-dt);playerHealthVisible=Math.max(0,playerHealthVisible-dt);playerDamageTime=Math.max(0,playerDamageTime-dt);
    if(hp<=0){deathAnim+=dt;return;}if(inventoryOpen||shopOpen||pauseMenu||startScreen)return;
    float mx=joyX,my=joyY,length=(float)Math.hypot(mx,my);
@@ -565,6 +579,11 @@ public class MainActivity extends Activity {
    for(Drop d:drops){float bob=(float)Math.sin(elapsed*3+d.bob)*2;
     drawRect(col("#28342b"),d.x-11,d.y+7,22,5);itemIcon(d.item,d.x-10,d.y-15+bob,.82f);
    }
+   // Day-night tint on terrain and decorations, behind creatures and UI.
+   float phase=(worldTime%240f)/240f;
+   float night=(float)Math.max(0,Math.min(1,(-Math.cos(phase*6.2831853f)-.10f)/.85f));
+   paint.setColor(Color.argb((int)(night*105),13,21,52));paint.setStyle(Paint.Style.FILL);
+   c.drawRect(px-vw/2-8,py-vh/2-8,px+vw/2+8,py+vh/2+8,paint);
    for(Mob m:mobs){
     if(m.dead&&m.deathTimer>2.5f)continue;
     String action=m.dead?"death":m.hurtTimer>0?"hurt":m.action;
