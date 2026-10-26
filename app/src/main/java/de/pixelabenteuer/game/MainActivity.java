@@ -41,11 +41,44 @@ public class MainActivity extends Activity {
   float px=180,py=180,joyX=0,joyY=0,elapsed=0,worldTime=0,attackAnim=0,hurtAnim=0,deathAnim=0,attackCooldown=0,playerHealthVisible=0;
   int hp=12,maxHp=12,kills=0,animalKills=0,playerDir=0,playerLevel=1,exp=0,attackPower=3,lastPlayerDamage=0;float playerDamageTime=0;float swordTimer=0;boolean sword=false;
   long previous=System.nanoTime();
-  Game(){super(MainActivity.this);setFocusable(true);setFocusableInTouchMode(true);paint.setFilterBitmap(false);loadSprites();loadItems();loadDecorations();spawnMobs();}
+  Game(){super(MainActivity.this);setFocusable(true);setFocusableInTouchMode(true);paint.setFilterBitmap(false);loadSprites();loadClouds();loadItems();loadDecorations();spawnMobs();}
   void spawnMobs(){
    String[] animals={"boar","fox","deer","black_grouse"};
    for(int i=0;i<28;i++){float x=80+random.nextInt(1440),y=80+random.nextInt(840);if(!blocked(x,y)&&Math.hypot(x-merchantX,y-merchantY)>110)mobs.add(new Mob(animals[i%4],x,y));}
    for(int i=0;i<18;i++){float x=380+random.nextInt(1100),y=80+random.nextInt(840);if(!blocked(x,y)&&Math.hypot(x-merchantX,y-merchantY)>110)mobs.add(new Mob("orc"+(1+i%3),x,y));}
+  }
+  final ArrayList<Bitmap[]> cloudAnimations=new ArrayList<>();
+  void loadClouds(){
+   String[] families={"Cloud","Cloud1","Cloud2"};
+   for(String family:families)for(int shape=2;shape<=5;shape++){
+    Bitmap[] frames=new Bitmap[5];boolean valid=true;
+    for(int f=1;f<=5;f++){
+     String file="sprites/"+family+"Shape"+shape+"/cloud_shape"+shape+"_"+f+".png";
+     try(InputStream in=getAssets().open(file)){frames[f-1]=BitmapFactory.decodeStream(in);}
+     catch(Exception ex){valid=false;break;}
+     if(frames[f-1]==null){valid=false;break;}
+    }
+    if(valid)cloudAnimations.add(frames);
+   }
+  }
+  void drawClouds(float vw,float vh){
+   if(cloudAnimations.isEmpty())return;
+   float phase=(worldTime%240f)/240f;
+   float night=(float)Math.max(0,Math.min(1,(-Math.cos(phase*6.2831853f)-.10f)/.85f));
+   int alpha=(int)(175-night*100);
+   // Screen-space cloud shadows drift across the landscape independently of the camera.
+   for(int i=0;i<11;i++){
+    Bitmap[] frames=cloudAnimations.get(i%cloudAnimations.size());
+    int frame=(int)(worldTime*.9f+i*2)%frames.length;
+    Bitmap cloud=frames[frame];if(cloud==null)continue;
+    float width=100+(i%4)*35,height=width*cloud.getHeight()/Math.max(1f,cloud.getWidth());
+    height=Math.min(95,height);
+    float x=((i*173+worldTime*(8+i%3*3))%(vw+width*2))-width;
+    float y=38+(i*79)%(int)Math.max(70,vh-95);
+    paint.setColor(Color.WHITE);paint.setAlpha(alpha);paint.setColorFilter(null);
+    canvas.drawBitmap(cloud,null,new RectF(x,y,x+width,y+height),paint);
+   }
+   paint.setAlpha(255);
   }
   void loadSprites(){
    String[] kinds={"boar","fox","deer","black_grouse","orc1","orc2","orc3","player_sword","player_unarmed"};
@@ -553,7 +586,7 @@ public class MainActivity extends Activity {
    }
   }
   void restart(){
-   playerLevel=1;exp=0;attackPower=3;maxHp=12;hp=maxHp;equipped.clear();copper=silver=gold=0;java.util.Arrays.fill(hotbar,null);selectedHotbar=-1;playerDamageTime=0;px=180;py=180;joyX=joyY=0;deathAnim=0;swordTimer=0;sword=false;attackAnim=0;playerHealthVisible=0;kills=animalKills=0;mobs.clear();drops.clear();inventory.clear();inventoryOpen=false;shopOpen=false;pauseMenu=false;spawnMobs();
+   playerLevel=1;exp=0;attackPower=3;maxHp=12;hp=maxHp;maxMana=20;mana=20;worldTime=0;equipped.clear();copper=silver=gold=0;java.util.Arrays.fill(hotbar,null);selectedHotbar=-1;playerDamageTime=0;px=180;py=180;joyX=joyY=0;deathAnim=0;swordTimer=0;sword=false;attackAnim=0;playerHealthVisible=0;kills=animalKills=0;mobs.clear();drops.clear();inventory.clear();inventoryOpen=false;shopOpen=false;pauseMenu=false;spawnMobs();
   }
   @Override protected void onDraw(Canvas c){
    canvas=c;float dt=Math.min(.05f,(System.nanoTime()-previous)/1000000000f);previous=System.nanoTime();update(dt);
@@ -603,6 +636,7 @@ public class MainActivity extends Activity {
    if(nearby!=null&&!inventoryOpen){paint.setColor(col("#fff0c5"));paint.setTextSize(13);paint.setTextAlign(Paint.Align.CENTER);
     canvas.drawText("E  "+nearby.item+" aufheben",px,py-60,paint);paint.setTextAlign(Paint.Align.LEFT);}
    c.restore();
+   drawClouds(vw,vh);
    drawRect(col("#142b24"),0,0,vw,37);paint.setColor(Color.WHITE);paint.setTextSize(18);
    c.drawText("Lv. "+playerLevel+" EXP "+exp+"/"+expNeeded()+" DMG "+attackPower+" DEF "+armorValue(),12,25,paint);
    itemIcon("Golden Coin",vw-202,7,.85f);itemIcon("Silver Coin",vw-137,7,.85f);itemIcon("Copper Coin",vw-72,7,.85f);
