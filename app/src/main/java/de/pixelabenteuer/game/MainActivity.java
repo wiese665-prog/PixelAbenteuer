@@ -117,13 +117,13 @@ public class MainActivity extends Activity {
    int third=atlas.getWidth()/3;
    int index=0;
    tile("Exterior_house",third*index,0,third,atlas.getHeight(),x-130,y-146,260,230);
-   tile("Exterior_house",third,atlas.getHeight()/2,Math.min(third/4,atlas.getWidth()-third),atlas.getHeight()/2,x+113,y-31,54,116);
+   // Never paste an arbitrary atlas strip: it contains a second roof corner.
    paint.setColor(col("#fff0ce"));paint.setTextAlign(Paint.Align.CENTER);paint.setTextSize(13);
    canvas.drawText(smithy?"SCHMIEDE":"DEIN HAUS",x,y-157,paint);paint.setTextAlign(Paint.Align.LEFT);
   }
   void enterOrLeave(){
    if(indoors){indoors=false;px=forgeX;py=forgeY+107;joyX=joyY=0;return;}
-   if(Math.abs(px-forgeX)<45&&py>forgeY+38&&py<forgeY+115){
+   if(Math.abs(px-forgeX)<30&&py>forgeY+36&&py<forgeY+115){
     indoors=true;currentHouse=1;px=400;py=425;joyX=joyY=0;
    }
   }
@@ -216,11 +216,11 @@ public class MainActivity extends Activity {
    if(x<18||y<18||x>WORLD_W-18||y>WORLD_H-18)return true;
    for(Decoration d:decorations)if(d.solid&&collides(d,x,y))return true;
    float dx=x-forgeX,dy=y-forgeY;
-   if(Math.abs(dx)<112&&dy>-39&&dy<69&&!(Math.abs(dx)<22&&dy>45))return true;
+   if(Math.abs(dx)<110&&dy>-63&&dy<65&&!(Math.abs(dx)<25&&dy>37))return true;
    if(dx>-7&&dx<17&&dy>84&&dy<115)return true;
    if(dx>12&&dx<44&&dy>79&&dy<110)return true;
    if(dx>3&&dx<36&&dy>109&&dy<127)return true;
-   if(dx>92&&dx<147&&dy>76&&dy<108)return true;
+   if(dx>91&&dx<139&&dy>48&&dy<93)return true;
    return false;
   }
   int expNeeded(){return 12+playerLevel*8;}
@@ -629,7 +629,7 @@ public class MainActivity extends Activity {
      float nx=px+mx*step,ny=py+my*step;
      if(!blocked(nx,py))px=nx;
      if(!blocked(px,ny))py=ny;
-     if(Math.abs(px-forgeX)<22&&py>forgeY+52&&py<forgeY+79&&my<0){enterOrLeave();break;}
+     if(Math.abs(px-forgeX)<26&&py>forgeY+38&&py<forgeY+91&&my<0){enterOrLeave();break;}
     }
    }
    if(indoors)return;
