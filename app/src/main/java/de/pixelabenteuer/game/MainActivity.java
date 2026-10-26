@@ -132,14 +132,14 @@ public class MainActivity extends Activity {
    // The facade is a complete single sprite in x=0..145, y=0..162.
    tile("Exterior_house",0,0,145,163,x-116,y-140,232,261);
    // The loose props are separate cells on the bottom of the same atlas.
-   tile("Exterior_house",44,165,50,41,x-117,y+113,66,55); // crates
+   tile("Exterior_house",65,165,38,42,x-117,y+113,66,55); // crates
    tile("Exterior_house",107,164,47,43,x+97,y+66,72,60); // complete cart
    paint.setColor(col("#fff0ce"));paint.setTextAlign(Paint.Align.CENTER);paint.setTextSize(13);
    canvas.drawText("SCHMIEDE",x,y-150,paint);paint.setTextAlign(Paint.Align.LEFT);
   }
   void enterOrLeave(){
    if(indoors){indoors=false;px=forgeX;py=forgeY+141;joyX=joyY=0;return;}
-   if(Math.abs(px-(forgeX-8))<30&&py>forgeY+36&&py<forgeY+115){
+   if(Math.abs(px-forgeX)<30&&py>forgeY+36&&py<forgeY+115){
     indoors=true;currentHouse=1;px=400;py=425;joyX=joyY=0;
    }
   }
@@ -150,7 +150,7 @@ public class MainActivity extends Activity {
    // timber at x=144..160; violet stone at x=240..255.
    // Copy the original pixel art, never draw replacement colored tiles.
    for(int iy=0;iy<18;iy++)for(int ix=0;ix<20;ix++){
-    tile("Walls_interior",242,133,12,12,l+16+ix*16,t+52+iy*16,16,16);
+    tile("Walls_interior",15,82,16,16,l+16+ix*16,t+52+iy*16,16,16);
    }
    for(int iy=0;iy<18;iy++)for(int ix=0;ix<20;ix++){
     tile("Walls_interior",145,21,12,12,l+340+ix*16,t+52+iy*16,16,16);
@@ -174,21 +174,21 @@ public class MainActivity extends Activity {
    Bitmap furnace=buildingSprites.get("Forge");
    if(furnace!=null)tile("Forge",0,0,Math.max(1,furnace.getWidth()/3),
      Math.max(1,furnace.getHeight()/2),l+94,t+73,104,111);
-   tile("Interior_objects",155,442,50,45,l+216,t+107,57,54);
-   tile("Interior_objects",0,445,100,49,l+66,t+263,129,66);
+   tile("Interior_objects",173,226,34,36,l+216,t+107,57,54);
+   tile("Interior_objects",10,194,27,34,l+66,t+263,44,52);\n   tile("Interior_objects",47,194,27,34,l+119,t+263,44,52);
    // Shop: only the original two rear wall shelves and one painting.
-   tile("Interior_objects",0,91,49,104,l+355,t+74,91,110);
-   tile("Interior_objects",52,91,50,104,l+554,t+74,91,110);
-   tile("Interior_objects",104,279,102,46,l+451,t+79,103,58);
+   tile("Interior_objects",7,101,56,63,l+355,t+74,91,110);
+   tile("Interior_objects",109,101,53,63,l+554,t+74,91,110);
+   tile("Interior_objects",116,264,68,39,l+451,t+79,103,58);
    // One carpet sprite per position: previous crop accidentally contained two.
-   tile("Interior_objects",6,398,49,40,l+430,t+157,186,71);
-   tile("Interior_objects",6,398,49,40,l+430,t+255,186,71);
+   tile("Interior_objects",6,397,82,44,l+430,t+157,186,71);
+   tile("Interior_objects",6,397,82,44,l+430,t+255,186,71);
    // Preserve the full shop counter.
-   tile("Interior_objects",0,0,176,29,l+345,t+212,310,43);
+   tile("Interior_objects",15,8,161,22,l+345,t+212,310,43);
    // Complete entrance stair-shelves, both moved toward the doorway.
-   tile("Interior_objects",0,198,104,92,l+342,t+256,98,80);
-   tile("Interior_objects",104,198,104,92,l+558,t+256,98,80);
-   characterTile("Master_Idle",3,2,(int)(elapsed*2)%3,l+236,t+175,68);
+
+
+   characterTile("Master_Idle",3,2,(int)(elapsed*2)%3,l+236,t+175,71);
    characterTile("Seller",3,2,0,l+497,t+182,68);
    characterTile("Customer",3,2,(int)(elapsed*2)%3,l+507,t+288,49);
    float cx=l+340+(px-400),cy=t+176+(py-350);
@@ -247,7 +247,7 @@ public class MainActivity extends Activity {
    if(x<18||y<18||x>WORLD_W-18||y>WORLD_H-18)return true;
    for(Decoration d:decorations)if(d.solid&&Math.hypot(d.x-forgeX,d.y-forgeY)>185&&collides(d,x,y))return true;
    float dx=x-forgeX,dy=y-forgeY;
-   if(Math.abs(dx)<110&&dy>-63&&dy<65&&!(Math.abs(dx+8)<25&&dy>37))return true;
+   if(Math.abs(dx)<110&&dy>-63&&dy<65&&!(Math.abs(dx)<25&&dy>37))return true;
    if(dx>-122&&dx<-66&&dy>111&&dy<168)return true;
    if(dx>-7&&dx<17&&dy>84&&dy<115)return true;
    if(dx>12&&dx<44&&dy>79&&dy<110)return true;
@@ -671,7 +671,7 @@ public class MainActivity extends Activity {
      float nx=px+mx*step,ny=py+my*step;
      if(!blocked(nx,py))px=nx;
      if(!blocked(px,ny))py=ny;
-     if(Math.abs(px-(forgeX-8))<26&&py>forgeY+38&&py<forgeY+91&&my<0){enterOrLeave();break;}
+     if(Math.abs(px-forgeX)<26&&py>forgeY+38&&py<forgeY+91&&my<0){enterOrLeave();break;}
     }
    }
    if(indoors)return;
