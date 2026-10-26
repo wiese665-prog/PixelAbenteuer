@@ -115,7 +115,7 @@ public class MainActivity extends Activity {
    Bitmap atlas=buildingSprites.get("Exterior_house");
    if(atlas==null)return;
    int third=atlas.getWidth()/3;
-   int index=smithy?0:1;
+   int index=0; // Reuse the complete first house; the next atlas slice cuts through its cart.
    tile("Exterior_house",third*index,0,third,atlas.getHeight(),x-130,y-146,260,230);
    paint.setColor(col("#fff0ce"));paint.setTextAlign(Paint.Align.CENTER);paint.setTextSize(13);
    canvas.drawText(smithy?"SCHMIEDE":"DEIN HAUS",x,y-157,paint);paint.setTextAlign(Paint.Align.LEFT);
@@ -214,6 +214,14 @@ public class MainActivity extends Activity {
   boolean blocked(float x,float y){
    if(x<18||y<18||x>WORLD_W-18||y>WORLD_H-18)return true;
    for(Decoration d:decorations)if(d.solid&&collides(d,x,y))return true;
+   // Building walls are solid; leave the central entrance approach clear.
+   for(float[] house:new float[][]{{forgeX,forgeY},{homeX,homeY}}){
+    float dx=x-house[0],dy=y-house[1];
+    if(Math.abs(dx)<117&&dy>-65&&dy<71&&!(Math.abs(dx)<27&&dy>34))return true;
+    // Crates and the cart at the side of each building.
+    if(dx>-122&&dx<-76&&dy>40&&dy<87)return true;
+    if(dx>76&&dx<128&&dy>39&&dy<91)return true;
+   }
    return false;
   }
   int expNeeded(){return 12+playerLevel*8;}
@@ -689,6 +697,7 @@ public class MainActivity extends Activity {
     if(n==1)drawRect(col("#6a9a53"),x+8,y+7,5,4);
    }
    for(Decoration d:decorations){
+    if((Math.hypot(d.x-forgeX,d.y-(forgeY+84))<68)||(Math.hypot(d.x-homeX,d.y-(homeY+84))<68))continue;
     if(d.image!=null){paint.setColor(Color.WHITE);paint.setColorFilter(null);paint.setAlpha(255);paint.setStyle(Paint.Style.FILL);c.drawBitmap(d.image,null,new RectF(d.x-d.w/2,d.y-d.h*.8f,d.x+d.w/2,d.y+d.h*.2f),paint);}
     else drawRect(col("#82776b"),d.x-d.w/2,d.y-d.h/2,d.w,d.h);
    }
