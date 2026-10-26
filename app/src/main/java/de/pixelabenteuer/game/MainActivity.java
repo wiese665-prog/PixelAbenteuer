@@ -155,10 +155,18 @@ public class MainActivity extends Activity {
    paint.setColor(col("#fff0ce"));paint.setTextAlign(Paint.Align.CENTER);paint.setTextSize(13);
    canvas.drawText("SCHMIEDE",x,y-150,paint);paint.setTextAlign(Paint.Align.LEFT);
   }
+  // Door anchors are shared by the automatic movement triggers and teleportation.
+  final float DOOR_OUT_X=0f,DOOR_OUT_Y=102f;
+  final float DOOR_IN_X=555f,DOOR_IN_Y=480f;
   void enterOrLeave(){
-   if(indoors){indoors=false;px=forgeX+7;py=forgeY+119;joyX=joyY=0;return;}
-   if(Math.abs(px-(forgeX+7))<25&&py>forgeY+48&&py<forgeY+112){
-    indoors=true;currentHouse=1;px=555;py=452;joyX=joyY=0;
+   if(indoors){
+    indoors=false;px=forgeX+DOOR_OUT_X;py=forgeY+DOOR_OUT_Y+19f;
+    joyX=joyY=0;return;
+   }
+   if(Math.abs(px-(forgeX+DOOR_OUT_X))<22&&
+      py>forgeY+DOOR_OUT_Y-22&&py<forgeY+DOOR_OUT_Y+10){
+    indoors=true;currentHouse=1;px=DOOR_IN_X;py=DOOR_IN_Y-22f;
+    joyX=joyY=0;
    }
   }
   void drawInterior(float vw,float vh){
@@ -690,7 +698,7 @@ public class MainActivity extends Activity {
     // The middle opening (y=354..444) is deliberately passable.
     if(!((nx>=378&&nx<=401)&&(ny<354||ny>467)))px=nx;
     py=ny;
-    if(py>482&&Math.abs(px-400)<45&&my>0)enterOrLeave();
+    if(py>482&&Math.abs(px-DOOR_IN_X)<38&&my>0)enterOrLeave();
     return;
    }
    if(Math.abs(mx)+Math.abs(my)>.08f){
@@ -700,7 +708,7 @@ public class MainActivity extends Activity {
      float nx=px+mx*step,ny=py+my*step;
      if(!blocked(nx,py))px=nx;
      if(!blocked(px,ny))py=ny;
-     if(Math.abs(px-(forgeX+7))<26&&py>forgeY+48&&py<forgeY+112&&my<0){enterOrLeave();break;}
+     if(Math.abs(px-(forgeX+DOOR_OUT_X))<22&&py>forgeY+DOOR_OUT_Y-22&&py<forgeY+DOOR_OUT_Y+10&&my<0){enterOrLeave();break;}
     }
    }
    if(indoors)return;
