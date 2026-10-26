@@ -141,7 +141,7 @@ public class MainActivity extends Activity {
      maxX=Math.max(maxX,xx);maxY=Math.max(maxY,yy);
     }
    if(maxX>=minX&&maxY>=minY){
-    float h=43,w=Math.min(35,h*(maxX-minX+1)/(float)(maxY-minY+1));
+    float h=37,w=Math.min(30,h*(maxX-minX+1)/(float)(maxY-minY+1));
     tile("Seller",sx+minX,sy+minY,maxX-minX+1,maxY-minY+1,x-w/2,y-h,w,h);
    }
   }
@@ -156,8 +156,8 @@ public class MainActivity extends Activity {
    canvas.drawText("SCHMIEDE",x,y-150,paint);paint.setTextAlign(Paint.Align.LEFT);
   }
   void enterOrLeave(){
-   if(indoors){indoors=false;px=forgeX;py=forgeY+141;joyX=joyY=0;return;}
-   if(Math.abs(px-(forgeX+7))<25&&py>forgeY+68&&py<forgeY+130){
+   if(indoors){indoors=false;px=forgeX+7;py=forgeY+119;joyX=joyY=0;return;}
+   if(Math.abs(px-(forgeX+7))<25&&py>forgeY+48&&py<forgeY+112){
     indoors=true;currentHouse=1;px=555;py=452;joyX=joyY=0;
    }
   }
@@ -174,19 +174,18 @@ public class MainActivity extends Activity {
    for(int ix=0;ix<14;ix++)
     tile("Walls_interior",48+(ix%2)*32,0,32,32,l+16+ix*46,t,46,70);
    for(int iy=0;iy<6;iy++){
-    tile("Walls_interior",16,128,32,42,l,t+67+iy*44,31,44);
-    tile("Walls_interior",177,128,32,42,l+649,t+67+iy*44,31,44);
+    tile("Walls_interior",16,128,26,42,l,t+67+iy*44,24,44);
+    tile("Walls_interior",177,128,26,42,l+656,t+67+iy*44,24,44);
    }
    // Divider: two original stone piers with a broad passable gap.
-   tile("Walls_interior",48,128,24,42,l+312,t+52,28,126);
-   tile("Walls_interior",48,128,24,42,l+312,t+295,28,42);
-   // Stone floor transition: cover the transparent black edge with actual floor cells.
-   for(int iy=0;iy<18;iy++)tile("Walls_interior",240,128,16,16,l+324,t+52+iy*16,16,16);
+   tile("Walls_interior",16,128,24,42,l+315,t+52,23,126);
+   tile("Walls_interior",16,128,24,42,l+315,t+295,23,42);
+   // Floors meet directly beneath the stone divider; no overlaid floor strip.
    // Forge: show one complete furnace cell, not half an animation sheet.
    Bitmap furnace=buildingSprites.get("Forge");
    if(furnace!=null){
     int fw=Math.max(1,furnace.getWidth()/2),fh=Math.max(1,furnace.getHeight()/3);
-    tile("Forge",0,0,fw,fh,l+89,t+67,114,122);
+    tile("Forge",0,0,fw,fh,l+75,t+54,114,122);
    }
    // One complete original ore crate, no clipped fragments at entrance.
    
@@ -200,11 +199,11 @@ public class MainActivity extends Activity {
    // The complete counter with its decorative vases, cropped as one object.
    tile("Interior_objects",16,0,160,27,l+353,t+213,294,47);
    // Two complete decorative original sprites at the bottom of the forge.
-   tile("Interior_objects",7,328,51,55,l+71,t+265,61,65);
-   tile("Interior_objects",169,439,39,44,l+213,t+267,55,61);
+   tile("Interior_objects",0,328,65,60,l+71,t+265,61,65);
+   tile("Interior_objects",168,436,40,51,l+213,t+267,55,61);
    // The seller is drawn only once, using a single stable pose.
-   characterTile("Master_Idle",3,2,(int)(elapsed*2)%3,l+236,t+175,79);
-   sellerPortrait(l+497,t+216);
+   characterTile("Master_Idle",3,2,(int)(elapsed*2)%3,l+236,t+175,81.4f);
+   sellerPortrait(l+497,t+229);
    characterTile("Customer",3,2,0,l+507,t+288,52);
    float cx=l+340+(px-400),cy=t+176+(py-350);
    drawSprite(sword?"player_sword":"player_unarmed","idle",playerDir,cx,cy,94,94,elapsed,false);
@@ -674,7 +673,7 @@ public class MainActivity extends Activity {
     float ny=Math.max(205,Math.min(492,py+my*140*dt));
     // Partition occupies x=375..402 in interior player coordinates.
     // The middle opening (y=354..444) is deliberately passable.
-    if(!((nx>=375&&nx<=402)&&(ny<354||ny>467)))px=nx;
+    if(!((nx>=378&&nx<=401)&&(ny<354||ny>467)))px=nx;
     py=ny;
     if(py>482&&Math.abs(px-400)<45&&my>0)enterOrLeave();
     return;
@@ -686,7 +685,7 @@ public class MainActivity extends Activity {
      float nx=px+mx*step,ny=py+my*step;
      if(!blocked(nx,py))px=nx;
      if(!blocked(px,ny))py=ny;
-     if(Math.abs(px-(forgeX+7))<26&&py>forgeY+68&&py<forgeY+130&&my<0){enterOrLeave();break;}
+     if(Math.abs(px-(forgeX+7))<26&&py>forgeY+48&&py<forgeY+112&&my<0){enterOrLeave();break;}
     }
    }
    if(indoors)return;
