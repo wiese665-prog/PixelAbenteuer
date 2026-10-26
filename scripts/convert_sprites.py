@@ -33,6 +33,9 @@ def convert(path):
  animal=next((v for v in ("boar","deer","fox","black_grouse","orc1","orc2","orc3") if v in name),None)
  if name.startswith("sword_"):animal="player_sword"
  if name.startswith("unarmed_"):animal="player_unarmed"
+ if name in ("forge","doors_windows","light_animation","master","master_idle","seller","customer"):
+  sheet.save(out/(name+".png"))
+  print("building",name,len(frames));return
  if not animal:return
  action=next((a for a in ("run_attack","walk_attack","idle","walk","run","flight","attack","hurt","death") if a in name),None)
  direction=next((d for d in ("front","back","left","right") if d in name),None)
