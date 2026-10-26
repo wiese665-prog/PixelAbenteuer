@@ -41,10 +41,10 @@ public class MainActivity extends Activity {
   float px=180,py=180,joyX=0,joyY=0,elapsed=0,worldTime=0,attackAnim=0,hurtAnim=0,deathAnim=0,attackCooldown=0,playerHealthVisible=0;
   int hp=12,maxHp=12,kills=0,animalKills=0,playerDir=0,playerLevel=1,exp=0,attackPower=3,lastPlayerDamage=0;float playerDamageTime=0;float swordTimer=0;boolean sword=false;
   long previous=System.nanoTime();
-  Game(){super(MainActivity.this);setFocusable(true);setFocusableInTouchMode(true);paint.setFilterBitmap(false);loadSprites();loadClouds();loadItems();loadDecorations();spawnMobs();}
+  Game(){super(MainActivity.this);setFocusable(true);setFocusableInTouchMode(true);paint.setFilterBitmap(false);loadSprites();loadBuildings();loadClouds();loadItems();loadDecorations();spawnMobs();}
   void spawnMobs(){
    String[] animals={"boar","fox","deer","black_grouse"};
-   for(int i=0;i<28;i++){float x=80+random.nextInt(1440),y=80+random.nextInt(840);if(!blocked(x,y)&&Math.hypot(x-merchantX,y-merchantY)>110)mobs.add(new Mob(animals[i%4],x,y));}
+   for(int i=0;i<28;i++){float x=80+random.nextInt(1440),y=80+random.nextInt(840);if(!blocked(x,y)&&!safeZone(x,y)&&Math.hypot(x-merchantX,y-merchantY)>110)mobs.add(new Mob(animals[i%4],x,y));}
    for(int i=0;i<18;i++){float x=380+random.nextInt(1100),y=80+random.nextInt(840);if(!blocked(x,y)&&Math.hypot(x-merchantX,y-merchantY)>110)mobs.add(new Mob("orc"+(1+i%3),x,y));}
   }
   final ArrayList<Bitmap[]>[] cloudAnimations=new ArrayList[]{new ArrayList<Bitmap[]>(),new ArrayList<Bitmap[]>(),new ArrayList<Bitmap[]>()};
@@ -85,6 +85,71 @@ public class MainActivity extends Activity {
     canvas.drawBitmap(cloud,null,new RectF(x,y,x+width,y+height),paint);
    }
    paint.setAlpha(255);
+  }
+  final HashMap<String,Bitmap> buildingSprites=new HashMap<>();
+  boolean indoors=false;int currentHouse=0;
+  final float forgeX=550,forgeY=300,homeX=300,homeY=500;
+  boolean safeZone(float x,float y){return Math.hypot(x-forgeX,y-forgeY)<235||Math.hypot(x-homeX,y-homeY)<195;}
+  void loadBuildings(){
+   for(String name:new String[]{"forge","doors_windows","light_animation","master","master_idle","seller","customer"}){
+    try(InputStream in=getAssets().open("generated/"+name+".png")){
+     Bitmap b=BitmapFactory.decodeStream(in);if(b!=null)buildingSprites.put(name,b);
+    }catch(Exception ignored){}
+   }
+  }
+  void buildingSprite(String name,float x,float y,float width,float height,int frame){
+   Bitmap b=buildingSprites.get(name);if(b==null)return;
+   int fw=b.getHeight(),count=Math.max(1,b.getWidth()/Math.max(1,fw));
+   int index=Math.floorMod(frame,count);
+   paint.setColor(Color.WHITE);paint.setAlpha(255);paint.setColorFilter(null);
+   canvas.drawBitmap(b,new Rect(index*fw,0,Math.min(b.getWidth(),(index+1)*fw),b.getHeight()),new RectF(x-width/2,y-height/2,x+width/2,y+height/2),paint);
+  }
+  void drawHouse(float x,float y,boolean smithy){
+   float w=smithy?190:150,h=smithy?145:125;
+   drawRect(col("#3b342e"),x-w/2-5,y-h/2-5,w+10,h+10);
+   drawRect(col(smithy?"#73594a":"#806b4b"),x-w/2,y-h/2,w,h);
+   drawRect(col("#493b38"),x-w/2-12,y-h/2-20,w+24,38);
+   for(int i=0;i<7;i++)drawRect(col("#765047"),x-w/2-7+i*(w+14)/7,y-h/2-16,(w+14)/7-3,24);
+   drawRect(col("#c4a36c"),x-23,y+h/2-32,46,33);
+   drawRect(col("#27272c"),x-17,y+h/2-29,34,29);
+   drawRect(col("#d2b779"),x-12,y+h/2-25,3,18);
+   drawRect(col("#a4c2bf"),x-w/2+18,y-14,24,23);
+   drawRect(col("#a4c2bf"),x+w/2-42,y-14,24,23);
+   paint.setColor(col("#fff0ce"));paint.setTextAlign(Paint.Align.CENTER);paint.setTextSize(14);
+   canvas.drawText(smithy?"SCHMIEDE":"DEIN HAUS",x,y-h/2-26,paint);
+   paint.setTextAlign(Paint.Align.LEFT);
+  }
+  void enterOrLeave(){
+   if(indoors){indoors=false;px=currentHouse==1?forgeX:homeX;py=(currentHouse==1?forgeY:homeY)+105;joyX=joyY=0;return;}
+   if(Math.hypot(px-forgeX,py-(forgeY+77))<65){indoors=true;currentHouse=1;px=400;py=330;joyX=joyY=0;}
+   else if(Math.hypot(px-homeX,py-(homeY+66))<65){indoors=true;currentHouse=2;px=400;py=330;joyX=joyY=0;}
+  }
+  void drawInterior(float vw,float vh){
+   drawRect(col("#201c20"),0,0,vw,vh);
+   drawRect(col("#866a4c"),65,40,vw-130,vh-75);
+   for(int x=70;x<vw-70;x+=45)for(int y=48;y<vh-40;y+=45)
+    drawRect(col(((x+y)/45)%2==0?"#917654":"#806749"),x,y,43,43);
+   drawRect(col("#44312b"),vw/2-55,vh-67,110,38);
+   drawRect(col("#c4a56b"),vw/2-25,vh-67,50,32);
+   if(currentHouse==1){
+    drawRect(col("#55443a"),100,88,135,110);drawRect(col("#211e1e"),115,100,105,84);
+    drawRect(col("#ec8b32"),139,125,56,54);
+    drawRect(col("#ffcc67"),151,137,32,36);
+    buildingSprite("light_animation",165,151,80,80,(int)(elapsed*6));
+    buildingSprite("master_idle",300,172,68,68,(int)(elapsed*4));
+    buildingSprite("seller",vw-175,180,64,64,(int)(elapsed*3));
+    buildingSprite("customer",vw-280,270,60,60,(int)(elapsed*3));
+    buildingSprite("forge",165,105,110,90,0);
+    paint.setColor(col("#fff0cc"));paint.setTextSize(15);canvas.drawText("SCHMIEDE  |  Meister und Haendler",85,66,paint);
+   }else{
+    drawRect(col("#4b3630"),105,105,175,94);drawRect(col("#d1b38a"),112,112,160,78);
+    drawRect(col("#49362e"),vw-240,108,130,80);
+    drawRect(col("#a88a5b"),vw-230,114,110,68);
+    paint.setColor(col("#fff0cc"));paint.setTextSize(15);canvas.drawText("DEIN ZUHAUSE",85,66,paint);
+   }
+   paint.setColor(col("#fff2d5"));paint.setTextSize(13);
+   canvas.drawText("E - durch die Tuer nach draussen",vw/2-117,vh-18,paint);
+   drawSprite(sword?"player_sword":"player_unarmed","idle",0,vw/2,vh/2+65,72,72,elapsed,false);
   }
   void loadSprites(){
    String[] kinds={"boar","fox","deer","black_grouse","orc1","orc2","orc3","player_sword","player_unarmed"};
@@ -444,7 +509,7 @@ public class MainActivity extends Activity {
   void saveGame(){
    try{
     org.json.JSONObject root=new org.json.JSONObject();
-    root.put("px",px);root.put("py",py);root.put("worldTime",worldTime);root.put("mana",mana);root.put("hp",hp);root.put("level",playerLevel);root.put("exp",exp);
+    root.put("px",px);root.put("py",py);root.put("indoors",indoors);root.put("currentHouse",currentHouse);root.put("worldTime",worldTime);root.put("mana",mana);root.put("hp",hp);root.put("level",playerLevel);root.put("exp",exp);
     root.put("gold",gold);root.put("silver",silver);root.put("copper",copper);root.put("kills",kills);root.put("animalKills",animalKills);
     org.json.JSONObject bag=new org.json.JSONObject();for(String name:inventory.keySet())bag.put(name,inventory.get(name));root.put("inventory",bag);
     org.json.JSONObject gear=new org.json.JSONObject();for(String slot:equipped.keySet())gear.put(slot,equipped.get(slot));root.put("equipped",gear);
@@ -461,7 +526,7 @@ public class MainActivity extends Activity {
     String json=getContext().getSharedPreferences("pixel_save",MODE_PRIVATE).getString("save",null);
     if(json==null){pickupNotice="Kein Spielstand";noticeTime=3f;return;}
     org.json.JSONObject root=new org.json.JSONObject(json);
-    px=(float)root.getDouble("px");py=(float)root.getDouble("py");worldTime=(float)root.optDouble("worldTime",0);playerLevel=root.getInt("level");exp=root.getInt("exp");
+    px=(float)root.getDouble("px");py=(float)root.getDouble("py");indoors=root.optBoolean("indoors",false);currentHouse=root.optInt("currentHouse",0);worldTime=(float)root.optDouble("worldTime",0);playerLevel=root.getInt("level");exp=root.getInt("exp");
     gold=root.getInt("gold");silver=root.getInt("silver");copper=root.getInt("copper");kills=root.optInt("kills");animalKills=root.optInt("animalKills");
     inventory.clear();org.json.JSONObject bag=root.getJSONObject("inventory");java.util.Iterator<String> keys=bag.keys();while(keys.hasNext()){String k=keys.next();inventory.put(k,bag.getInt(k));}
     equipped.clear();org.json.JSONObject gear=root.getJSONObject("equipped");keys=gear.keys();while(keys.hasNext()){String k=keys.next();equipped.put(k,gear.getString(k));}
@@ -536,6 +601,7 @@ public class MainActivity extends Activity {
    if(hp<=0){deathAnim+=dt;return;}if(inventoryOpen||shopOpen||pauseMenu||startScreen)return;
    float mx=joyX,my=joyY,length=(float)Math.hypot(mx,my);
    if(length>1){mx/=length;my/=length;}
+   if(indoors){joyX=joyY=0;return;}
    if(Math.abs(mx)+Math.abs(my)>.08f){
     playerDir=Math.abs(mx)>Math.abs(my)?(mx<0?2:3):(my<0?1:0);
     float step=140*dt/3f;
@@ -545,6 +611,7 @@ public class MainActivity extends Activity {
      if(!blocked(px,ny))py=ny;
     }
    }
+   if(indoors)return;
    for(Mob m:mobs){
     if(m.dead){m.deathTimer+=dt;continue;}
     m.anim+=dt;m.attackTimer=Math.max(0,m.attackTimer-dt);m.hurtTimer=Math.max(0,m.hurtTimer-dt);m.healthVisible=Math.max(0,m.healthVisible-dt);m.damageNumberTime=Math.max(0,m.damageNumberTime-dt);
@@ -565,6 +632,7 @@ public class MainActivity extends Activity {
      }
      vx=m.vx;vy=m.vy;action=Math.abs(vx)+Math.abs(vy)<1?"idle":"walk";
     }
+    if(safeZone(m.x,m.y)||safeZone(m.x+vx*dt,m.y+vy*dt)){vx=0;vy=0;m.vx=0;m.vy=0;}
     if(Math.abs(vx)+Math.abs(vy)>1){
      float step=dt/3f;
      for(int sub=0;sub<3;sub++){
@@ -592,7 +660,7 @@ public class MainActivity extends Activity {
    }
   }
   void restart(){
-   playerLevel=1;exp=0;attackPower=3;maxHp=12;hp=maxHp;maxMana=20;mana=20;worldTime=0;equipped.clear();copper=silver=gold=0;java.util.Arrays.fill(hotbar,null);selectedHotbar=-1;playerDamageTime=0;px=180;py=180;joyX=joyY=0;deathAnim=0;swordTimer=0;sword=false;attackAnim=0;playerHealthVisible=0;kills=animalKills=0;mobs.clear();drops.clear();inventory.clear();inventoryOpen=false;shopOpen=false;pauseMenu=false;spawnMobs();
+   indoors=false;currentHouse=0;playerLevel=1;exp=0;attackPower=3;maxHp=12;hp=maxHp;maxMana=20;mana=20;worldTime=0;equipped.clear();copper=silver=gold=0;java.util.Arrays.fill(hotbar,null);selectedHotbar=-1;playerDamageTime=0;px=180;py=180;joyX=joyY=0;deathAnim=0;swordTimer=0;sword=false;attackAnim=0;playerHealthVisible=0;kills=animalKills=0;mobs.clear();drops.clear();inventory.clear();inventoryOpen=false;shopOpen=false;pauseMenu=false;spawnMobs();
   }
   @Override protected void onDraw(Canvas c){
    canvas=c;float dt=Math.min(.05f,(System.nanoTime()-previous)/1000000000f);previous=System.nanoTime();update(dt);
@@ -611,6 +679,7 @@ public class MainActivity extends Activity {
     if(d.image!=null){paint.setColor(Color.WHITE);paint.setColorFilter(null);paint.setAlpha(255);paint.setStyle(Paint.Style.FILL);c.drawBitmap(d.image,null,new RectF(d.x-d.w/2,d.y-d.h*.8f,d.x+d.w/2,d.y+d.h*.2f),paint);}
     else drawRect(col("#82776b"),d.x-d.w/2,d.y-d.h/2,d.w,d.h);
    }
+   drawHouse(forgeX,forgeY,true);drawHouse(homeX,homeY,false);
    drawSprite("orc2","idle",0,merchantX,merchantY,68,68,elapsed,false);
    paint.setTextAlign(Paint.Align.CENTER);paint.setColor(col("#ffe7aa"));paint.setTextSize(13);
    canvas.drawText("HAENDLER",merchantX,merchantY-45,paint);paint.setTextAlign(Paint.Align.LEFT);
@@ -642,7 +711,7 @@ public class MainActivity extends Activity {
    if(nearby!=null&&!inventoryOpen){paint.setColor(col("#fff0c5"));paint.setTextSize(13);paint.setTextAlign(Paint.Align.CENTER);
     canvas.drawText("E  "+nearby.item+" aufheben",px,py-60,paint);paint.setTextAlign(Paint.Align.LEFT);}
    c.restore();
-   drawClouds(vw,vh);
+   if(indoors)drawInterior(vw,vh);else drawClouds(vw,vh);
    drawRect(col("#142b24"),0,0,vw,37);paint.setColor(Color.WHITE);paint.setTextSize(18);
    c.drawText("Lv. "+playerLevel+" EXP "+exp+"/"+expNeeded()+" DMG "+attackPower+" DEF "+armorValue(),12,25,paint);
    itemIcon("Golden Coin",vw-202,7,.85f);itemIcon("Silver Coin",vw-137,7,.85f);itemIcon("Copper Coin",vw-72,7,.85f);
@@ -717,7 +786,7 @@ public class MainActivity extends Activity {
     case KeyEvent.KEYCODE_W:case KeyEvent.KEYCODE_DPAD_UP:joyY=-1;break;
     case KeyEvent.KEYCODE_S:case KeyEvent.KEYCODE_DPAD_DOWN:joyY=1;break;
     case KeyEvent.KEYCODE_SPACE:attack();break;
-    case KeyEvent.KEYCODE_E:if(shopOpen)shopOpen=false;else if(Math.hypot(px-merchantX,py-merchantY)<100)openShop();else pickup();break;
+    case KeyEvent.KEYCODE_E:if(shopOpen)shopOpen=false;else if(indoors||Math.hypot(px-forgeX,py-(forgeY+77))<65||Math.hypot(px-homeX,py-(homeY+66))<65)enterOrLeave();else if(Math.hypot(px-merchantX,py-merchantY)<100)openShop();else pickup();break;
     case KeyEvent.KEYCODE_I:if(shopOpen)shopOpen=false;else inventoryOpen=!inventoryOpen;hoverSlot=-1;break;
     case KeyEvent.KEYCODE_1:useHotbar(0);break;
     case KeyEvent.KEYCODE_2:useHotbar(1);break;
