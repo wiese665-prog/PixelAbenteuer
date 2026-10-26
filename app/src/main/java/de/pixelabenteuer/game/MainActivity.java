@@ -14,13 +14,13 @@ public class MainActivity extends Activity {
   setContentView(new Game());
  }
  class Mob {
-  String kind,action="idle";float x,y,vx,vy,anim=0,decision=0,attackTimer=0,hurtTimer=0,deathTimer=0,healthVisible=0;int hp,maxHp,level,damage,dir=0;boolean dead=false;
+  String kind,action="idle";float x,y,vx,vy,anim=0,decision=0,attackTimer=0,hurtTimer=0,deathTimer=0,healthVisible=0;int hp,maxHp,level,damage,dir=0;boolean dead=false;float damageNumberTime=0;int lastDamage=0;
   Mob(String k,float xx,float yy) {kind=k;x=xx;y=yy;level=1+(int)(Math.random()*(k.startsWith("orc")?6:4));int baseHp=k.equals("orc3")?12:k.equals("orc2")?9:k.equals("orc1")?7:k.equals("boar")?8:k.equals("deer")?5:k.equals("fox")?4:2;maxHp=baseHp+(level-1)*(k.equals("boar")||k.startsWith("orc")?3:2);hp=maxHp;damage=(k.equals("orc3")?3:k.equals("orc2")?2:k.equals("orc1")?1:0)+(level-1)/3;}
   boolean hostile(){return kind.startsWith("orc");}
  }
  class Decoration {
-  Bitmap image;float x,y,w,h;boolean solid;
-  Decoration(Bitmap b,float xx,float yy,float ww,float hh,boolean s){image=b;x=xx;y=yy;w=ww;h=hh;solid=s;}
+  Bitmap image,mask;float x,y,w,h;boolean solid;
+  Decoration(Bitmap b,Bitmap collision,float xx,float yy,float ww,float hh,boolean s){image=b;mask=collision==null?b:collision;x=xx;y=yy;w=ww;h=hh;solid=s;}
  }
  class Game extends View {
   final int WORLD_W=1600,WORLD_H=1000;
@@ -28,7 +28,7 @@ public class MainActivity extends Activity {
   ArrayList<Mob> mobs=new ArrayList<>();ArrayList<Decoration> decorations=new ArrayList<>();
   HashMap<String,Bitmap> sprites=new HashMap<>();
   float px=180,py=180,joyX=0,joyY=0,elapsed=0,attackAnim=0,hurtAnim=0,deathAnim=0,attackCooldown=0,playerHealthVisible=0;
-  int hp=8,maxHp=8,kills=0,animalKills=0,playerDir=0;float swordTimer=0;boolean sword=false;
+  int hp=12,maxHp=12,kills=0,animalKills=0,playerDir=0,playerLevel=1,exp=0,attackPower=3,lastPlayerDamage=0;float playerDamageTime=0;float swordTimer=0;boolean sword=false;
   long previous=System.nanoTime();
   Game(){super(MainActivity.this);setFocusable(true);setFocusableInTouchMode(true);paint.setFilterBitmap(false);loadSprites();loadDecorations();spawnMobs();}
   void spawnMobs(){
@@ -49,10 +49,10 @@ public class MainActivity extends Activity {
    try(InputStream in=getAssets().open("sprites/"+filename)){return BitmapFactory.decodeStream(in);}catch(Exception ignored){return null;}
   }
   void loadDecorations(){
-   ArrayList<Bitmap> rocks=new ArrayList<>(),ruins=new ArrayList<>(),plants=new ArrayList<>();
+   ArrayList<Bitmap> rocks=new ArrayList<>(),rockMasks=new ArrayList<>(),ruins=new ArrayList<>(),plants=new ArrayList<>();
    String[] ruinTypes={"Blue-gray_ruins","Brown-gray_ruins","Brown_ruins","Sand_ruins"};
    for(String type:ruinTypes)for(int i=1;i<=5;i++){Bitmap b=asset(type+i+".png");if(b!=null)ruins.add(b);}
-   for(int type=1;type<=6;type++)for(int i=1;i<=5;i++){Bitmap b=asset("Rock"+type+"_"+i+".png");if(b!=null)rocks.add(b);}
+   for(int type=1;type<=6;type++)for(int i=1;i<=5;i++){Bitmap b=asset("Rock"+type+"_"+i+".png");if(b!=null){rocks.add(b);Bitmap mask=asset("Rock"+type+"_"+i+"_no_shadow.png");rockMasks.add(mask==null?b:mask);}}
    try{
     String[] filenames=getAssets().list("sprites");
     if(filenames!=null)for(String filename:filenames){
@@ -62,25 +62,46 @@ public class MainActivity extends Activity {
      }
     }
    }catch(Exception ignored){}
-   for(int i=0;i<19;i++){float x=300+(i*251)%1200,y=90+(i*197)%810;Bitmap b=ruins.isEmpty()?null:ruins.get(i%ruins.size());decorations.add(new Decoration(b,x,y,94,90,true));}
-   for(int i=0;i<85;i++){float x=60+(i*167)%1480,y=65+(i*283)%870;if(Math.hypot(x-180,y-180)<140)continue;Bitmap b=rocks.isEmpty()?null:rocks.get(i%rocks.size());decorations.add(new Decoration(b,x,y,42+(i%3)*12,38+(i%4)*9,true));}
-   for(int i=0;i<70&&!plants.isEmpty();i++){float x=30+(i*131)%1540,y=40+(i*223)%920;decorations.add(new Decoration(plants.get(i%plants.size()),x,y,34+(i%3)*12,40+(i%3)*10,true));}
+   for(int i=0;i<19;i++){float x=300+(i*251)%1200,y=90+(i*197)%810;Bitmap b=ruins.isEmpty()?null:ruins.get(i%ruins.size());decorations.add(new Decoration(b,b,x,y,94,90,true));}
+   for(int i=0;i<85;i++){float x=60+(i*167)%1480,y=65+(i*283)%870;if(Math.hypot(x-180,y-180)<140)continue;Bitmap b=rocks.isEmpty()?null:rocks.get(i%rocks.size());decorations.add(new Decoration(b,rockMasks.isEmpty()?b:rockMasks.get(i%rockMasks.size()),x,y,42+(i%3)*12,38+(i%4)*9,true));}
+   for(int i=0;i<70&&!plants.isEmpty();i++){float x=30+(i*131)%1540,y=40+(i*223)%920;decorations.add(new Decoration(plants.get(i%plants.size()),plants.get(i%plants.size()),x,y,34+(i%3)*12,40+(i%3)*10,true));}
   }
-  // Solid objects use a broad footprint. Alpha only refines the silhouette;
-  // transparent shadows or gaps must never make a rock/ruin passable.
+  // Per-pixel collisions use the very same destination rectangle as rendering.
+  // Test the feet/body of the moving character against opaque object pixels.
   boolean collides(Decoration d,float x,float y){
-   float dx=x-d.x,dy=y-d.y;
-   float radiusX=d.w*(d.h>=75?.43f:.42f)+11f;
-   float radiusY=d.h*(d.h>=75?.33f:.38f)+11f;
-   // A rounded rectangle covers the solid base of the object, including its edges.
-   float coreX=Math.max(0,Math.abs(dx)-(radiusX-9));
-   float coreY=Math.max(0,Math.abs(dy)-(radiusY-9));
-   return coreX*coreX+coreY*coreY<=81f;
+   Bitmap mask=d.mask;
+   float left=d.x-d.w/2,top=d.y-d.h*.8f;
+   if(x+10<left||x-10>left+d.w||y+12<top||y-12>top+d.h)return false;
+   if(mask==null)return Math.abs(x-d.x)<d.w*.4f+9&&Math.abs(y-d.y)<d.h*.4f+9;
+   int bw=mask.getWidth(),bh=mask.getHeight();
+   for(int ix=-2;ix<=2;ix++)for(int iy=-2;iy<=2;iy++){
+    float sampleX=x+ix*4f,sampleY=y+iy*4f;
+    float u=(sampleX-left)/d.w,v=(sampleY-top)/d.h;
+    if(u<0||u>=1||v<0||v>=1)continue;
+    int sx=Math.min(bw-1,(int)(u*bw)),sy=Math.min(bh-1,(int)(v*bh));
+    if(Color.alpha(mask.getPixel(sx,sy))>=200)return true;
+   }
+   return false;
   }
   boolean blocked(float x,float y){
    if(x<18||y<18||x>WORLD_W-18||y>WORLD_H-18)return true;
    for(Decoration d:decorations)if(d.solid&&collides(d,x,y))return true;
    return false;
+  }
+  int expNeeded(){return 12+playerLevel*8;}
+  void earnExp(int amount){
+   exp+=amount;
+   while(exp>=expNeeded()){
+    exp-=expNeeded();playerLevel++;maxHp+=4;hp=Math.min(maxHp,hp+4);attackPower++;
+    playerHealthVisible=3f;
+   }
+  }
+  void damageText(float x,float y,int damage,float remaining){
+   if(remaining<=0)return;
+   paint.setTextSize(19);paint.setTextAlign(Paint.Align.CENTER);
+   paint.setColor(col("#3b1711"));canvas.drawText("-"+damage,x+1,y-remaining*13+1,paint);
+   paint.setColor(col("#ffe28a"));canvas.drawText("-"+damage,x,y-remaining*13,paint);
+   paint.setTextAlign(Paint.Align.LEFT);
   }
   void healthBar(float x,float y,float width,int current,int maximum){
    float ratio=Math.max(0,Math.min(1,current/(float)Math.max(1,maximum)));
@@ -101,7 +122,7 @@ public class MainActivity extends Activity {
    canvas.drawBitmap(b,new Rect(frame*frameWidth,0,(frame+1)*frameWidth,b.getHeight()),new RectF(x-w/2,y-h/2,x+w/2,y+h/2),paint);
   }
   void update(float dt){
-   elapsed+=dt;swordTimer=Math.max(0,swordTimer-dt);sword=swordTimer>0;attackCooldown=Math.max(0,attackCooldown-dt);attackAnim=Math.max(0,attackAnim-dt);hurtAnim=Math.max(0,hurtAnim-dt);playerHealthVisible=Math.max(0,playerHealthVisible-dt);
+   elapsed+=dt;swordTimer=Math.max(0,swordTimer-dt);sword=swordTimer>0;attackCooldown=Math.max(0,attackCooldown-dt);attackAnim=Math.max(0,attackAnim-dt);hurtAnim=Math.max(0,hurtAnim-dt);playerHealthVisible=Math.max(0,playerHealthVisible-dt);playerDamageTime=Math.max(0,playerDamageTime-dt);
    if(hp<=0){deathAnim+=dt;return;}
    float mx=joyX,my=joyY,length=(float)Math.hypot(mx,my);
    if(length>1){mx/=length;my/=length;}
@@ -116,14 +137,14 @@ public class MainActivity extends Activity {
    }
    for(Mob m:mobs){
     if(m.dead){m.deathTimer+=dt;continue;}
-    m.anim+=dt;m.attackTimer=Math.max(0,m.attackTimer-dt);m.hurtTimer=Math.max(0,m.hurtTimer-dt);m.healthVisible=Math.max(0,m.healthVisible-dt);
+    m.anim+=dt;m.attackTimer=Math.max(0,m.attackTimer-dt);m.hurtTimer=Math.max(0,m.hurtTimer-dt);m.healthVisible=Math.max(0,m.healthVisible-dt);m.damageNumberTime=Math.max(0,m.damageNumberTime-dt);
     float distance=(float)Math.hypot(px-m.x,py-m.y);
     float vx=0,vy=0;String action="idle";
     if(m.hurtTimer>0){action="hurt";}
     else if(m.hostile()&&distance<330){
      m.dir=direction(px-m.x,py-m.y);
      if(distance>43){vx=(px-m.x)/Math.max(1,distance)*75;vy=(py-m.y)/Math.max(1,distance)*75;action="run";}
-     else {action="attack";if(m.attackTimer<=0){hp=Math.max(0,hp-Math.max(1,m.damage));hurtAnim=.32f;playerHealthVisible=3f;m.attackTimer=1.3f;}}
+     else {action="attack";if(m.attackTimer<=0){int dealt=Math.max(1,m.damage);hp=Math.max(0,hp-dealt);lastPlayerDamage=dealt;playerDamageTime=.9f;hurtAnim=.32f;playerHealthVisible=3f;m.attackTimer=1.3f;}}
     }else if(!m.hostile()&&distance<110){
      vx=(m.x-px)/Math.max(1,distance)*105;vy=(m.y-py)/Math.max(1,distance)*105;
      action=m.kind.equals("black_grouse")?"flight":"run";
@@ -156,12 +177,12 @@ public class MainActivity extends Activity {
     float dx=m.x-px,dy=m.y-py,d=(float)Math.hypot(dx,dy);
     if(d>76||d<.01f)continue;
     if((dx*fx+dy*fy)/d<-.1f)continue;
-    m.hp-=3;m.hurtTimer=.28f;m.healthVisible=3f;m.anim=0;
-    if(m.hp<=0){m.dead=true;m.deathTimer=0;if(m.hostile())kills++;else animalKills++;}
+    m.hp-=attackPower;m.lastDamage=attackPower;m.damageNumberTime=.9f;m.hurtTimer=.28f;m.healthVisible=3f;m.anim=0;
+    if(m.hp<=0){m.dead=true;m.deathTimer=0;if(m.hostile())kills++;else animalKills++;earnExp((m.hostile()?8:3)+m.level*2);}
    }
   }
   void restart(){
-   hp=maxHp;px=180;py=180;joyX=joyY=0;deathAnim=0;swordTimer=0;sword=false;attackAnim=0;playerHealthVisible=0;kills=animalKills=0;mobs.clear();spawnMobs();
+   playerLevel=1;exp=0;attackPower=3;maxHp=12;hp=maxHp;playerDamageTime=0;px=180;py=180;joyX=joyY=0;deathAnim=0;swordTimer=0;sword=false;attackAnim=0;playerHealthVisible=0;kills=animalKills=0;mobs.clear();spawnMobs();
   }
   @Override protected void onDraw(Canvas c){
    canvas=c;float dt=Math.min(.05f,(System.nanoTime()-previous)/1000000000f);previous=System.nanoTime();update(dt);
@@ -181,18 +202,20 @@ public class MainActivity extends Activity {
    for(Mob m:mobs){
     if(m.dead&&m.deathTimer>2.5f)continue;
     String action=m.dead?"death":m.hurtTimer>0?"hurt":m.action;
-    float size=m.hostile()?68:50;
+    float size=m.hostile()?65:m.kind.equals("boar")?45:m.kind.equals("deer")?43:36;
     drawSprite(m.kind,action,m.dir,m.x,m.y,size,size,m.dead?m.deathTimer:m.anim,m.dead&&m.deathTimer>.7f);
     if(!m.dead){paint.setColor(Color.WHITE);paint.setTextSize(12);paint.setTextAlign(Paint.Align.CENTER);canvas.drawText("Lv. "+m.level,m.x,m.y-size*.64f,paint);paint.setTextAlign(Paint.Align.LEFT);}
     if(m.healthVisible>0&&(!m.dead||m.deathTimer<1f))healthBar(m.x,m.y-size*.65f-12,42,m.hp,m.maxHp);
+    damageText(m.x,m.y-size*.65f-22,m.lastDamage,m.damageNumberTime);
    }
    String playerKind=sword?"player_sword":"player_unarmed";
    String playerAction=hp<=0?"death":hurtAnim>0?"hurt":attackAnim>0&&sword?"attack":Math.abs(joyX)+Math.abs(joyY)>.08f?"run":"idle";
-   drawSprite(playerKind,playerAction,playerDir,px,py,64,64,hp<=0?deathAnim:attackAnim>0?.4f-attackAnim:elapsed,hp<=0&&deathAnim>.8f);
-   if(playerHealthVisible>0)healthBar(px,py-47,52,hp,maxHp);
+   drawSprite(playerKind,playerAction,playerDir,px,py,80,80,hp<=0?deathAnim:attackAnim>0?.4f-attackAnim:elapsed,hp<=0&&deathAnim>.8f);
+   if(playerHealthVisible>0)healthBar(px,py-56,52,hp,maxHp);
+   damageText(px,py-66,lastPlayerDamage,playerDamageTime);
    c.restore();
    drawRect(col("#142b24"),0,0,vw,37);paint.setColor(Color.WHITE);paint.setTextSize(18);
-   c.drawText("Orks "+kills+"   Tiere "+animalKills+"   "+(sword?"Schwert":"Unbewaffnet"),12,25,paint);
+   c.drawText("Lv. "+playerLevel+"  EXP "+exp+"/"+expNeeded()+"  DMG "+attackPower+"  Orks "+kills+"  Tiere "+animalKills,12,25,paint);
    if(hp<=0){drawRect(col("#111111"),vw/2-180,vh/2-45,360,90);paint.setColor(Color.WHITE);paint.setTextSize(24);c.drawText("GAME OVER - Tippen",vw/2-145,vh/2+7,paint);}
    c.restore();postInvalidateDelayed(16);
   }
