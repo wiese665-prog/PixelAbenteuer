@@ -34,7 +34,7 @@ public class MainActivity extends Activity {
   ArrayList<Mob> mobs=new ArrayList<>();ArrayList<Decoration> decorations=new ArrayList<>();ArrayList<Drop> drops=new ArrayList<>();LinkedHashMap<String,Integer> inventory=new LinkedHashMap<>();HashMap<String,Bitmap> itemImages=new HashMap<>();
   HashMap<String,Item> definitions=new HashMap<>();HashMap<String,String> equipped=new HashMap<>();
   String[] hotbar=new String[5];int copper=0,silver=0,gold=0,hoverSlot=-1;float hoverX=0,hoverY=0;
-  boolean inventoryOpen=false,shopOpen=false;float merchantX=265,merchantY=215;
+  boolean inventoryOpen=false,shopOpen=false,startScreen=true,pauseMenu=false;float merchantX=265,merchantY=215;
   String[] shopStock={"Apple","Ham","Healthpotion","Healpotion med","Iron Sword","Silver Sword","Leather Armor","Iron Armor","Iron Helmet","Golden Sword"};
   String pickupNotice="";float noticeTime=0;
   HashMap<String,Bitmap> sprites=new HashMap<>();
@@ -201,6 +201,17 @@ public class MainActivity extends Activity {
    equipped.put(item.slot,name);recalcStats();
    pickupNotice=name+" angelegt";noticeTime=2f;
   }
+  void unequip(String slot){
+   String old=equipped.remove(slot);if(old==null)return;
+   inventory.put(old,inventory.getOrDefault(old,0)+1);recalcStats();
+   pickupNotice=old+" ausgezogen";noticeTime=2f;
+  }
+  int equippedSlotAt(float x,float y,float vw,float vh){
+   float left=invLeft(vw),top=invTop(vh);
+   float[][] p={{left+129,top+96},{left+20,top+158},{left+223,top+158},{left+129,top+277},{left+223,top+245}};
+   for(int i=0;i<p.length;i++)if(x>=p[i][0]&&x<=p[i][0]+43&&y>=p[i][1]&&y<=p[i][1]+43)return i;
+   return -1;
+  }
   void useItem(String name){
    Item item=definitions.get(name);
    if(item==null||item.heal<=0||inventory.getOrDefault(name,0)<=0||hp<=0||hp>=maxHp)return;
@@ -248,7 +259,7 @@ public class MainActivity extends Activity {
    return nearest;
   }
   void pickup(){
-   if(inventoryOpen||shopOpen)return;
+   if(inventoryOpen||shopOpen||pauseMenu||startScreen)return;
    Drop d=nearestDrop();if(d==null)return;
    inventory.put(d.item,inventory.containsKey(d.item)?inventory.get(d.item)+1:1);
    pickupNotice="+1 "+d.item;noticeTime=1.8f;drops.remove(d);
@@ -278,12 +289,12 @@ public class MainActivity extends Activity {
    paint.setTextSize(11);paint.setColor(col("#9fc2c0"));canvas.drawText("I schliessen  |  Klick anlegen / Hotbar",left+18,top+48,paint);
    panel(left+14,top+65,285,313);
    paint.setTextSize(14);paint.setColor(col("#f5d7a5"));canvas.drawText("CHARAKTER",left+28,top+87,paint);
-   drawRect(col("#1b302e"),left+101,top+115,100,171);
-   drawRect(col("#32564a"),left+105,top+119,92,163);
-   drawSprite(sword?"player_sword":"player_unarmed","idle",0,left+151,top+198,102,126,elapsed,false);
-   paint.setTextSize(11);paint.setColor(col("#d8e7da"));canvas.drawText("Lv "+playerLevel+"   HP "+hp+"/"+maxHp,left+100,top+305,paint);
+   drawRect(col("#1b302e"),left+82,top+115,140,171);
+   drawRect(col("#32564a"),left+86,top+119,132,163);
+   drawSprite(sword?"player_sword":"player_unarmed","idle",0,left+151,top+198,136,158,elapsed,false);
+   paint.setTextSize(11);paint.setColor(col("#d8e7da"));canvas.drawText("Lv "+playerLevel+"   HP "+hp+"/"+maxHp,left+91,top+319,paint);
    String[] slots={"Kopf","Waffe","Brust","Fuesse","Guertel"};
-   float[][] positions={{left+129,top+96},{left+32,top+158},{left+223,top+158},{left+129,top+257},{left+32,top+258}};
+   float[][] positions={{left+129,top+96},{left+20,top+158},{left+223,top+158},{left+129,top+277},{left+223,top+245}};
    for(int i=0;i<slots.length;i++){
     float sx=positions[i][0],sy=positions[i][1];String name=equipped.get(slots[i]);
     slotFrame(sx,sy,43,name);
@@ -329,32 +340,99 @@ public class MainActivity extends Activity {
    panel(left,top,730,370);
    paint.setColor(col("#f6dbab"));paint.setTypeface(Typeface.DEFAULT_BOLD);paint.setTextSize(21);
    canvas.drawText("ORK-HAENDLER",left+17,top+30,paint);
-   paint.setTextSize(12);canvas.drawText("E / I: Schliessen     Anklicken: Kaufen oder Verkaufen",left+260,top+29,paint);
-   panel(left+12,top+48,344,306);panel(left+374,top+48,344,306);
-   paint.setTextSize(15);paint.setColor(col("#f2d39c"));canvas.drawText("KAUFEN",left+25,top+70,paint);
-   canvas.drawText("VERKAUFEN",left+388,top+70,paint);
+   paint.setTextSize(12);canvas.drawText("E / I schliessen   |   Klick: Kaufen / Verkaufen",left+302,top+28,paint);
    String[] selling=inventoryNames();
    for(int side=0;side<2;side++){
+    float sx=left+(side==0?14:374);
+    panel(sx,top+49,340,306);
+    paint.setTextSize(15);paint.setColor(col("#f1d7a4"));
+    canvas.drawText(side==0?"ANGEBOT":"DEIN VERKAUF",sx+13,top+72,paint);
     String[] names=side==0?shopStock:selling;
-    for(int i=0;i<Math.min(20,names.length);i++){
-     float x=left+(side==0?23:385)+(i%5)*65,y=top+87+(i/5)*61;
-     slotFrame(x,y,54,names[i]);
-     Item item=definitions.get(names[i]);paint.setColor(item!=null&&item.equipment()?rarityColor(item.rarity):Color.WHITE);
-     paint.setTextSize(9);String label=names[i].length()>10?names[i].substring(0,9)+".":names[i];
-     canvas.drawText(label,x+2,y+44,paint);
-     paint.setColor(col("#f6d58a"));paint.setTextSize(10);
-     canvas.drawText(""+(side==0?price(names[i]):Math.max(1,price(names[i])/2))+" K",x+3,y+54,paint);
+    for(int i=0;i<Math.min(12,names.length);i++){
+     float x=sx+10+(i%3)*106,y=top+87+(i/3)*65;
+     drawRect(col("#17212a"),x,y,101,60);
+     drawRect(col("#58666b"),x+2,y+2,97,56);
+     drawRect(col("#28343c"),x+4,y+4,93,52);
+     itemIcon(names[i],x+4,y+5,1.45f);
+     Item item=definitions.get(names[i]);
+     paint.setTextSize(10);paint.setColor(item!=null&&item.equipment()?rarityColor(item.rarity):col("#f1eee1"));
+     String label=names[i];if(label.length()>13)label=label.substring(0,12)+".";
+     canvas.drawText(label,x+38,y+20,paint);
+     paint.setColor(col("#eac582"));paint.setTextSize(11);
+     canvas.drawText((side==0?price(names[i]):Math.max(1,price(names[i])/2))+" Kupfer",x+38,y+40,paint);
     }
    }
    paint.setTypeface(Typeface.DEFAULT);
   }
   int shopIndex(float x,float y,float vw,float vh,boolean buy){
    float left=vw/2-365,top=vh/2-185;
-   float dx=x-left-(buy?23:385),dy=y-top-87;
-   if(dx<0||dy<0||dx>=325||dy>=244)return -1;
-   int col=(int)(dx/65),row=(int)(dy/61);
-   if(dx%65>=54||dy%61>=54)return -1;
-   return row*5+col;
+   float dx=x-left-(buy?24:384),dy=y-top-87;
+   if(dx<0||dy<0||dx>=318||dy>=260)return -1;
+   int col=(int)(dx/106),row=(int)(dy/65);
+   if(dx%106>=101||dy%65>=60)return -1;
+   return row*3+col;
+  }
+  void saveGame(){
+   try{
+    org.json.JSONObject root=new org.json.JSONObject();
+    root.put("px",px);root.put("py",py);root.put("hp",hp);root.put("level",playerLevel);root.put("exp",exp);
+    root.put("gold",gold);root.put("silver",silver);root.put("copper",copper);root.put("kills",kills);root.put("animalKills",animalKills);
+    org.json.JSONObject bag=new org.json.JSONObject();for(String name:inventory.keySet())bag.put(name,inventory.get(name));root.put("inventory",bag);
+    org.json.JSONObject gear=new org.json.JSONObject();for(String slot:equipped.keySet())gear.put(slot,equipped.get(slot));root.put("equipped",gear);
+    org.json.JSONArray bar=new org.json.JSONArray();for(String item:hotbar)bar.put(item==null?org.json.JSONObject.NULL:item);root.put("hotbar",bar);
+    org.json.JSONArray enemies=new org.json.JSONArray();for(Mob m:mobs){org.json.JSONObject o=new org.json.JSONObject();
+     o.put("kind",m.kind);o.put("x",m.x);o.put("y",m.y);o.put("hp",m.hp);o.put("maxHp",m.maxHp);o.put("level",m.level);o.put("damage",m.damage);o.put("dead",m.dead);enemies.put(o);}root.put("mobs",enemies);
+    org.json.JSONArray ground=new org.json.JSONArray();for(Drop d:drops){org.json.JSONObject o=new org.json.JSONObject();o.put("item",d.item);o.put("x",d.x);o.put("y",d.y);ground.put(o);}root.put("drops",ground);
+    getContext().getSharedPreferences("pixel_save",MODE_PRIVATE).edit().putString("save",root.toString()).apply();
+    pickupNotice="Spiel gespeichert";noticeTime=3f;
+   }catch(Exception ex){pickupNotice="Speichern fehlgeschlagen";noticeTime=3f;}
+  }
+  void loadGame(){
+   try{
+    String json=getContext().getSharedPreferences("pixel_save",MODE_PRIVATE).getString("save",null);
+    if(json==null){pickupNotice="Kein Spielstand";noticeTime=3f;return;}
+    org.json.JSONObject root=new org.json.JSONObject(json);
+    px=(float)root.getDouble("px");py=(float)root.getDouble("py");playerLevel=root.getInt("level");exp=root.getInt("exp");
+    gold=root.getInt("gold");silver=root.getInt("silver");copper=root.getInt("copper");kills=root.optInt("kills");animalKills=root.optInt("animalKills");
+    inventory.clear();org.json.JSONObject bag=root.getJSONObject("inventory");java.util.Iterator<String> keys=bag.keys();while(keys.hasNext()){String k=keys.next();inventory.put(k,bag.getInt(k));}
+    equipped.clear();org.json.JSONObject gear=root.getJSONObject("equipped");keys=gear.keys();while(keys.hasNext()){String k=keys.next();equipped.put(k,gear.getString(k));}
+    java.util.Arrays.fill(hotbar,null);org.json.JSONArray bar=root.getJSONArray("hotbar");for(int i=0;i<Math.min(5,bar.length());i++)if(!bar.isNull(i))hotbar[i]=bar.getString(i);
+    recalcStats();hp=Math.min(maxHp,root.getInt("hp"));
+    mobs.clear();org.json.JSONArray enemies=root.getJSONArray("mobs");for(int i=0;i<enemies.length();i++){org.json.JSONObject o=enemies.getJSONObject(i);
+     Mob m=new Mob(o.getString("kind"),(float)o.getDouble("x"),(float)o.getDouble("y"));m.hp=o.getInt("hp");m.maxHp=o.getInt("maxHp");m.level=o.getInt("level");m.damage=o.getInt("damage");m.dead=o.getBoolean("dead");mobs.add(m);}
+    drops.clear();org.json.JSONArray ground=root.getJSONArray("drops");for(int i=0;i<ground.length();i++){org.json.JSONObject o=ground.getJSONObject(i);drops.add(new Drop(o.getString("item"),(float)o.getDouble("x"),(float)o.getDouble("y"),0));}
+    startScreen=false;pauseMenu=false;inventoryOpen=false;shopOpen=false;joyX=joyY=0;previous=System.nanoTime();
+    pickupNotice="Spielstand geladen";noticeTime=3f;
+   }catch(Exception ex){pickupNotice="Laden fehlgeschlagen";noticeTime=3f;}
+  }
+  void drawMenu(float vw,float vh){
+   drawRect(col("#101820"),0,0,vw,vh);
+   float left=vw/2-250,top=vh/2-208;
+   panel(left,top,500,416);
+   paint.setTypeface(Typeface.DEFAULT_BOLD);paint.setTextAlign(Paint.Align.CENTER);
+   paint.setColor(col("#f2cf8b"));paint.setTextSize(30);canvas.drawText("PIXEL ABENTEUER",vw/2,top+47,paint);
+   paint.setColor(col("#b6c8c2"));paint.setTextSize(13);
+   canvas.drawText(startScreen?"Willkommen in deiner Welt":"PAUSE  /  SPIELMENUE",vw/2,top+70,paint);
+   String[] buttons={startScreen?"SPIEL STARTEN":"WEITERSPIELEN","SPIEL SPEICHERN","SPIEL LADEN","NEUSTART"};
+   for(int i=0;i<buttons.length;i++){float y=top+89+i*49;drawRect(col("#7b7259"),left+95,y,310,42);
+    drawRect(col("#334a4c"),left+98,y+3,304,36);paint.setColor(col("#f6e7c6"));paint.setTextSize(17);canvas.drawText(buttons[i],vw/2,y+26,paint);}
+   paint.setColor(col("#e5cc9c"));paint.setTextSize(15);canvas.drawText("STEUERUNG",vw/2,top+311,paint);
+   paint.setTextSize(12);paint.setColor(col("#d8e2d9"));
+   canvas.drawText("WASD: Laufen   |   Linksklick: Angriff   |   E: Aufheben / Handel",vw/2,top+335,paint);
+   canvas.drawText("I: Inventar   |   1-5: Hotbar   |   ESC: Pause",vw/2,top+355,paint);
+   canvas.drawText("Ausrüstung: Im Inventar anklicken zum An- oder Ausziehen",vw/2,top+376,paint);
+   paint.setTextAlign(Paint.Align.LEFT);paint.setTypeface(Typeface.DEFAULT);
+  }
+  void menuClick(float x,float y,float vw,float vh){
+   float top=vh/2-208,left=vw/2-250;
+   if(x<left+95||x>left+405)return;
+   for(int i=0;i<4;i++){float by=top+89+i*49;if(y>=by&&y<=by+42){
+    if(i==0){startScreen=false;pauseMenu=false;previous=System.nanoTime();}
+    if(i==1)saveGame();
+    if(i==2)loadGame();
+    if(i==3){restart();startScreen=false;pauseMenu=false;}
+    return;
+   }}
   }
   void drawHotbar(float vw,float vh){
    for(int i=0;i<5;i++){
@@ -385,7 +463,7 @@ public class MainActivity extends Activity {
   }
   void update(float dt){
    elapsed+=dt;noticeTime=Math.max(0,noticeTime-dt);swordTimer=Math.max(0,swordTimer-dt);sword=swordTimer>0;attackCooldown=Math.max(0,attackCooldown-dt);attackAnim=Math.max(0,attackAnim-dt);hurtAnim=Math.max(0,hurtAnim-dt);playerHealthVisible=Math.max(0,playerHealthVisible-dt);playerDamageTime=Math.max(0,playerDamageTime-dt);
-   if(hp<=0){deathAnim+=dt;return;}if(inventoryOpen||shopOpen)return;
+   if(hp<=0){deathAnim+=dt;return;}if(inventoryOpen||shopOpen||pauseMenu||startScreen)return;
    float mx=joyX,my=joyY,length=(float)Math.hypot(mx,my);
    if(length>1){mx/=length;my/=length;}
    if(Math.abs(mx)+Math.abs(my)>.08f){
@@ -403,7 +481,7 @@ public class MainActivity extends Activity {
     float distance=(float)Math.hypot(px-m.x,py-m.y);
     float vx=0,vy=0;String action="idle";
     if(m.hurtTimer>0){action="hurt";}
-    else if(m.hostile()&&distance<330){
+    else if(m.hostile()&&distance<285){
      m.dir=direction(px-m.x,py-m.y);
      if(distance>43){vx=(px-m.x)/Math.max(1,distance)*75;vy=(py-m.y)/Math.max(1,distance)*75;action="run";}
      else {action="attack";if(m.attackTimer<=0){int dealt=Math.max(1,m.damage);hp=Math.max(0,hp-Math.max(1,dealt-armorValue()));lastPlayerDamage=dealt;playerDamageTime=.9f;hurtAnim=.32f;playerHealthVisible=3f;m.attackTimer=1.3f;}}
@@ -431,7 +509,7 @@ public class MainActivity extends Activity {
   }
   int direction(float vx,float vy){return Math.abs(vx)>Math.abs(vy)?(vx<0?2:3):(vy<0?1:0);}
   void attack(){
-   if(hp<=0||attackCooldown>0||inventoryOpen||shopOpen)return;
+   if(hp<=0||attackCooldown>0||inventoryOpen||shopOpen||pauseMenu||startScreen)return;
    attackCooldown=.42f;attackAnim=.4f;swordTimer=3f;sword=true;
    float fx=playerDir==2?-1:playerDir==3?1:0,fy=playerDir==1?-1:playerDir==0?1:0;
    for(Mob m:mobs){
@@ -444,7 +522,7 @@ public class MainActivity extends Activity {
    }
   }
   void restart(){
-   playerLevel=1;exp=0;attackPower=3;maxHp=12;hp=maxHp;equipped.clear();copper=silver=gold=0;java.util.Arrays.fill(hotbar,null);playerDamageTime=0;px=180;py=180;joyX=joyY=0;deathAnim=0;swordTimer=0;sword=false;attackAnim=0;playerHealthVisible=0;kills=animalKills=0;mobs.clear();drops.clear();inventory.clear();inventoryOpen=false;shopOpen=false;spawnMobs();
+   playerLevel=1;exp=0;attackPower=3;maxHp=12;hp=maxHp;equipped.clear();copper=silver=gold=0;java.util.Arrays.fill(hotbar,null);playerDamageTime=0;px=180;py=180;joyX=joyY=0;deathAnim=0;swordTimer=0;sword=false;attackAnim=0;playerHealthVisible=0;kills=animalKills=0;mobs.clear();drops.clear();inventory.clear();inventoryOpen=false;shopOpen=false;pauseMenu=false;spawnMobs();
   }
   @Override protected void onDraw(Canvas c){
    canvas=c;float dt=Math.min(.05f,(System.nanoTime()-previous)/1000000000f);previous=System.nanoTime();update(dt);
@@ -495,6 +573,7 @@ public class MainActivity extends Activity {
    drawHotbar(vw,vh);
    if(noticeTime>0){paint.setColor(col("#f7e0a6"));paint.setTextSize(17);c.drawText(pickupNotice,12,60,paint);}
    if(inventoryOpen)drawInventory(vw,vh);
+   if(startScreen||pauseMenu)drawMenu(vw,vh);
    if(shopOpen)drawShop(vw,vh);
    if(hp<=0){drawRect(col("#111111"),vw/2-180,vh/2-45,360,90);paint.setColor(Color.WHITE);paint.setTextSize(24);c.drawText("GAME OVER - Tippen",vw/2-145,vh/2+7,paint);}
    c.restore();postInvalidateDelayed(16);
@@ -524,14 +603,16 @@ public class MainActivity extends Activity {
   @Override public boolean onTouchEvent(MotionEvent e){
    int type=e.getActionMasked();
    if(type==MotionEvent.ACTION_DOWN){
+    if(startScreen||pauseMenu){float sc=Math.min(getWidth()/800f,getHeight()/450f),xx=e.getX()/sc,yy=e.getY()/sc,vw=getWidth()/sc,vh=getHeight()/sc;menuClick(xx,yy,vw,vh);return true;}
     if(shopOpen){
      float sc=Math.min(getWidth()/800f,getHeight()/450f),xx=e.getX()/sc,yy=e.getY()/sc,vw=getWidth()/sc,vh=getHeight()/sc;
      int idx=shopIndex(xx,yy,vw,vh,true);
-     if(idx>=0&&idx<shopStock.length)trade(shopStock[idx],true);
-     else{idx=shopIndex(xx,yy,vw,vh,false);String[] names=inventoryNames();if(idx>=0&&idx<names.length)trade(names[idx],false);}
+     if(idx>=0&&idx<Math.min(12,shopStock.length))trade(shopStock[idx],true);
+     else{idx=shopIndex(xx,yy,vw,vh,false);String[] names=inventoryNames();if(idx>=0&&idx<Math.min(12,names.length))trade(names[idx],false);}
      return true;
     }
     if(inventoryOpen){float sc=Math.min(getWidth()/800f,getHeight()/450f),xx=e.getX()/sc,yy=e.getY()/sc,vw=getWidth()/sc,vh=getHeight()/sc;
+     int equippedIndex=equippedSlotAt(xx,yy,vw,vh);if(equippedIndex>=0){unequip(new String[]{"Kopf","Waffe","Brust","Fuesse","Guertel"}[equippedIndex]);return true;}
      int idx=inventoryIndex(xx,yy,vw,vh);if(idx>=0){String[] names=inventoryNames();if(idx<names.length){String name=names[idx];Item item=definitions.get(name);if(item!=null){if(item.equipment())equip(name);else if(item.heal>0){int slot=0;while(slot<4&&hotbar[slot]!=null)slot++;hotbar[slot]=name;pickupNotice=name+" auf Hotbar "+(slot+1);noticeTime=2f;}}}}return true;}
     if(hp<=0){restart();return true;}
     // In BlueStacks, a left mouse click arrives as a primary mouse/touch press.
@@ -542,6 +623,12 @@ public class MainActivity extends Activity {
    return true;
   }
   @Override public boolean onKeyDown(int key,KeyEvent e){
+   if(key==KeyEvent.KEYCODE_ESCAPE||key==KeyEvent.KEYCODE_BACK){
+    if(startScreen)return true;
+    if(shopOpen)shopOpen=false;else if(inventoryOpen)inventoryOpen=false;else pauseMenu=!pauseMenu;
+    joyX=joyY=0;return true;
+   }
+   if(startScreen||pauseMenu){if(key==KeyEvent.KEYCODE_ENTER){startScreen=false;pauseMenu=false;}return true;}
    switch(key){case KeyEvent.KEYCODE_A:case KeyEvent.KEYCODE_DPAD_LEFT:joyX=-1;break;
     case KeyEvent.KEYCODE_D:case KeyEvent.KEYCODE_DPAD_RIGHT:joyX=1;break;
     case KeyEvent.KEYCODE_W:case KeyEvent.KEYCODE_DPAD_UP:joyY=-1;break;
