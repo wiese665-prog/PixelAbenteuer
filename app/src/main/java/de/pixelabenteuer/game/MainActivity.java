@@ -28,7 +28,7 @@ public class MainActivity extends Activity {
   ArrayList<Mob> mobs=new ArrayList<>();ArrayList<Decoration> decorations=new ArrayList<>();
   HashMap<String,Bitmap> sprites=new HashMap<>();
   float px=180,py=180,joyX=0,joyY=0,elapsed=0,attackAnim=0,hurtAnim=0,deathAnim=0,attackCooldown=0;
-  int hp=8,maxHp=8,kills=0,animalKills=0,playerDir=0;boolean sword=true;
+  int hp=8,maxHp=8,kills=0,animalKills=0,playerDir=0;float swordTimer=0;boolean sword=false;
   long previous=System.nanoTime();
   Game(){super(MainActivity.this);setFocusable(true);setFocusableInTouchMode(true);paint.setFilterBitmap(false);loadSprites();loadDecorations();spawnMobs();}
   void spawnMobs(){
@@ -63,12 +63,12 @@ public class MainActivity extends Activity {
     }
    }catch(Exception ignored){}
    for(int i=0;i<19;i++){float x=300+(i*251)%1200,y=90+(i*197)%810;Bitmap b=ruins.isEmpty()?null:ruins.get(i%ruins.size());decorations.add(new Decoration(b,x,y,94,90,true));}
-   for(int i=0;i<85;i++){float x=60+(i*167)%1480,y=65+(i*283)%870;if(Math.hypot(x-180,y-180)<115)continue;Bitmap b=rocks.isEmpty()?null:rocks.get(i%rocks.size());decorations.add(new Decoration(b,x,y,42+(i%3)*12,38+(i%4)*9,true));}
+   for(int i=0;i<85;i++){float x=60+(i*167)%1480,y=65+(i*283)%870;if(Math.hypot(x-180,y-180)<140)continue;Bitmap b=rocks.isEmpty()?null:rocks.get(i%rocks.size());decorations.add(new Decoration(b,x,y,42+(i%3)*12,38+(i%4)*9,true));}
    for(int i=0;i<70&&!plants.isEmpty();i++){float x=30+(i*131)%1540,y=40+(i*223)%920;decorations.add(new Decoration(plants.get(i%plants.size()),x,y,34+(i%3)*12,40+(i%3)*10,false));}
   }
   boolean blocked(float x,float y){
    if(x<18||y<18||x>WORLD_W-18||y>WORLD_H-18)return true;
-   for(Decoration d:decorations)if(d.solid&&Math.abs(x-d.x)<d.w*.34f+7&&Math.abs(y-d.y)<d.h*.24f+6)return true;
+   for(Decoration d:decorations)if(d.solid){float radiusX=d.w*(d.h>=80?.24f:.27f)+8;float radiusY=d.h*(d.h>=80?.14f:.19f)+7;float footY=d.y;float nx=(x-d.x)/radiusX,ny=(y-footY)/radiusY;if(nx*nx+ny*ny<1)return true;}
    return false;
   }
   void drawRect(int col,float x,float y,float w,float h){paint.setColor(col);canvas.drawRect(x,y,x+w,y+h,paint);}
@@ -84,7 +84,7 @@ public class MainActivity extends Activity {
    canvas.drawBitmap(b,new Rect(frame*frameWidth,0,(frame+1)*frameWidth,b.getHeight()),new RectF(x-w/2,y-h/2,x+w/2,y+h/2),paint);
   }
   void update(float dt){
-   elapsed+=dt;attackCooldown=Math.max(0,attackCooldown-dt);attackAnim=Math.max(0,attackAnim-dt);hurtAnim=Math.max(0,hurtAnim-dt);
+   elapsed+=dt;swordTimer=Math.max(0,swordTimer-dt);sword=swordTimer>0;attackCooldown=Math.max(0,attackCooldown-dt);attackAnim=Math.max(0,attackAnim-dt);hurtAnim=Math.max(0,hurtAnim-dt);
    if(hp<=0){deathAnim+=dt;return;}
    float mx=joyX,my=joyY,length=(float)Math.hypot(mx,my);
    if(length>1){mx/=length;my/=length;}
@@ -126,19 +126,19 @@ public class MainActivity extends Activity {
   int direction(float vx,float vy){return Math.abs(vx)>Math.abs(vy)?(vx<0?2:3):(vy<0?1:0);}
   void attack(){
    if(hp<=0||attackCooldown>0)return;
-   attackCooldown=.42f;attackAnim=.4f;
+   attackCooldown=.42f;attackAnim=.4f;swordTimer=3f;sword=true;
    float fx=playerDir==2?-1:playerDir==3?1:0,fy=playerDir==1?-1:playerDir==0?1:0;
    for(Mob m:mobs){
     if(m.dead)continue;
     float dx=m.x-px,dy=m.y-py,d=(float)Math.hypot(dx,dy);
     if(d>76||d<.01f)continue;
     if((dx*fx+dy*fy)/d<-.1f)continue;
-    m.hp-=sword?2:1;m.hurtTimer=.28f;m.anim=0;
+    m.hp-=2;m.hurtTimer=.28f;m.anim=0;
     if(m.hp<=0){m.dead=true;m.deathTimer=0;if(m.hostile())kills++;else animalKills++;}
    }
   }
   void restart(){
-   hp=maxHp;px=180;py=180;joyX=joyY=0;deathAnim=0;kills=animalKills=0;mobs.clear();spawnMobs();
+   hp=maxHp;px=180;py=180;joyX=joyY=0;deathAnim=0;swordTimer=0;sword=false;attackAnim=0;kills=animalKills=0;mobs.clear();spawnMobs();
   }
   @Override protected void onDraw(Canvas c){
    canvas=c;float dt=Math.min(.05f,(System.nanoTime()-previous)/1000000000f);previous=System.nanoTime();update(dt);
@@ -165,21 +165,24 @@ public class MainActivity extends Activity {
    c.restore();
    drawRect(col("#142b24"),0,0,vw,37);paint.setColor(Color.WHITE);paint.setTextSize(18);
    c.drawText("HP "+hp+"/"+maxHp+"   Orks "+kills+"   Tiere "+animalKills+"   "+(sword?"Schwert":"Unbewaffnet"),12,25,paint);
-   drawRect(col("#263d40"),18,vh-112,100,98);drawRect(col("#496b67"),61,vh-102,14,78);drawRect(col("#496b67"),28,vh-70,82,14);
-   drawRect(col("#a54c45"),vw-110,vh-104,90,90);paint.setColor(Color.WHITE);paint.setTextSize(21);c.drawText("HIT",vw-87,vh-52,paint);
-   drawRect(col("#394e69"),vw-225,vh-86,102,56);paint.setTextSize(14);paint.setColor(Color.WHITE);c.drawText(sword?"WAFFE":"SCHWERT",vw-216,vh-52,paint);
    if(hp<=0){drawRect(col("#111111"),vw/2-180,vh/2-45,360,90);paint.setColor(Color.WHITE);paint.setTextSize(24);c.drawText("GAME OVER - Tippen",vw/2-145,vh/2+7,paint);}
    c.restore();postInvalidateDelayed(16);
   }
   @Override public boolean onTouchEvent(MotionEvent e){
-   float scale=Math.min(getWidth()/800f,getHeight()/450f),x=e.getX()/scale,y=e.getY()/scale,vw=getWidth()/scale,vh=getHeight()/scale;
    int type=e.getActionMasked();
-   if(type==MotionEvent.ACTION_UP||type==MotionEvent.ACTION_CANCEL){joyX=joyY=0;return true;}
-   if(hp<=0){if(type==MotionEvent.ACTION_DOWN)restart();return true;}
-   if(x>vw-118&&y>vh-118){if(type==MotionEvent.ACTION_DOWN)attack();}
-   else if(x>vw-235&&x<vw-115&&y>vh-105){if(type==MotionEvent.ACTION_DOWN)sword=!sword;}
-   else if(x<145&&y>vh-145){joyX=Math.max(-1,Math.min(1,(x-68)/36));joyY=Math.max(-1,Math.min(1,(y-(vh-65))/36));}
+   if(type==MotionEvent.ACTION_DOWN){
+    if(hp<=0){restart();return true;}
+    // In BlueStacks, a left mouse click arrives as a primary mouse/touch press.
+    if((e.getSource()&InputDevice.SOURCE_MOUSE)==InputDevice.SOURCE_MOUSE){
+     if(e.getButtonState()==0||(e.getButtonState()&MotionEvent.BUTTON_PRIMARY)!=0)attack();
+    }else attack();
+   }
    return true;
+  }
+  @Override public boolean onGenericMotionEvent(MotionEvent e){
+   if((e.getSource()&InputDevice.SOURCE_MOUSE)==InputDevice.SOURCE_MOUSE&&e.getActionMasked()==MotionEvent.ACTION_BUTTON_PRESS
+      &&e.getActionButton()==MotionEvent.BUTTON_PRIMARY){attack();return true;}
+   return super.onGenericMotionEvent(e);
   }
   @Override public boolean onKeyDown(int key,KeyEvent e){
    switch(key){case KeyEvent.KEYCODE_A:case KeyEvent.KEYCODE_DPAD_LEFT:joyX=-1;break;
@@ -187,7 +190,7 @@ public class MainActivity extends Activity {
     case KeyEvent.KEYCODE_W:case KeyEvent.KEYCODE_DPAD_UP:joyY=-1;break;
     case KeyEvent.KEYCODE_S:case KeyEvent.KEYCODE_DPAD_DOWN:joyY=1;break;
     case KeyEvent.KEYCODE_SPACE:attack();break;
-    case KeyEvent.KEYCODE_E:sword=!sword;break;
+    case KeyEvent.KEYCODE_E:attack();break;
     case KeyEvent.KEYCODE_ENTER:if(hp<=0)restart();break;
    }return true;
   }
