@@ -89,7 +89,7 @@ public class MainActivity extends Activity {
   final HashMap<String,Bitmap> buildingSprites=new HashMap<>();
   boolean indoors=false;int currentHouse=0;
   final float forgeX=550,forgeY=300,homeX=300,homeY=500;
-  boolean safeZone(float x,float y){return Math.hypot(x-forgeX,y-forgeY)<235||Math.hypot(x-homeX,y-homeY)<195;}
+  boolean safeZone(float x,float y){return Math.hypot(x-forgeX,y-forgeY)<235;}
   void loadBuildings(){
    for(String name:new String[]{"Exterior_house","Walls_interior","Walls_street","Interior_objects","Doors_windows_animations","Decorative_cracks","Forge","Light_animation","Master_Idle","Master","Seller","Customer"}){
     try(InputStream in=getAssets().open("sprites/"+name+".png")){
@@ -115,15 +115,17 @@ public class MainActivity extends Activity {
    Bitmap atlas=buildingSprites.get("Exterior_house");
    if(atlas==null)return;
    int third=atlas.getWidth()/3;
-   int index=0; // Reuse the complete first house; the next atlas slice cuts through its cart.
+   int index=0;
    tile("Exterior_house",third*index,0,third,atlas.getHeight(),x-130,y-146,260,230);
+   tile("Exterior_house",third,atlas.getHeight()/2,Math.min(third/4,atlas.getWidth()-third),atlas.getHeight()/2,x+113,y-31,54,116);
    paint.setColor(col("#fff0ce"));paint.setTextAlign(Paint.Align.CENTER);paint.setTextSize(13);
    canvas.drawText(smithy?"SCHMIEDE":"DEIN HAUS",x,y-157,paint);paint.setTextAlign(Paint.Align.LEFT);
   }
   void enterOrLeave(){
-   if(indoors){indoors=false;px=currentHouse==1?forgeX:homeX;py=(currentHouse==1?forgeY:homeY)+112;joyX=joyY=0;return;}
-   if(Math.hypot(px-forgeX,py-(forgeY+84))<62){indoors=true;currentHouse=1;px=400;py=330;joyX=joyY=0;}
-   else if(Math.hypot(px-homeX,py-(homeY+84))<62){indoors=true;currentHouse=2;px=400;py=330;joyX=joyY=0;}
+   if(indoors){indoors=false;px=forgeX;py=forgeY+107;joyX=joyY=0;return;}
+   if(Math.abs(px-forgeX)<45&&py>forgeY+38&&py<forgeY+115){
+    indoors=true;currentHouse=1;px=400;py=350;joyX=joyY=0;
+   }
   }
   void drawInterior(float vw,float vh){
    float left=vw/2-350,top=vh/2-190;
@@ -214,14 +216,12 @@ public class MainActivity extends Activity {
   boolean blocked(float x,float y){
    if(x<18||y<18||x>WORLD_W-18||y>WORLD_H-18)return true;
    for(Decoration d:decorations)if(d.solid&&collides(d,x,y))return true;
-   // Building walls are solid; leave the central entrance approach clear.
-   for(float[] house:new float[][]{{forgeX,forgeY},{homeX,homeY}}){
-    float dx=x-house[0],dy=y-house[1];
-    if(Math.abs(dx)<117&&dy>-65&&dy<71&&!(Math.abs(dx)<27&&dy>34))return true;
-    // Crates and the cart at the side of each building.
-    if(dx>-122&&dx<-76&&dy>40&&dy<87)return true;
-    if(dx>76&&dx<128&&dy>39&&dy<91)return true;
-   }
+   float dx=x-forgeX,dy=y-forgeY;
+   if(Math.abs(dx)<112&&dy>-39&&dy<69&&!(Math.abs(dx)<22&&dy>45))return true;
+   if(dx>-7&&dx<17&&dy>84&&dy<115)return true;
+   if(dx>12&&dx<44&&dy>79&&dy<110)return true;
+   if(dx>3&&dx<36&&dy>109&&dy<127)return true;
+   if(dx>92&&dx<147&&dy>76&&dy<108)return true;
    return false;
   }
   int expNeeded(){return 12+playerLevel*8;}
@@ -622,7 +622,7 @@ public class MainActivity extends Activity {
    if(hp<=0){deathAnim+=dt;return;}if(inventoryOpen||shopOpen||pauseMenu||startScreen)return;
    float mx=joyX,my=joyY,length=(float)Math.hypot(mx,my);
    if(length>1){mx/=length;my/=length;}
-   if(indoors){joyX=joyY=0;return;}
+   if(indoors){px=Math.max(110,Math.min(690,px+mx*140*dt));py=Math.max(220,Math.min(370,py+my*140*dt));if(py>365&&Math.abs(px-400)<42&&my>0)enterOrLeave();return;}
    if(Math.abs(mx)+Math.abs(my)>.08f){
     playerDir=Math.abs(mx)>Math.abs(my)?(mx<0?2:3):(my<0?1:0);
     float step=140*dt/3f;
@@ -630,6 +630,7 @@ public class MainActivity extends Activity {
      float nx=px+mx*step,ny=py+my*step;
      if(!blocked(nx,py))px=nx;
      if(!blocked(px,ny))py=ny;
+     if(Math.abs(px-forgeX)<22&&py>forgeY+52&&py<forgeY+79&&my<0){enterOrLeave();break;}
     }
    }
    if(indoors)return;
@@ -701,7 +702,7 @@ public class MainActivity extends Activity {
     if(d.image!=null){paint.setColor(Color.WHITE);paint.setColorFilter(null);paint.setAlpha(255);paint.setStyle(Paint.Style.FILL);c.drawBitmap(d.image,null,new RectF(d.x-d.w/2,d.y-d.h*.8f,d.x+d.w/2,d.y+d.h*.2f),paint);}
     else drawRect(col("#82776b"),d.x-d.w/2,d.y-d.h/2,d.w,d.h);
    }
-   drawHouse(forgeX,forgeY,true);drawHouse(homeX,homeY,false);
+   drawHouse(forgeX,forgeY,true);
    drawSprite("orc2","idle",0,merchantX,merchantY,68,68,elapsed,false);
    paint.setTextAlign(Paint.Align.CENTER);paint.setColor(col("#ffe7aa"));paint.setTextSize(13);
    canvas.drawText("HAENDLER",merchantX,merchantY-45,paint);paint.setTextAlign(Paint.Align.LEFT);
@@ -808,7 +809,7 @@ public class MainActivity extends Activity {
     case KeyEvent.KEYCODE_W:case KeyEvent.KEYCODE_DPAD_UP:joyY=-1;break;
     case KeyEvent.KEYCODE_S:case KeyEvent.KEYCODE_DPAD_DOWN:joyY=1;break;
     case KeyEvent.KEYCODE_SPACE:attack();break;
-    case KeyEvent.KEYCODE_E:if(shopOpen)shopOpen=false;else if(indoors||Math.hypot(px-forgeX,py-(forgeY+84))<65||Math.hypot(px-homeX,py-(homeY+84))<65)enterOrLeave();else if(Math.hypot(px-merchantX,py-merchantY)<100)openShop();else pickup();break;
+    case KeyEvent.KEYCODE_E:if(shopOpen)shopOpen=false;else if(indoors||Math.hypot(px-forgeX,py-(forgeY+84))<65)enterOrLeave();else if(Math.hypot(px-merchantX,py-merchantY)<100)openShop();else pickup();break;
     case KeyEvent.KEYCODE_I:if(shopOpen)shopOpen=false;else inventoryOpen=!inventoryOpen;hoverSlot=-1;break;
     case KeyEvent.KEYCODE_1:useHotbar(0);break;
     case KeyEvent.KEYCODE_2:useHotbar(1);break;
