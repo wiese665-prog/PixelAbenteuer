@@ -130,18 +130,12 @@ public class MainActivity extends Activity {
   void drawInterior(float vw,float vh){
    float left=vw/2-350,top=vh/2-190;
    drawRect(col("#171419"),0,0,vw,vh);
-   // Use real wall and floor textures from the supplied atlas.
-   for(int ix=0;ix<14;ix++)for(int iy=0;iy<8;iy++){
-    tile("Walls_interior",0,0,32,32,left+ix*50,top+iy*47,50,47);
-   }
-   for(int ix=0;ix<14;ix++){
-    tile("Walls_interior",32,0,32,32,left+ix*50,top,50,46);
-    tile("Walls_interior",32,0,32,32,left+ix*50,top+329,50,46);
-   }
-   for(int iy=0;iy<8;iy++){
-    tile("Walls_interior",64,0,32,32,left,top+iy*47,35,47);
-    tile("Walls_interior",64,0,32,32,left+665,top+iy*47,35,47);
-   }
+   // Keep atlas sections intact instead of repeating arbitrary 32px samples.
+   Bitmap walls=buildingSprites.get("Walls_interior");
+   if(walls!=null){
+    int sectionW=Math.min(walls.getWidth(),320),sectionH=Math.min(walls.getHeight(),180);
+    tile("Walls_interior",0,0,sectionW,sectionH,left,top,700,375);
+   }else drawRect(col("#806749"),left,top,700,375);
    if(currentHouse==1){
     // Workshop: fireplace, shop counter, display shelves, smith and visitors.
     tile("Forge",0,0,Math.max(1,buildingSprites.get("Forge").getWidth()/3),buildingSprites.get("Forge").getHeight(),left+62,top+38,110,118);
@@ -698,7 +692,7 @@ public class MainActivity extends Activity {
     if(n==1)drawRect(col("#6a9a53"),x+8,y+7,5,4);
    }
    for(Decoration d:decorations){
-    if((Math.hypot(d.x-forgeX,d.y-(forgeY+84))<68)||(Math.hypot(d.x-homeX,d.y-(homeY+84))<68))continue;
+    if(Math.hypot(d.x-forgeX,d.y-(forgeY+84))<82)continue;
     if(d.image!=null){paint.setColor(Color.WHITE);paint.setColorFilter(null);paint.setAlpha(255);paint.setStyle(Paint.Style.FILL);c.drawBitmap(d.image,null,new RectF(d.x-d.w/2,d.y-d.h*.8f,d.x+d.w/2,d.y+d.h*.2f),paint);}
     else drawRect(col("#82776b"),d.x-d.w/2,d.y-d.h/2,d.w,d.h);
    }
