@@ -118,36 +118,43 @@ public class MainActivity extends Activity {
    paint.setColor(col("#fff2ae"));canvas.drawText(label,tx-1,ty-2,paint);
    paint.setTypeface(Typeface.DEFAULT);paint.setTextAlign(Paint.Align.LEFT);
   }
+  int rarityColor(String rarity){
+   if("Legendär".equals(rarity))return col("#f6c95b");
+   if("Super Rare".equals(rarity))return col("#c17af4");
+   if("Rare".equals(rarity))return col("#61a8ff");
+   if("Uncommon".equals(rarity))return col("#70d889");
+   return col("#b9bdc2");
+  }
   void define(String name,String rarity,String slot,int dmg,int armor,int bonusHp,int heal){
    definitions.put(name,new Item(name,rarity,slot,dmg,armor,bonusHp,heal));
   }
   void loadItems(){
    String[] filenames={"Healthpotion.png","Healthpotion large.png","Healpotion med.png","Green Apple.png","Ham.png","Apple.png","Mushroom.png","Cheese.png","Bag.png","Belt.png","Helm.png","Iron Armor.png","Iron Boot.png","Iron Helmet.png","Leather Armor.png","Leather Boot.png","Leather Helmet.png","Wizard Hat.png","Wooden Armor.png","Wood Log.png","Wool.png","Copper Coin.png","Gear.png","Golden Coin.png","Silver Coin.png","Rune Stone.png","Map.png","Bone.png","Egg.png","Feather.png","Monster Egg.png","Monster Eye.png","Monster Meat.png","Skull.png","Slime Gel.png","Coal.png","Copper Ingot.png","Copper Nugget.png","Crystal.png","Cut Emerald.png","Cut Ruby.png","Cut Sapphire.png","Cut Topaz.png","Diamond.png","Emerald.png","Gold Nugget.png","Golden Ingot.png","Obsidian.png","Pearl.png","Ruby.png","Sapphire.png","Silver Ingot.png","Silver Nugget.png","Topaz.png","Iron Sword.png","Silver Sword.png","Wooden Sword.png","Golden Sword.png"};
    for(String filename:filenames){Bitmap b=asset(filename);if(b!=null)itemImages.put(filename.substring(0,filename.length()-4),b);}
-   define("Wooden Sword","Gewoehnlich","Waffe",1,0,0,0);
-   define("Iron Sword","Ungewoehnlich","Waffe",3,0,0,0);
-   define("Silver Sword","Selten","Waffe",5,0,0,0);
-   define("Golden Sword","Episch","Waffe",8,0,0,0);
-   define("Wooden Armor","Gewoehnlich","Brust",0,1,1,0);
-   define("Leather Armor","Ungewoehnlich","Brust",0,2,3,0);
-   define("Iron Armor","Selten","Brust",0,4,5,0);
-   define("Leather Helmet","Gewoehnlich","Kopf",0,1,1,0);
-   define("Iron Helmet","Selten","Kopf",0,3,3,0);
-   define("Wizard Hat","Episch","Kopf",2,1,4,0);
-   define("Leather Boot","Gewoehnlich","Fuesse",0,1,0,0);
-   define("Iron Boot","Selten","Fuesse",0,3,2,0);
-   define("Belt","Ungewoehnlich","Guertel",0,1,2,0);
-   define("Helm","Ungewoehnlich","Kopf",0,2,2,0);
-   define("Bag","Gewoehnlich","Guertel",0,0,2,0);
-   define("Apple","Gewoehnlich","",0,0,0,3);
-   define("Green Apple","Gewoehnlich","",0,0,0,4);
-   define("Mushroom","Gewoehnlich","",0,0,0,2);
-   define("Cheese","Gewoehnlich","",0,0,0,5);
-   define("Ham","Ungewoehnlich","",0,0,0,8);
-   define("Monster Meat","Ungewoehnlich","",0,0,0,6);
-   define("Healthpotion","Ungewoehnlich","",0,0,0,10);
-   define("Healpotion med","Selten","",0,0,0,20);
-   define("Healthpotion large","Episch","",0,0,0,40);
+   define("Wooden Sword","Common","Waffe",1,0,0,0);
+   define("Iron Sword","Uncommon","Waffe",3,0,0,0);
+   define("Silver Sword","Rare","Waffe",6,0,0,0);
+   define("Golden Sword","Legendär","Waffe",12,0,0,0);
+   define("Wooden Armor","Common","Brust",0,1,1,0);
+   define("Leather Armor","Uncommon","Brust",0,2,3,0);
+   define("Iron Armor","Rare","Brust",0,6,8,0);
+   define("Leather Helmet","Common","Kopf",0,1,1,0);
+   define("Iron Helmet","Rare","Kopf",0,5,5,0);
+   define("Wizard Hat","Super Rare","Kopf",4,2,8,0);
+   define("Leather Boot","Common","Fuesse",0,1,0,0);
+   define("Iron Boot","Rare","Fuesse",0,4,4,0);
+   define("Belt","Uncommon","Guertel",0,1,2,0);
+   define("Helm","Uncommon","Kopf",0,2,2,0);
+   define("Bag","Common","Guertel",0,0,2,0);
+   define("Apple","Common","",0,0,0,3);
+   define("Green Apple","Common","",0,0,0,4);
+   define("Mushroom","Common","",0,0,0,2);
+   define("Cheese","Common","",0,0,0,5);
+   define("Ham","Uncommon","",0,0,0,8);
+   define("Monster Meat","Uncommon","",0,0,0,6);
+   define("Healthpotion","Uncommon","",0,0,0,10);
+   define("Healpotion med","Rare","",0,0,0,20);
+   define("Healthpotion large","Super Rare","",0,0,0,40);
   }
   void itemIcon(String item,float x,float y,float scale){
    Bitmap b=itemImages.get(item);
@@ -237,30 +244,43 @@ public class MainActivity extends Activity {
     float x=left+16+(i%8)*69,y=top+46+(i/8)*75;
     drawRect(col("#121b20"),x,y,63,68);drawRect(col("#48545b"),x+3,y+3,57,62);
     itemIcon(names[i],x+13,y+4,1.5f);
-    paint.setColor(Color.WHITE);paint.setTextSize(9);
+    Item def=definitions.get(names[i]);paint.setColor(def!=null&&def.equipment()?rarityColor(def.rarity):Color.WHITE);paint.setTextSize(9);
     String label=names[i];if(label.length()>11)label=label.substring(0,10)+".";
     canvas.drawText(label,x+3,y+54,paint);
     paint.setColor(col("#ffe1a0"));paint.setTextSize(11);
     canvas.drawText("x"+inventory.get(names[i]),x+44,y+13,paint);
    }
    paint.setColor(col("#f1d7a4"));paint.setTextSize(13);
-   canvas.drawText("Ausgeruestet:",left+17,top+293,paint);
-   int i=0;for(String slot:new String[]{"Waffe","Kopf","Brust","Fuesse","Guertel"}){
-    String name=equipped.get(slot);paint.setTextSize(11);
-    canvas.drawText(slot+": "+(name==null?"-":name),left+17+(i%3)*186,top+315+(i/3)*20,paint);i++;
+   canvas.drawText("Ausgeruestet:",left+17,top+286,paint);
+   int equippedIndex=0;
+   for(String slot:new String[]{"Waffe","Kopf","Brust","Fuesse","Guertel"}){
+    float sx=left+17+equippedIndex*111,sy=top+296;
+    drawRect(col("#121b20"),sx,sy,105,69);
+    String name=equipped.get(slot);Item gear=definitions.get(name);
+    if(name!=null)itemIcon(name,sx+6,sy+4,1.3f);
+    paint.setTextSize(10);paint.setColor(col("#d5d9d5"));canvas.drawText(slot,sx+39,sy+16,paint);
+    if(name!=null){paint.setColor(rarityColor(gear.rarity));paint.setTextSize(9);
+     String label=name.length()>11?name.substring(0,10)+".":name;
+     canvas.drawText(label,sx+3,sy+59,paint);
+    }else{paint.setColor(col("#78858b"));canvas.drawText("Leer",sx+39,sy+38,paint);}
+    equippedIndex++;
    }
    if(hoverSlot>=0&&hoverSlot<names.length){
     Item item=definitions.get(names[hoverSlot]);
-    if(item!=null){
-     float tx=Math.min(vw-214,hoverX+14),ty=Math.min(vh-118,hoverY+10);
-     drawRect(col("#10171e"),tx,ty,208,105);drawRect(col("#6d6b5d"),tx+2,ty+2,204,101);
-     drawRect(col("#202a33"),tx+4,ty+4,200,97);
-     paint.setTextSize(13);paint.setColor(col("#fff1c9"));canvas.drawText(item.name,tx+10,ty+20,paint);
-     paint.setTextSize(12);paint.setColor(item.rarity.equals("Episch")?col("#d69af4"):item.rarity.equals("Selten")?col("#76b7f7"):col("#d6e3d0"));
-     canvas.drawText(item.rarity,tx+10,ty+38,paint);paint.setColor(Color.WHITE);
-     canvas.drawText(item.equipment()?"Slot: "+item.slot:"Verbrauchbar",tx+10,ty+55,paint);
-     canvas.drawText(item.equipment()?"DMG +"+item.dmg+"  DEF +"+item.armor+"  HP +"+item.hp:"Heilung: +"+item.heal+" HP",tx+10,ty+75,paint);
-     canvas.drawText(item.equipment()?"Klicken: Anlegen":item.heal>0?"Klicken: Hotbar zuweisen":"Material",tx+10,ty+92,paint);
+    if(item!=null&&item.equipment()){
+     float tx=Math.max(5,Math.min(vw-232,hoverX+16)),ty=Math.max(5,Math.min(vh-146,hoverY+14));
+     drawRect(col("#0d1118"),tx-2,ty-2,228,139);
+     drawRect(rarityColor(item.rarity),tx,ty,224,135);
+     drawRect(col("#202832"),tx+2,ty+2,220,131);
+     itemIcon(item.name,tx+8,ty+8,1.4f);
+     paint.setTypeface(Typeface.DEFAULT_BOLD);paint.setTextSize(14);paint.setColor(rarityColor(item.rarity));
+     canvas.drawText(item.name,tx+47,ty+22,paint);
+     paint.setTextSize(12);canvas.drawText(item.rarity,tx+47,ty+39,paint);
+     paint.setTypeface(Typeface.DEFAULT);paint.setColor(col("#f4f0e5"));
+     canvas.drawText("Slot: "+item.slot,tx+10,ty+62,paint);
+     paint.setColor(col("#83df9a"));canvas.drawText("Schaden  +"+item.dmg,tx+10,ty+80,paint);
+     canvas.drawText("Ruestung  +"+item.armor,tx+10,ty+98,paint);
+     canvas.drawText("Max. Leben  +"+item.hp,tx+10,ty+116,paint);
     }
    }
    paint.setTypeface(Typeface.DEFAULT);
@@ -359,11 +379,12 @@ public class MainActivity extends Activity {
    canvas=c;float dt=Math.min(.05f,(System.nanoTime()-previous)/1000000000f);previous=System.nanoTime();update(dt);
    float w=getWidth(),h=getHeight(),scale=Math.min(w/800f,h/450f),vw=w/scale,vh=h/scale;
    paint.reset();paint.setAntiAlias(false);paint.setFilterBitmap(false);paint.setColor(Color.WHITE);
-   c.drawColor(col("#407d46"));c.save();c.scale(scale,scale);c.save();c.translate(vw/2-px,vh/2-py);
+   paint.setColorFilter(null);paint.setAlpha(255);paint.setStyle(Paint.Style.FILL);
+   c.drawColor(col("#47884a"));c.save();c.scale(scale,scale);c.save();c.translate(vw/2-px,vh/2-py);
    int startX=(int)Math.floor((px-vw/2)/32f)*32-32,endX=(int)Math.ceil((px+vw/2)/32f)*32+32;
    int startY=(int)Math.floor((py-vh/2)/32f)*32-32,endY=(int)Math.ceil((py+vh/2)/32f)*32+32;
    for(int x=startX;x<endX;x+=32)for(int y=startY;y<endY;y+=32){
-    int n=(x*37+y*19)%7;drawRect(n<3?col("#407d46"):col("#47884a"),x,y,32,32);
+    int n=Math.floorMod(x/32*37+y/32*19,7);drawRect(n<3?col("#407d46"):col("#47884a"),x,y,32,32);
     if(n==1)drawRect(col("#6a9a53"),x+8,y+7,5,4);
    }
    for(Decoration d:decorations){
@@ -371,7 +392,7 @@ public class MainActivity extends Activity {
     else drawRect(col("#82776b"),d.x-d.w/2,d.y-d.h/2,d.w,d.h);
    }
    for(Drop d:drops){float bob=(float)Math.sin(elapsed*3+d.bob)*2;
-    drawRect(col("#28342b"),d.x-11,d.y+7,22,5);itemIcon(d.item,d.x-12,d.y-17+bob,1f);
+    drawRect(col("#28342b"),d.x-11,d.y+7,22,5);itemIcon(d.item,d.x-10,d.y-15+bob,.82f);
    }
    for(Mob m:mobs){
     if(m.dead&&m.deathTimer>2.5f)continue;
@@ -393,8 +414,8 @@ public class MainActivity extends Activity {
    c.restore();
    drawRect(col("#142b24"),0,0,vw,37);paint.setColor(Color.WHITE);paint.setTextSize(18);
    c.drawText("Lv. "+playerLevel+" EXP "+exp+"/"+expNeeded()+" DMG "+attackPower+" DEF "+armorValue(),12,25,paint);
-   itemIcon("Copper Coin",vw-202,7,.85f);itemIcon("Silver Coin",vw-137,7,.85f);itemIcon("Golden Coin",vw-72,7,.85f);
-   paint.setColor(Color.WHITE);paint.setTextSize(15);c.drawText(""+copper,vw-178,25,paint);c.drawText(""+silver,vw-113,25,paint);c.drawText(""+gold,vw-48,25,paint);
+   itemIcon("Golden Coin",vw-202,7,.85f);itemIcon("Silver Coin",vw-137,7,.85f);itemIcon("Copper Coin",vw-72,7,.85f);
+   paint.setColor(Color.WHITE);paint.setTextSize(15);c.drawText(""+gold,vw-178,25,paint);c.drawText(""+silver,vw-113,25,paint);c.drawText(""+copper,vw-48,25,paint);
    drawHotbar(vw,vh);
    if(noticeTime>0){paint.setColor(col("#f7e0a6"));paint.setTextSize(17);c.drawText(pickupNotice,12,60,paint);}
    if(inventoryOpen)drawInventory(vw,vh);
@@ -414,6 +435,15 @@ public class MainActivity extends Activity {
     hoverX=e.getX()/sc;hoverY=e.getY()/sc;hoverSlot=inventoryIndex(hoverX,hoverY,vw,vh);invalidate();return true;}
    return super.onHoverEvent(e);
   }
+  @Override public boolean onGenericMotionEvent(MotionEvent e){
+   if(inventoryOpen&&(e.getActionMasked()==MotionEvent.ACTION_HOVER_MOVE||e.getActionMasked()==MotionEvent.ACTION_MOVE)){
+    float sc=Math.min(getWidth()/800f,getHeight()/450f),vw=getWidth()/sc,vh=getHeight()/sc;
+    hoverX=e.getX()/sc;hoverY=e.getY()/sc;hoverSlot=inventoryIndex(hoverX,hoverY,vw,vh);invalidate();return true;
+   }
+   if((e.getSource()&InputDevice.SOURCE_MOUSE)==InputDevice.SOURCE_MOUSE&&e.getActionMasked()==MotionEvent.ACTION_BUTTON_PRESS
+      &&e.getActionButton()==MotionEvent.BUTTON_PRIMARY){attack();return true;}
+   return super.onGenericMotionEvent(e);
+  }
   @Override public boolean onTouchEvent(MotionEvent e){
    int type=e.getActionMasked();
    if(type==MotionEvent.ACTION_DOWN){
@@ -426,11 +456,6 @@ public class MainActivity extends Activity {
     }else attack();
    }
    return true;
-  }
-  @Override public boolean onGenericMotionEvent(MotionEvent e){
-   if((e.getSource()&InputDevice.SOURCE_MOUSE)==InputDevice.SOURCE_MOUSE&&e.getActionMasked()==MotionEvent.ACTION_BUTTON_PRESS
-      &&e.getActionButton()==MotionEvent.BUTTON_PRIMARY){attack();return true;}
-   return super.onGenericMotionEvent(e);
   }
   @Override public boolean onKeyDown(int key,KeyEvent e){
    switch(key){case KeyEvent.KEYCODE_A:case KeyEvent.KEYCODE_DPAD_LEFT:joyX=-1;break;
