@@ -175,7 +175,8 @@ public class MainActivity extends Activity {
    if(furnace!=null)tile("Forge",0,0,Math.max(1,furnace.getWidth()/3),
      Math.max(1,furnace.getHeight()/2),l+94,t+73,104,111);
    tile("Interior_objects",173,226,34,36,l+216,t+107,57,54);
-   tile("Interior_objects",10,194,27,34,l+66,t+263,44,52);\n   tile("Interior_objects",47,194,27,34,l+119,t+263,44,52);
+   tile("Interior_objects",10,194,27,34,l+66,t+263,44,52);
+   tile("Interior_objects",47,194,27,34,l+119,t+263,44,52);
    // Shop: only the original two rear wall shelves and one painting.
    tile("Interior_objects",7,101,56,63,l+355,t+74,91,110);
    tile("Interior_objects",109,101,53,63,l+554,t+74,91,110);
