@@ -160,7 +160,7 @@ public class MainActivity extends Activity {
   final float DOOR_IN_X=555f,DOOR_IN_Y=480f;
   void enterOrLeave(){
    if(indoors){
-    indoors=false;px=forgeX+DOOR_OUT_X;py=forgeY+DOOR_OUT_Y+19f;
+    indoors=false;px=forgeX+DOOR_OUT_X;py=forgeY+DOOR_OUT_Y+43f;
     joyX=joyY=0;return;
    }
    if(Math.abs(px-(forgeX+DOOR_OUT_X))<22&&
@@ -284,11 +284,11 @@ public class MainActivity extends Activity {
    if(x<18||y<18||x>WORLD_W-18||y>WORLD_H-18)return true;
    for(Decoration d:decorations)if(d.solid&&Math.hypot(d.x-forgeX,d.y-forgeY)>185&&collides(d,x,y))return true;
    float dx=x-forgeX,dy=y-forgeY;
-   if(Math.abs(dx)<110&&dy>-63&&dy<65&&!(Math.abs(dx-7)<25&&dy>37))return true;
+   if(Math.abs(dx)<110&&dy>-63&&dy<65&&!(Math.abs(dx-DOOR_OUT_X)<25&&dy>32))return true;
    if(dx>-122&&dx<-66&&dy>111&&dy<168)return true;
-   if(dx>-7&&dx<17&&dy>84&&dy<115)return true;
-   if(dx>12&&dx<44&&dy>79&&dy<110)return true;
-   if(dx>3&&dx<36&&dy>109&&dy<127)return true;
+   // Keep the whole door approach clear; the old rectangle trapped the player.
+   if(dx>12&&dx<44&&dy>79&&dy<110&&Math.abs(dx-DOOR_OUT_X)>26)return true;
+   if(dx>3&&dx<36&&dy>109&&dy<127&&Math.abs(dx-DOOR_OUT_X)>26)return true;
    if(dx>91&&dx<139&&dy>48&&dy<93)return true;
    return false;
   }
