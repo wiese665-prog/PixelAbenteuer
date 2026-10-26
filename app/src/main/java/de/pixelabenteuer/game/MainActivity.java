@@ -234,7 +234,7 @@ public class MainActivity extends Activity {
   }
   int equippedSlotAt(float x,float y,float vw,float vh){
    float left=invLeft(vw),top=invTop(vh);
-   float[][] p={{left+129,top+96},{left+20,top+158},{left+223,top+158},{left+129,top+277},{left+223,top+245}};
+   float[][] p={{left+129,top+97},{left+21,top+155},{left+222,top+155},{left+21,top+246},{left+222,top+246}};
    for(int i=0;i<p.length;i++)if(x>=p[i][0]&&x<=p[i][0]+43&&y>=p[i][1]&&y<=p[i][1]+43)return i;
    return -1;
   }
@@ -316,12 +316,12 @@ public class MainActivity extends Activity {
    paint.setTextSize(11);paint.setColor(col("#9fc2c0"));canvas.drawText("Hotbar anklicken: Platz waehlen / leeren  |  Item anklicken: zuweisen",left+18,top+48,paint);
    panel(left+14,top+65,285,313);
    paint.setTextSize(14);paint.setColor(col("#f5d7a5"));canvas.drawText("CHARAKTER",left+28,top+87,paint);
-   drawRect(col("#1b302e"),left+82,top+115,140,171);
-   drawRect(col("#32564a"),left+86,top+119,132,163);
-   drawSprite(sword?"player_sword":"player_unarmed","idle",0,left+151,top+198,136,158,elapsed,false);
-   paint.setTextSize(11);paint.setColor(col("#d8e7da"));canvas.drawText("Lv "+playerLevel+"   HP "+hp+"/"+maxHp,left+91,top+319,paint);
+   drawRect(col("#1b302e"),left+85,top+143,132,152);
+   drawRect(col("#32564a"),left+89,top+147,124,144);
+   drawSprite(sword?"player_sword":"player_unarmed","idle",0,left+151,top+217,125,143,elapsed,false);
+   paint.setTextSize(12);paint.setTypeface(Typeface.DEFAULT_BOLD);paint.setColor(col("#f2deb6"));canvas.drawText("ABENTEURER  -  Lv. "+playerLevel,left+75,top+316,paint);paint.setTypeface(Typeface.DEFAULT);
    String[] slots={"Kopf","Waffe","Brust","Fuesse","Guertel"};
-   float[][] positions={{left+129,top+96},{left+20,top+158},{left+223,top+158},{left+129,top+277},{left+223,top+245}};
+   float[][] positions={{left+129,top+97},{left+21,top+155},{left+222,top+155},{left+21,top+246},{left+222,top+246}};
    for(int i=0;i<slots.length;i++){
     float sx=positions[i][0],sy=positions[i][1];String name=equipped.get(slots[i]);
     slotFrame(sx,sy,43,name);
@@ -560,7 +560,8 @@ public class MainActivity extends Activity {
    float w=getWidth(),h=getHeight(),scale=Math.min(w/800f,h/450f),vw=w/scale,vh=h/scale;
    paint.reset();paint.setAntiAlias(false);paint.setFilterBitmap(false);paint.setColor(Color.WHITE);
    paint.setColorFilter(null);paint.setAlpha(255);paint.setStyle(Paint.Style.FILL);
-   c.drawColor(col("#47884a"));c.save();c.scale(scale,scale);c.save();c.translate(vw/2-px,vh/2-py);
+   // Clear the entire frame, including any emulator-provided dirty region.
+   c.drawColor(col("#47884a"),android.graphics.PorterDuff.Mode.SRC);c.save();c.scale(scale,scale);c.save();c.translate(vw/2-px,vh/2-py);
    int startX=(int)Math.floor((px-vw/2)/32f)*32-32,endX=(int)Math.ceil((px+vw/2)/32f)*32+32;
    int startY=(int)Math.floor((py-vh/2)/32f)*32-32,endY=(int)Math.ceil((py+vh/2)/32f)*32+32;
    for(int x=startX;x<endX;x+=32)for(int y=startY;y<endY;y+=32){
@@ -582,7 +583,7 @@ public class MainActivity extends Activity {
    // Day-night tint on terrain and decorations, behind creatures and UI.
    float phase=(worldTime%240f)/240f;
    float night=(float)Math.max(0,Math.min(1,(-Math.cos(phase*6.2831853f)-.10f)/.85f));
-   paint.setColor(Color.argb((int)(night*105),13,21,52));paint.setStyle(Paint.Style.FILL);
+   paint.setColor(Color.argb((int)(night*70),13,21,52));paint.setStyle(Paint.Style.FILL);
    c.drawRect(px-vw/2-8,py-vh/2-8,px+vw/2+8,py+vh/2+8,paint);
    for(Mob m:mobs){
     if(m.dead&&m.deathTimer>2.5f)continue;
@@ -622,22 +623,26 @@ public class MainActivity extends Activity {
    if(dx%67>=56||dy%64>=56)return -1;
    return row*6+col;
   }
+  void updateInventoryHover(MotionEvent e){
+   if(!inventoryOpen)return;
+   float sc=Math.min(getWidth()/800f,getHeight()/450f),vw=getWidth()/sc,vh=getHeight()/sc;
+   hoverX=e.getX()/sc;hoverY=e.getY()/sc;
+   hoverSlot=inventoryIndex(hoverX,hoverY,vw,vh);
+   invalidate();
+  }
   @Override public boolean onHoverEvent(MotionEvent e){
-   if(inventoryOpen){float sc=Math.min(getWidth()/800f,getHeight()/450f),vw=getWidth()/sc,vh=getHeight()/sc;
-    hoverX=e.getX()/sc;hoverY=e.getY()/sc;hoverSlot=inventoryIndex(hoverX,hoverY,vw,vh);invalidate();return true;}
+   if(inventoryOpen){updateInventoryHover(e);return true;}
    return super.onHoverEvent(e);
   }
   @Override public boolean onGenericMotionEvent(MotionEvent e){
-   if(inventoryOpen&&(e.getActionMasked()==MotionEvent.ACTION_HOVER_MOVE||e.getActionMasked()==MotionEvent.ACTION_MOVE)){
-    float sc=Math.min(getWidth()/800f,getHeight()/450f),vw=getWidth()/sc,vh=getHeight()/sc;
-    hoverX=e.getX()/sc;hoverY=e.getY()/sc;hoverSlot=inventoryIndex(hoverX,hoverY,vw,vh);invalidate();return true;
-   }
+   if(inventoryOpen){updateInventoryHover(e);return true;}
    if((e.getSource()&InputDevice.SOURCE_MOUSE)==InputDevice.SOURCE_MOUSE&&e.getActionMasked()==MotionEvent.ACTION_BUTTON_PRESS
       &&e.getActionButton()==MotionEvent.BUTTON_PRIMARY){attack();return true;}
    return super.onGenericMotionEvent(e);
   }
   @Override public boolean onTouchEvent(MotionEvent e){
    int type=e.getActionMasked();
+   if(inventoryOpen&&(type==MotionEvent.ACTION_MOVE||type==MotionEvent.ACTION_HOVER_MOVE)){updateInventoryHover(e);return true;}
    if(type==MotionEvent.ACTION_DOWN){
     if(startScreen||pauseMenu){float sc=Math.min(getWidth()/800f,getHeight()/450f),xx=e.getX()/sc,yy=e.getY()/sc,vw=getWidth()/sc,vh=getHeight()/sc;menuClick(xx,yy,vw,vh);return true;}
     if(shopOpen){
@@ -647,7 +652,7 @@ public class MainActivity extends Activity {
      else{idx=shopIndex(xx,yy,vw,vh,false);String[] names=inventoryNames();if(idx>=0&&idx<Math.min(12,names.length))trade(names[idx],false);}
      return true;
     }
-    if(inventoryOpen){float sc=Math.min(getWidth()/800f,getHeight()/450f),xx=e.getX()/sc,yy=e.getY()/sc,vw=getWidth()/sc,vh=getHeight()/sc;
+    if(inventoryOpen){updateInventoryHover(e);float sc=Math.min(getWidth()/800f,getHeight()/450f),xx=e.getX()/sc,yy=e.getY()/sc,vw=getWidth()/sc,vh=getHeight()/sc;
      int barSlot=hotbarIndexAt(xx,yy,vw,vh);
      if(barSlot>=0){if(selectedHotbar==barSlot){hotbar[barSlot]=null;selectedHotbar=-1;}else selectedHotbar=barSlot;return true;}
      int equippedIndex=equippedSlotAt(xx,yy,vw,vh);if(equippedIndex>=0){unequip(new String[]{"Kopf","Waffe","Brust","Fuesse","Guertel"}[equippedIndex]);return true;}
