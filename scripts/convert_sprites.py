@@ -13,7 +13,7 @@ def convert(path):
   for _ in range(chunks):
    length=u32(b,p);kind=u16(b,p+4);q=p+6
    if kind==0x2004:
-    flags=u16(b,q+2);layers.append(bool(flags&1))
+    flags=u16(b,q);layers.append(bool(flags&1))
    elif kind==0x2005:
     layer=u16(b,q);x,y=struct.unpack_from("<hh",b,q+2);opacity=b[q+6];typ=u16(b,q+7)
     if typ in (0,2):
@@ -30,7 +30,9 @@ def convert(path):
  for i,im in enumerate(frames):sheet.paste(im,(i*w,0))
  name=path.stem.lower()
  parts=path.parts
- animal=next((v for v in ("boar","deer","fox","black_grouse","orc1","orc2","orc3") if v.lower() in str(path).lower()),None)
+ animal=next((v for v in ("boar","deer","fox","black_grouse","orc1","orc2","orc3") if v in name),None)
+ if name.startswith("sword_"):animal="player_sword"
+ if name.startswith("unarmed_"):animal="player_unarmed"
  if not animal:return
  action=next((a for a in ("run_attack","walk_attack","idle","walk","run","flight","attack","hurt","death") if a in name),None)
  direction=next((d for d in ("front","back","left","right") if d in name),None)
