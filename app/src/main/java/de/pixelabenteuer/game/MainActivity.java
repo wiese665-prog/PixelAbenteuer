@@ -112,8 +112,20 @@ public class MainActivity extends Activity {
   void characterTile(String name,int columns,int rows,int frame,float x,float y,float size){
    Bitmap bitmap=buildingSprites.get(name);if(bitmap==null)return;
    int fw=bitmap.getWidth()/columns,fh=bitmap.getHeight()/rows;
-   int index=Math.floorMod(frame,columns*rows);
-   tile(name,(index%columns)*fw,(index/columns)*fh,fw,fh,x-size/2,y-size/2,size,size);
+   int index=Math.floorMod(frame,columns*rows),sx=(index%columns)*fw,sy=(index/columns)*fh;
+   // Trim transparent padding inside the selected animation cell so all NPCs
+   // have the same visible height as the player, regardless of sheet spacing.
+   int minX=fw,minY=fh,maxX=-1,maxY=-1;
+   for(int yy=0;yy<fh;yy++)for(int xx=0;xx<fw;xx++){
+    if(Color.alpha(bitmap.getPixel(sx+xx,sy+yy))>32){
+     if(xx<minX)minX=xx;if(xx>maxX)maxX=xx;
+     if(yy<minY)minY=yy;if(yy>maxY)maxY=yy;
+    }
+   }
+   if(maxX<minX||maxY<minY)return;
+   float h=size*.78f,w=h*(maxX-minX+1)/(float)(maxY-minY+1);
+   w=Math.min(w,size*.85f);
+   tile(name,sx+minX,sy+minY,maxX-minX+1,maxY-minY+1,x-w/2,y-h,w,h);
   }
   void drawHouse(float x,float y,boolean smithy){
    // Exact source rectangles measured against Exterior_house.png (400x208).
@@ -166,14 +178,14 @@ public class MainActivity extends Activity {
    tile("Interior_objects",52,91,50,104,l+555,t+69,94,108);
    tile("Interior_objects",104,279,102,46,l+450,t+80,104,59);
    // Two rugs, one behind and one in front of the original counter.
-   tile("Interior_objects",0,388,103,53,l+391,t+154,215,65);
-   tile("Interior_objects",0,388,103,53,l+391,t+254,215,69);
+   tile("Interior_objects",6,398,92,44,l+405,t+159,224,68);
+   tile("Interior_objects",6,398,92,44,l+405,t+257,224,69);
    tile("Interior_objects",0,0,176,29,l+345,t+212,310,43);
    // Stair-shaped display shelves at the sales room entrance.
    tile("Interior_objects",0,198,104,92,l+345,t+264,75,67);
    tile("Interior_objects",104,198,104,92,l+580,t+264,75,67);
    characterTile("Master_Idle",3,2,(int)(elapsed*2)%3,l+236,t+175,68);
-   characterTile("Seller",3,2,(int)(elapsed*2)%3,l+497,t+182,68);
+   characterTile("Seller",3,2,0,l+497,t+182,68);
    characterTile("Customer",3,2,(int)(elapsed*2)%3,l+507,t+288,68);
    float cx=l+340+(px-400),cy=t+176+(py-350);
    drawSprite(sword?"player_sword":"player_unarmed","idle",playerDir,cx,cy,68,68,elapsed,false);
