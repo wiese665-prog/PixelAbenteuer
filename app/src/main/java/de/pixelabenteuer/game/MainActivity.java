@@ -14,8 +14,8 @@ public class MainActivity extends Activity {
   setContentView(new Game());
  }
  class Mob {
-  String kind,action="idle";float x,y,vx,vy,anim=0,decision=0,attackTimer=0,hurtTimer=0,deathTimer=0,healthVisible=0;int hp,maxHp,dir=0;boolean dead=false;
-  Mob(String k,float xx,float yy) {kind=k;x=xx;y=yy;maxHp=k.equals("orc3")?7:k.equals("orc2")?5:k.equals("orc1")?4:k.equals("boar")?4:2;hp=maxHp;}
+  String kind,action="idle";float x,y,vx,vy,anim=0,decision=0,attackTimer=0,hurtTimer=0,deathTimer=0,healthVisible=0;int hp,maxHp,level,damage,dir=0;boolean dead=false;
+  Mob(String k,float xx,float yy) {kind=k;x=xx;y=yy;level=1+random.nextInt(k.startsWith("orc")?6:4);int baseHp=k.equals("orc3")?12:k.equals("orc2")?9:k.equals("orc1")?7:k.equals("boar")?8:k.equals("deer")?5:k.equals("fox")?4:2;maxHp=baseHp+(level-1)*(k.equals("boar")||k.startsWith("orc")?3:2);hp=maxHp;damage=(k.equals("orc3")?3:k.equals("orc2")?2:k.equals("orc1")?1:0)+(level-1)/3;}
   boolean hostile(){return kind.startsWith("orc");}
  }
  class Decoration {
@@ -127,7 +127,7 @@ public class MainActivity extends Activity {
     else if(m.hostile()&&distance<330){
      m.dir=direction(px-m.x,py-m.y);
      if(distance>43){vx=(px-m.x)/Math.max(1,distance)*75;vy=(py-m.y)/Math.max(1,distance)*75;action="run";}
-     else {action="attack";if(m.attackTimer<=0){hp=Math.max(0,hp-1);hurtAnim=.32f;playerHealthVisible=3f;m.attackTimer=1.3f;}}
+     else {action="attack";if(m.attackTimer<=0){hp=Math.max(0,hp-Math.max(1,m.damage));hurtAnim=.32f;playerHealthVisible=3f;m.attackTimer=1.3f;}}
     }else if(!m.hostile()&&distance<110){
      vx=(m.x-px)/Math.max(1,distance)*105;vy=(m.y-py)/Math.max(1,distance)*105;
      action=m.kind.equals("black_grouse")?"flight":"run";
@@ -157,7 +157,7 @@ public class MainActivity extends Activity {
     float dx=m.x-px,dy=m.y-py,d=(float)Math.hypot(dx,dy);
     if(d>76||d<.01f)continue;
     if((dx*fx+dy*fy)/d<-.1f)continue;
-    m.hp-=2;m.hurtTimer=.28f;m.healthVisible=3f;m.anim=0;
+    m.hp-=3;m.hurtTimer=.28f;m.healthVisible=3f;m.anim=0;
     if(m.hp<=0){m.dead=true;m.deathTimer=0;if(m.hostile())kills++;else animalKills++;}
    }
   }
@@ -167,8 +167,11 @@ public class MainActivity extends Activity {
   @Override protected void onDraw(Canvas c){
    canvas=c;float dt=Math.min(.05f,(System.nanoTime()-previous)/1000000000f);previous=System.nanoTime();update(dt);
    float w=getWidth(),h=getHeight(),scale=Math.min(w/800f,h/450f),vw=w/scale,vh=h/scale;
-   c.drawColor(col("#182b24"));c.save();c.scale(scale,scale);c.save();c.translate(vw/2-px,vh/2-py);
-   for(int x=0;x<WORLD_W;x+=32)for(int y=0;y<WORLD_H;y+=32){
+   paint.reset();paint.setAntiAlias(false);paint.setFilterBitmap(false);paint.setColor(Color.WHITE);
+   c.drawColor(col("#407d46"));c.save();c.scale(scale,scale);c.save();c.translate(vw/2-px,vh/2-py);
+   int startX=(int)Math.floor((px-vw/2)/32f)*32-32,endX=(int)Math.ceil((px+vw/2)/32f)*32+32;
+   int startY=(int)Math.floor((py-vh/2)/32f)*32-32,endY=(int)Math.ceil((py+vh/2)/32f)*32+32;
+   for(int x=startX;x<endX;x+=32)for(int y=startY;y<endY;y+=32){
     int n=(x*37+y*19)%7;drawRect(n<3?col("#407d46"):col("#47884a"),x,y,32,32);
     if(n==1)drawRect(col("#6a9a53"),x+8,y+7,5,4);
    }
@@ -181,7 +184,8 @@ public class MainActivity extends Activity {
     String action=m.dead?"death":m.hurtTimer>0?"hurt":m.action;
     float size=m.hostile()?68:50;
     drawSprite(m.kind,action,m.dir,m.x,m.y,size,size,m.dead?m.deathTimer:m.anim,m.dead&&m.deathTimer>.7f);
-    if(m.healthVisible>0&&(!m.dead||m.deathTimer<1f))healthBar(m.x,m.y-size*.65f,42,m.hp,m.maxHp);
+    if(!m.dead){paint.setColor(Color.WHITE);paint.setTextSize(12);paint.setTextAlign(Paint.Align.CENTER);canvas.drawText("Lv. "+m.level,m.x,m.y-size*.64f,paint);paint.setTextAlign(Paint.Align.LEFT);}
+    if(m.healthVisible>0&&(!m.dead||m.deathTimer<1f))healthBar(m.x,m.y-size*.65f-12,42,m.hp,m.maxHp);
    }
    String playerKind=sword?"player_sword":"player_unarmed";
    String playerAction=hp<=0?"death":hurtAnim>0?"hurt":attackAnim>0&&sword?"attack":Math.abs(joyX)+Math.abs(joyY)>.08f?"run":"idle";
