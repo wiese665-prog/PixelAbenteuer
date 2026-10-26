@@ -30,6 +30,10 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.7'
+      - name: Convert animal sprite animations
+        run: |
+          python3 -m pip install Pillow
+          python3 scripts/convert_sprites.py
       - name: Build APK
         run: gradle :app:assembleDebug --no-daemon
       - name: Upload APK
