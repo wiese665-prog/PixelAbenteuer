@@ -128,6 +128,23 @@ public class MainActivity extends Activity {
    w=Math.min(w,size*.85f);
    tile(name,sx+minX,sy+minY,maxX-minX+1,maxY-minY+1,x-w/2,y-h,w,h);
   }
+  void sellerPortrait(float x,float y){
+   Bitmap bitmap=buildingSprites.get("Seller");if(bitmap==null)return;
+   // Seller.png is 96x96: each of the 3x2 cells is 32x48.
+   // Its 48px-high cells contain an unwanted second row fragment.
+   // Isolate the first standing character within the upper 32x32 area.
+   int sx=0,sy=0,sw=Math.min(32,bitmap.getWidth()),sh=Math.min(32,bitmap.getHeight());
+   int minX=sw,minY=sh,maxX=-1,maxY=-1;
+   for(int yy=0;yy<sh;yy++)for(int xx=0;xx<sw;xx++)
+    if(Color.alpha(bitmap.getPixel(sx+xx,sy+yy))>32){
+     minX=Math.min(minX,xx);minY=Math.min(minY,yy);
+     maxX=Math.max(maxX,xx);maxY=Math.max(maxY,yy);
+    }
+   if(maxX>=minX&&maxY>=minY){
+    float h=56,w=Math.min(42,h*(maxX-minX+1)/(float)(maxY-minY+1));
+    tile("Seller",sx+minX,sy+minY,maxX-minX+1,maxY-minY+1,x-w/2,y-h,w,h);
+   }
+  }
   void drawHouse(float x,float y,boolean smithy){
    // Exact source rectangles measured against Exterior_house.png (400x208).
    // The facade is a complete single sprite in x=0..145, y=0..162.
@@ -157,12 +174,12 @@ public class MainActivity extends Activity {
    for(int ix=0;ix<14;ix++)
     tile("Walls_interior",48+(ix%2)*32,0,32,32,l+16+ix*46,t,46,70);
    for(int iy=0;iy<6;iy++){
-    tile("Walls_interior",0,128,32,42,l,t+67+iy*44,31,44);
-    tile("Walls_interior",193,128,32,42,l+649,t+67+iy*44,31,44);
+    tile("Walls_interior",16,128,32,42,l,t+67+iy*44,31,44);
+    tile("Walls_interior",177,128,32,42,l+649,t+67+iy*44,31,44);
    }
    // Divider: two original stone piers with a broad passable gap.
-   tile("Walls_interior",0,128,32,42,l+312,t+69,28,109);
-   tile("Walls_interior",0,128,32,42,l+312,t+272,28,65);
+   tile("Walls_interior",16,128,32,42,l+312,t+69,28,109);
+   tile("Walls_interior",16,128,32,42,l+312,t+272,28,65);
    // Forge: show one complete furnace cell, not half an animation sheet.
    Bitmap furnace=buildingSprites.get("Forge");
    if(furnace!=null){
@@ -170,20 +187,20 @@ public class MainActivity extends Activity {
     tile("Forge",0,0,fw,fh,l+94,t+73,104,111);
    }
    // One complete original ore crate, no clipped fragments at entrance.
-   tile("Interior_objects",174,200,34,40,l+217,t+111,54,56);
+   
    // Two complete rear display shelves and one dragon picture.
-   tile("Interior_objects",13,127,33,52,l+356,t+76,90,111);
-   tile("Interior_objects",113,127,33,52,l+556,t+76,90,111);
+   tile("Interior_objects",13,128,34,51,l+369,t+87,70,87);
+   tile("Interior_objects",114,128,34,51,l+569,t+87,70,87);
    tile("Interior_objects",114,257,59,49,l+451,t+82,106,59);
    // Two separate COMPLETE purple rugs (source x=6..60, y=397..421).
-   tile("Interior_objects",1,388,58,34,l+415,t+156,205,72);
-   tile("Interior_objects",1,388,58,34,l+415,t+256,205,72);
+   tile("Interior_objects",0,385,59,40,l+415,t+156,205,72);
+   tile("Interior_objects",70,385,55,40,l+415,t+256,205,72);
    // The complete counter with its decorative vases, cropped as one object.
-   tile("Interior_objects",16,9,160,21,l+345,t+212,310,43);
+   tile("Interior_objects",16,0,160,27,l+345,t+212,310,49);
    // The seller is drawn only once, using a single stable pose.
-   characterTile("Master_Idle",3,2,(int)(elapsed*2)%3,l+236,t+175,71);
-   characterTile("Seller",3,2,0,l+497,t+198,78);
-   characterTile("Customer",3,2,0,l+507,t+288,68);
+   characterTile("Master_Idle",3,2,(int)(elapsed*2)%3,l+236,t+175,77);
+   sellerPortrait(l+497,t+198);
+   characterTile("Customer",3,2,0,l+507,t+288,52);
    float cx=l+340+(px-400),cy=t+176+(py-350);
    drawSprite(sword?"player_sword":"player_unarmed","idle",playerDir,cx,cy,94,94,elapsed,false);
    paint.setColor(col("#fff2d5"));paint.setTextSize(13);
