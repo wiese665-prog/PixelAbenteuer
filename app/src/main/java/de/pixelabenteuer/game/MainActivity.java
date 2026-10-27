@@ -380,7 +380,7 @@ public class MainActivity extends Activity {
      int cw=right-left+1,ch=bottom-top+1;
      float scale=Math.min(92f/cw,99f/ch);
      float dw=cw*scale,dh=ch*scale;
-     tile("Forge",left,top,cw,ch,l+75+(114-dw)/2,t+25+(122-dh),dw,dh);
+     tile("Forge",left,top,cw,ch,l+75+(114-dw)/2,t+10+(122-dh),dw,dh);
     }
    }
    // Reuse the exact exterior crate and cart atlas rectangles without recropping.
@@ -388,9 +388,9 @@ public class MainActivity extends Activity {
    tile("Exterior_house",70,162,32,38,l+24,t+198,50,52); // same crates as outside
    tile("Exterior_house",116,160,34,34,l+70,t+259,55,55); // same complete cart, against the lower-left smithy wall
    // Two complete rear display shelves and one dragon picture.
-   tile("Interior_objects",13,128,35,63,l+381,t+75,53,80);
-   tile("Interior_objects",163,129,39,62,l+570,t+75,53,80);
-   tile("Interior_objects",114,257,59,49,l+451,t+67,106,59);
+   tile("Interior_objects",13,128,35,63,l+381,t+69,53,80);
+   tile("Interior_objects",163,129,39,62,l+570,t+69,53,80);
+   tile("Interior_objects",114,257,59,49,l+451,t+57,106,59);
    // Two separate COMPLETE purple rugs (source x=6..60, y=397..421).
    tile("Interior_objects",70,385,55,40,l+417,t+162,170,60);
    tile("Interior_objects",70,385,55,40,l+417,t+262,170,60);
@@ -410,14 +410,14 @@ public class MainActivity extends Activity {
    // Complete stair-display shelves on the bottom wall, flanking the entry.
    // Door is at interior x=555 (screen x=l+495); keep a clear central aisle.
    // Removed duplicate entrance shelf overlapping center pair.
-   tile("Interior_objects",148,70,46,59,l+596,t+266,56,69);
+   tile("Interior_objects",148,70,46,59,l+602,t+266,56,69);
    // The seller is drawn only once, using a single stable pose.
-   characterTile("Master_Idle",3,2,(int)(elapsed*2)%3,l+236,t+175,81.4f);
+   characterTile("Master_Idle",3,2,(int)(elapsed*2)%3,l+236,t+165,81.4f);
    sellerPortrait(l+510,t+198,(int)(elapsed*3)%3);
    paint.setTextAlign(Paint.Align.CENTER);
    paint.setTypeface(Typeface.DEFAULT_BOLD);
    paint.setTextSize(13);paint.setColor(col("#ffe7aa"));
-   fantasyName("Schmid",l+246,t+109);
+   fantasyName("Schmid",l+246,t+99);
    fantasyName("Händlerin",l+510,t+159);
    paint.setTypeface(Typeface.DEFAULT);paint.setTextSize(11);
    paint.setColor(col("#ffffff"));
@@ -1264,7 +1264,7 @@ public class MainActivity extends Activity {
   boolean interiorObstacle(float x,float y){
    // Coordinates are interior-world coordinates; player center uses a small footprint.
    float[][] solids={
-    {135,234,249,321},  // forge shifted 15 up
+    {135,219,249,306},  // forge shifted 15 up
     {84,372,134,424},   // interior crates (l+24,t+198)
     {130,433,185,488}, // interior cart (l+70,t+259)
     {441,255,494,337},  // upper-left shop shelf
@@ -1273,7 +1273,7 @@ public class MainActivity extends Activity {
     {78,438,134,509},   // left wall stair shelf
     {344,438,400,509},  // center left stair shelf
     {400,438,456,509},  // center right stair shelf
-    {656,438,712,509}   // right wall stair shelf
+    {662,438,718,509}   // right wall stair shelf
    };
    final float margin=9f;
    for(float[] box:solids)
