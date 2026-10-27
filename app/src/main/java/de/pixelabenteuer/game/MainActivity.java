@@ -317,6 +317,8 @@ public class MainActivity extends Activity {
    return false;
   }
   boolean blocked(float x,float y){
+   // Orc merchant: solid body, but still reachable using E from nearby.
+   if(Math.hypot(x-merchantX,y-merchantY)<25f)return true;
    if(x<18||y<18||x>WORLD_W-18||y>WORLD_H-18)return true;
    for(Decoration d:decorations)if(d.solid&&Math.hypot(d.x-forgeX,d.y-forgeY)>185&&collides(d,x,y))return true;
    float dx=x-forgeX,dy=y-forgeY;
@@ -806,6 +808,10 @@ public class MainActivity extends Activity {
    final float margin=9f;
    for(float[] box:solids)
     if(x>box[0]-margin&&x<box[2]+margin&&y>box[1]-margin&&y<box[3]+margin)return true;
+   // NPC footprints: block walking through their feet, not the whole sprite.
+   if(Math.hypot(x-296f,y-349f)<24f)return true; // Schmid
+   if(Math.hypot(x-570f,y-372f)<24f)return true; // Händlerin
+   if(Math.hypot(x-567f,y-462f)<22f)return true; // Abenteurer
    // Upper stone partition; lower passage remains open.
    if(x>389&&x<420&&y<389)return true;
    return false;
