@@ -1313,7 +1313,8 @@ public class MainActivity extends Activity {
    paint.setStyle(style);paint.setStrokeWidth(width);
   }
   void drawRect(int col,float x,float y,float w,float h){paint.setColor(col);canvas.drawRect(x,y,x+w,y+h,paint);}
-  int col(String hex){return Color.parseColor(hex);}
+  final HashMap<String,Integer> colorCache=new HashMap<>();
+  int col(String hex){Integer value=colorCache.get(hex);if(value!=null)return value;int parsed=Color.parseColor(hex);colorCache.put(hex,parsed);return parsed;}
   String characterPath(String page,String layer,String type,int variant){
    String file="char_a_"+page+"_"+layer+"_"+type+"_v"+String.format(java.util.Locale.US,"%02d",variant)+".png";
    String folder=layer.equals("0bas")?"":layer+"/";
@@ -1702,6 +1703,11 @@ public class MainActivity extends Activity {
    }
    if(shopOpen&&(type==MotionEvent.ACTION_DOWN||type==MotionEvent.ACTION_BUTTON_PRESS)&&((e.getButtonState()&MotionEvent.BUTTON_SECONDARY)!=0||e.getActionButton()==MotionEvent.BUTTON_SECONDARY)){float sc=Math.min(getWidth()/800f,getHeight()/450f);showShopTooltip(e.getX()/sc,e.getY()/sc,getWidth()/sc,getHeight()/sc);return true;}
    if(type==MotionEvent.ACTION_DOWN&&(inventoryOpen||shopOpen)&&((e.getMetaState()&(KeyEvent.META_SHIFT_ON|KeyEvent.META_CTRL_ON))!=0)){float sc=Math.min(getWidth()/800f,getHeight()/450f);float xx=e.getX()/sc,yy=e.getY()/sc,vw=getWidth()/sc,vh=getHeight()/sc;if(shopOpen)showShopTooltip(xx,yy,vw,vh);else showGearTooltip(xx,yy,vw,vh);return true;}
+   if(type==MotionEvent.ACTION_UP&&(inventoryOpen||shopOpen)&&e.getEventTime()-e.getDownTime()>=450){
+     float sc=Math.min(getWidth()/800f,getHeight()/450f),xx=e.getX()/sc,yy=e.getY()/sc,vw=getWidth()/sc,vh=getHeight()/sc;
+     if(shopOpen)showShopTooltip(xx,yy,vw,vh);else showGearTooltip(xx,yy,vw,vh);
+     return true;
+    }
    if(type==MotionEvent.ACTION_DOWN){
     if(creatorOpen){float sc=Math.min(getWidth()/800f,getHeight()/450f);creatorClick(e.getX()/sc,e.getY()/sc,getWidth()/sc,getHeight()/sc);return true;}
     if(startScreen||pauseMenu){float sc=Math.min(getWidth()/800f,getHeight()/450f),xx=e.getX()/sc,yy=e.getY()/sc,vw=getWidth()/sc,vh=getHeight()/sc;if(controlsOpen){controlsBackClick(xx,yy,vw,vh);}else menuClick(xx,yy,vw,vh);return true;}
