@@ -41,6 +41,18 @@ public class MainActivity extends Activity {
   Canvas canvas;Paint paint=new Paint();Random random=new Random(42);
   ArrayList<Mob> mobs=new ArrayList<>();ArrayList<Decoration> decorations=new ArrayList<>();ArrayList<Drop> drops=new ArrayList<>();LinkedHashMap<String,Integer> inventory=new LinkedHashMap<>();HashMap<String,Bitmap> itemImages=new HashMap<>();
   HashMap<String,Item> definitions=new HashMap<>();HashMap<String,String> equipped=new HashMap<>();
+  int nextGearId=1;
+  String uniqueGear(String template){
+   Item base=definitions.get(template);if(base==null||!base.equipment())return template;
+   String id=template+" {"+(nextGearId++)+"}";
+   Item item=new Item(id,base.rarity,base.slot,base.dmg,base.armor,base.hp,base.heal);item.mana=base.mana;
+   int rank=base.rarity.equals("Legendär")?4:base.rarity.equals("Super Rare")?3:base.rarity.equals("Rare")?2:base.rarity.equals("Uncommon")?1:0;
+   int[] strength={0,2,5,8,12},count={0,1,1,2,3};
+   for(int k=0;k<count[rank];k++){int bonus=strength[rank]+random.nextInt(Math.max(1,strength[rank]/2+1));int stat=random.nextInt(3);
+    if(stat==0)item.hp+=bonus*2;else if(stat==1&&item.slot.equals("Waffe"))item.dmg+=bonus;else if(stat==1)item.armor+=bonus;else item.mana+=bonus;
+   }
+   definitions.put(id,item);return id;
+  }
   String[] hotbar=new String[9];int selectedHotbar=-1;int copper=0,silver=0,gold=0,hoverSlot=-1;float hoverX=0,hoverY=0;
   Item inspectedGear=null;String characterName="Abenteurer";int armorStyle=0,characterGender=0;boolean sprintHeld=false;int attackSequence=0;boolean creatorOpen=false;int hairType=0,hairColor=1,skinColor=1,eyeColor=0,combatStyle=0;boolean inventoryOpen=false,shopOpen=false,startScreen=true,pauseMenu=false,controlsOpen=false;float merchantX=265,merchantY=215;
   int activeMerchant=0; // 0 Orc-Händler, 1 Schmid, 2 Händlerin
@@ -644,6 +656,7 @@ public class MainActivity extends Activity {
    refreshMerchantStocks();
   }
   String baseEquipmentName(String name){
+   int unique=name.lastIndexOf(" {");if(unique>=0&&name.endsWith("}"))name=name.substring(0,unique);
    int pos=name.lastIndexOf(" [");
    return pos>=0&&name.endsWith("]")?name.substring(0,pos):name;
   }
@@ -677,7 +690,9 @@ public class MainActivity extends Activity {
     int rank=i.rarity.equals("Legendär")?4:i.rarity.equals("Super Rare")?3:i.rarity.equals("Rare")?2:i.rarity.equals("Uncommon")?1:0;
     String base=baseEquipmentName(name);
     int material=base.startsWith("Wooden")?1:base.startsWith("Leather")?2:base.startsWith("Iron")?3:base.startsWith("Silver")?4:base.startsWith("Golden")?5:2;
-    return (20+material*55)*(rank+1)*(rank+1);
+    Item baseline=definitions.get(name.replaceAll(" \\{[0-9]+\\}$",""));
+    int bonus=baseline==null?0:Math.max(0,i.dmg-baseline.dmg)*18+Math.max(0,i.armor-baseline.armor)*16+Math.max(0,i.hp-baseline.hp)*8+Math.max(0,i.mana-baseline.mana)*8;
+    return (20+material*55)*(rank+1)*(rank+1)+bonus;
    }
    return i.heal>0?Math.max(6,i.heal*4):5;
   }
@@ -696,13 +711,14 @@ public class MainActivity extends Activity {
   }
   void refreshMerchantStocks(){
    ArrayList<String> smithPool=new ArrayList<>();
-   for(String name:definitions.keySet()){
+   for(String name:new java.util.ArrayList<>(definitions.keySet())){
+    if(name.matches(".* \\{[0-9]+\\}$"))continue;
     Item item=definitions.get(name);
     if(item!=null&&item.equipment()&&(name.startsWith("Wooden ")||name.startsWith("Leather ")||name.startsWith("Iron ")||name.startsWith("Silver ")||name.startsWith("Golden ")))smithPool.add(name);
    }
    Collections.sort(smithPool);
    Collections.shuffle(smithPool,random);
-   smithStock=smithPool.subList(0,Math.min(12,smithPool.size())).toArray(new String[0]);
+   smithStock=new String[Math.min(12,smithPool.size())];for(int i=0;i<smithStock.length;i++)smithStock[i]=uniqueGear(smithPool.get(i));
    ArrayList<String> orcPool=new ArrayList<>();
    // Keep the Orc merchant's mixed food, potions, weapons and armor assortment.
    String[] orcBasics={"Apple","Green Apple","Ham","Cheese","Mushroom","Healthpotion","Healthpotion large","Healpotion med"};
@@ -712,7 +728,7 @@ public class MainActivity extends Activity {
    Collections.shuffle(orcGear,random);
    ArrayList<String> offer=new ArrayList<>();
    for(int i=0;i<4&&i<orcPool.size();i++)offer.add(orcPool.get(i));
-   for(int i=0;i<6&&i<orcGear.size();i++)offer.add(orcGear.get(i));
+   for(int i=0;i<6&&i<orcGear.size();i++)offer.add(uniqueGear(orcGear.get(i)));
    shopStock=offer.toArray(new String[0]);
    stockRotation++;
   }
@@ -851,11 +867,11 @@ public class MainActivity extends Activity {
     if(random.nextFloat()<.32f){
      String[] weapons={"Wooden Sword","Iron Sword","Silver Sword","Golden Sword"};
      float chance=random.nextFloat();
-     addDrop(weapons[chance<.58f?0:chance<.85f?1:chance<.97f?2:3],m.x,m.y);
+     addDrop(uniqueGear(weapons[chance<.58f?0:chance<.85f?1:chance<.97f?2:3]),m.x,m.y);
     }
     if(random.nextFloat()<.28f){
      String[] armor={"Wooden Armor","Leather Armor","Iron Armor","Leather Helmet","Iron Helmet","Leather Boot","Iron Boot","Wizard Hat","Belt","Helm","Bag"};
-     addDrop(armor[random.nextInt(armor.length)],m.x,m.y);
+     addDrop(uniqueGear(armor[random.nextInt(armor.length)]),m.x,m.y);
     }
     if(random.nextFloat()<.23f){
      String[] food={"Apple","Green Apple","Cheese","Mushroom","Healthpotion","Healpotion med","Healthpotion large"};
@@ -964,6 +980,7 @@ public class MainActivity extends Activity {
    canvas.drawText("Verteidigung +"+item.armor,tx+10,ty+102,paint);
    canvas.drawText("Max. HP +"+item.hp+"     Mana +"+item.mana,tx+10,ty+121,paint);
   }
+  void showShopTooltip(float x,float y,float vw,float vh){int idx=shopIndex(x,y,vw,vh,true);String[] names=activeStock();if(idx>=0&&idx<names.length){Item item=definitions.get(names[idx]);if(item!=null&&item.equipment()){inspectedGear=item;gearTooltipTime=2f;hoverX=x;hoverY=y;}}}
   void drawShop(float vw,float vh){
    float left=vw/2-365,top=vh/2-185;
    panel(left,top,730,370);drawRect(col("#c5a36a"),left+365,top+48,2,302);
@@ -995,6 +1012,7 @@ public class MainActivity extends Activity {
      canvas.drawText((side==0?price(names[i]):Math.max(1,price(names[i])/2))+" Kupfer",x+38,y+40,paint);
     }
    }
+   if(inspectedGear!=null&&gearTooltipTime>0f)drawGearTooltip(inspectedGear,hoverX,hoverY,vw,vh);
    paint.setTypeface(Typeface.DEFAULT);
   }
   int shopIndex(float x,float y,float vw,float vh,boolean buy){
@@ -1011,6 +1029,8 @@ public class MainActivity extends Activity {
     root.put("characterName",characterName);root.put("armorStyle",armorStyle);root.put("characterGender",characterGender);root.put("hairType",hairType);root.put("hairColor",hairColor);root.put("skinColor",skinColor);root.put("eyeColor",eyeColor);root.put("combatStyle",combatStyle);
     root.put("px",px);root.put("py",py);root.put("indoors",indoors);root.put("currentHouse",currentHouse);root.put("worldTime",worldTime);root.put("mana",mana);root.put("hp",hp);root.put("level",playerLevel);root.put("exp",exp);
     root.put("gold",gold);root.put("silver",silver);root.put("copper",copper);root.put("kills",kills);root.put("animalKills",animalKills);root.put("nextQuestDay",nextQuestDay);root.put("questTier",questTier);root.put("questProgress",questProgress);root.put("questActive",questActive);
+    org.json.JSONObject unique=new org.json.JSONObject();for(String key:definitions.keySet())if(key.matches(".* \\{[0-9]+\\}$")){Item i=definitions.get(key);org.json.JSONObject o=new org.json.JSONObject();o.put("rarity",i.rarity);o.put("slot",i.slot);o.put("dmg",i.dmg);o.put("armor",i.armor);o.put("hp",i.hp);o.put("mana",i.mana);unique.put(key,o);}root.put("uniqueGear",unique);root.put("nextGearId",nextGearId);
+    root.put("smithStock",new org.json.JSONArray(java.util.Arrays.asList(smithStock)));root.put("shopStock",new org.json.JSONArray(java.util.Arrays.asList(shopStock)));
     org.json.JSONObject bag=new org.json.JSONObject();for(String name:inventory.keySet())bag.put(name,inventory.get(name));root.put("inventory",bag);
     org.json.JSONObject gear=new org.json.JSONObject();for(String slot:equipped.keySet())gear.put(slot,equipped.get(slot));root.put("equipped",gear);
     org.json.JSONArray bar=new org.json.JSONArray();for(String item:hotbar)bar.put(item==null?org.json.JSONObject.NULL:item);root.put("hotbar",bar);
@@ -1031,6 +1051,10 @@ public class MainActivity extends Activity {
     px=(float)root.getDouble("px");py=(float)root.getDouble("py");
     if(!Float.isFinite(px)||!Float.isFinite(py))throw new org.json.JSONException("Invalid position");indoors=root.optBoolean("indoors",false);currentHouse=root.optInt("currentHouse",0);worldTime=(float)root.optDouble("worldTime",0);playerLevel=root.getInt("level");exp=root.getInt("exp");
     gold=root.getInt("gold");silver=root.getInt("silver");copper=root.getInt("copper");kills=root.optInt("kills");animalKills=root.optInt("animalKills");nextQuestDay=root.has("nextQuestDay")?root.optInt("nextQuestDay"):root.optInt("questsCompletedToday")>0?currentQuestDay()+2:0;questTier=root.optInt("questTier");questProgress=root.optInt("questProgress");questActive=root.optBoolean("questActive");
+    definitions.keySet().removeIf(k->k.matches(".* \\{[0-9]+\\}$"));
+    nextGearId=root.optInt("nextGearId",1);org.json.JSONObject unique=root.optJSONObject("uniqueGear");if(unique!=null){java.util.Iterator<String> ids=unique.keys();while(ids.hasNext()){String id=ids.next();org.json.JSONObject o=unique.getJSONObject(id);Item item=new Item(id,o.getString("rarity"),o.getString("slot"),o.getInt("dmg"),o.getInt("armor"),o.getInt("hp"),0);item.mana=o.optInt("mana");definitions.put(id,item);}}
+    org.json.JSONArray savedSmith=root.optJSONArray("smithStock");if(savedSmith!=null){smithStock=new String[savedSmith.length()];for(int j=0;j<smithStock.length;j++)smithStock[j]=savedSmith.getString(j);}
+    org.json.JSONArray savedShop=root.optJSONArray("shopStock");if(savedShop!=null){shopStock=new String[savedShop.length()];for(int j=0;j<shopStock.length;j++)shopStock[j]=savedShop.getString(j);}
     inventory.clear();org.json.JSONObject bag=root.getJSONObject("inventory");java.util.Iterator<String> keys=bag.keys();while(keys.hasNext()){String k=keys.next();int count=bag.getInt(k);if(count>0&&definitions.containsKey(k))inventory.put(k,Math.min(count,999999));}
     equipped.clear();org.json.JSONObject gear=root.getJSONObject("equipped");keys=gear.keys();while(keys.hasNext()){String k=keys.next();String item=gear.getString(k);if(definitions.containsKey(item))equipped.put(k,item);}
     java.util.Arrays.fill(hotbar,null);selectedHotbar=-1;org.json.JSONArray bar=root.getJSONArray("hotbar");for(int i=0;i<Math.min(hotbar.length,bar.length());i++)if(!bar.isNull(i))hotbar[i]=bar.getString(i);
@@ -1379,7 +1403,7 @@ public class MainActivity extends Activity {
    if(pressedControlsBack){pressedControlsTime-=dt;if(pressedControlsTime<=0f){pressedControlsBack=false;controlsOpen=false;}}
    if(pressedCreatorButton){pressedCreatorTime-=dt;if(pressedCreatorTime<=0f){pressedCreatorButton=false;creatorOpen=false;startScreen=false;pauseMenu=false;previous=System.nanoTime();}}
    gearTooltipTime=Math.max(0f,gearTooltipTime-dt);
-   if(!inventoryOpen){inspectedGear=null;gearTooltipTime=0f;}
+   if(!inventoryOpen&&!shopOpen){inspectedGear=null;gearTooltipTime=0f;}
    if(pressedMenuButton>=0){pressedMenuTime-=dt;if(pressedMenuTime<=0f){int button=pressedMenuButton;pressedMenuButton=-1;runMenuButton(button);}}
    if(!startScreen&&!pauseMenu&&!creatorOpen&&!inventoryOpen&&!shopOpen){
     int previousDay=(int)(worldTime/240f);
@@ -1620,6 +1644,7 @@ public class MainActivity extends Activity {
    if(inventoryOpen&&(e.getSource()&InputDevice.SOURCE_MOUSE)==InputDevice.SOURCE_MOUSE&&e.getActionMasked()==MotionEvent.ACTION_BUTTON_PRESS&&e.getActionButton()==MotionEvent.BUTTON_SECONDARY){
     float sc=Math.min(getWidth()/800f,getHeight()/450f);showGearTooltip(e.getX()/sc,e.getY()/sc,getWidth()/sc,getHeight()/sc);invalidate();return true;
    }
+   if(shopOpen&&(e.getSource()&InputDevice.SOURCE_MOUSE)==InputDevice.SOURCE_MOUSE&&e.getActionMasked()==MotionEvent.ACTION_BUTTON_PRESS&&e.getActionButton()==MotionEvent.BUTTON_SECONDARY){float sc=Math.min(getWidth()/800f,getHeight()/450f);showShopTooltip(e.getX()/sc,e.getY()/sc,getWidth()/sc,getHeight()/sc);return true;}
    if(inventoryOpen){updateInventoryHover(e);return true;}
    if((e.getSource()&InputDevice.SOURCE_MOUSE)==InputDevice.SOURCE_MOUSE&&e.getActionMasked()==MotionEvent.ACTION_BUTTON_PRESS
       &&e.getActionButton()==MotionEvent.BUTTON_PRIMARY){attack();return true;}
@@ -1637,6 +1662,7 @@ public class MainActivity extends Activity {
    if(inventoryOpen&&type==MotionEvent.ACTION_DOWN&&(e.getButtonState()&MotionEvent.BUTTON_SECONDARY)!=0){
     float sc=Math.min(getWidth()/800f,getHeight()/450f);showGearTooltip(e.getX()/sc,e.getY()/sc,getWidth()/sc,getHeight()/sc);return true;
    }
+   if(shopOpen&&type==MotionEvent.ACTION_DOWN&&(e.getButtonState()&MotionEvent.BUTTON_SECONDARY)!=0){float sc=Math.min(getWidth()/800f,getHeight()/450f);showShopTooltip(e.getX()/sc,e.getY()/sc,getWidth()/sc,getHeight()/sc);return true;}
    if(type==MotionEvent.ACTION_DOWN){
     if(creatorOpen){float sc=Math.min(getWidth()/800f,getHeight()/450f);creatorClick(e.getX()/sc,e.getY()/sc,getWidth()/sc,getHeight()/sc);return true;}
     if(startScreen||pauseMenu){float sc=Math.min(getWidth()/800f,getHeight()/450f),xx=e.getX()/sc,yy=e.getY()/sc,vw=getWidth()/sc,vh=getHeight()/sc;if(controlsOpen){controlsBackClick(xx,yy,vw,vh);}else menuClick(xx,yy,vw,vh);return true;}
