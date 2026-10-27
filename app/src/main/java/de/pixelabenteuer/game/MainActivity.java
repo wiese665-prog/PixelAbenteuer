@@ -4,6 +4,9 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.graphics.*;
 import android.view.*;
+import android.media.AudioTrack;
+import android.media.AudioManager;
+import android.media.AudioFormat;
 import java.io.*;
 import java.util.*;
 
@@ -11,8 +14,12 @@ public class MainActivity extends Activity {
  @Override public void onCreate(Bundle b) {
   super.onCreate(b);
   getWindow().getDecorView().setSystemUiVisibility(5894|1024|512);
-  setContentView(new Game());
+  gameView=new Game();setContentView(gameView);
  }
+ @Override protected void onPause(){super.onPause();if(gameView!=null)gameView.pauseMusic();}
+ @Override protected void onResume(){super.onResume();if(gameView!=null)gameView.resumeMusic();}
+ @Override protected void onDestroy(){if(gameView!=null)gameView.releaseMusic();super.onDestroy();}
+ Game gameView;
  class Mob {
   String kind,action="idle";float x,y,vx,vy,anim=0,decision=0,attackTimer=0,hurtTimer=0,deathTimer=0,healthVisible=0;int hp,maxHp,level,damage,dir=0;boolean dead=false;float damageNumberTime=0;int lastDamage=0;
   Mob(String k,float xx,float yy) {kind=k;x=xx;y=yy;level=1+(int)(Math.random()*(k.startsWith("orc")?6:4));int baseHp=k.equals("orc3")?12:k.equals("orc2")?9:k.equals("orc1")?7:k.equals("boar")?8:k.equals("deer")?5:k.equals("fox")?4:2;maxHp=baseHp+(level-1)*(k.equals("boar")||k.startsWith("orc")?3:2);hp=maxHp;damage=(k.equals("orc3")?3:k.equals("orc2")?2:k.equals("orc1")?1:0)+(level-1)/3;}
@@ -47,7 +54,58 @@ public class MainActivity extends Activity {
   float px=180,py=180,joyX=0,joyY=0,elapsed=0,worldTime=0,attackAnim=0,hurtAnim=0,deathAnim=0,attackCooldown=0,playerHealthVisible=0;
   int hp=12,maxHp=12,kills=0,animalKills=0,playerDir=0,playerLevel=1,exp=0,attackPower=3,lastPlayerDamage=0;float playerDamageTime=0;float swordTimer=0;boolean sword=false;
   long previous=System.nanoTime();
-  Game(){super(MainActivity.this);setFocusable(true);setFocusableInTouchMode(true);paint.setFilterBitmap(false);loadSprites();loadBuildings();loadClouds();loadItems();loadDecorations();spawnMobs();}
+  AudioTrack[] musicTracks=new AudioTrack[3];
+  float[] musicVolumes=new float[3];
+  boolean musicPaused=false;
+  // Three original looping 8-bit melodies, generated locally without external audio assets.
+  short[] makeMelody(int theme){
+   int rate=22050,steps=32,samplesPerStep=rate/4;
+   short[] pcm=new short[steps*samplesPerStep];
+   int[][] notes={
+    {52,55,59,64,59,55,52,47,50,55,59,62,59,55,50,47,52,55,59,64,67,64,59,55,50,55,59,62,59,55,52,47},
+    {40,40,43,47,40,43,47,50,42,42,45,49,42,45,49,52,40,43,47,52,47,43,40,38,42,45,49,54,49,45,42,38},
+    {60,64,67,64,62,65,69,65,60,64,67,72,67,64,60,57,59,62,65,62,60,64,67,64,57,60,64,69,65,62,60,55}
+   };
+   for(int i=0;i<pcm.length;i++){
+    int step=i/samplesPerStep;double phase=(i%samplesPerStep)/(double)rate;
+    double hz=440*Math.pow(2,(notes[theme][step]-69)/12.0);
+    double wave=Math.sin(phase*hz*2*Math.PI);
+    double bass=Math.sin(phase*(hz/2)*2*Math.PI);
+    double env=Math.min(1.0,(i%samplesPerStep)/450.0)*Math.min(1.0,(samplesPerStep-i%samplesPerStep)/1500.0);
+    double rhythm=theme==1?Math.sin(phase*110*2*Math.PI)*.15:0;
+    pcm[i]=(short)(Math.max(-1,Math.min(1,(wave*.65+bass*.25+rhythm)*env))*7500);
+   }
+   return pcm;
+  }
+  void startMusic(){
+   for(int i=0;i<3;i++)try{
+    short[] data=makeMelody(i);
+    AudioTrack track=new AudioTrack(AudioManager.STREAM_MUSIC,22050,AudioFormat.CHANNEL_OUT_MONO,
+      AudioFormat.ENCODING_PCM_16BIT,data.length*2,AudioTrack.MODE_STATIC);
+    if(track.getState()!=AudioTrack.STATE_INITIALIZED){track.release();continue;}
+    track.write(data,0,data.length);
+    track.setLoopPoints(0,data.length,-1);
+    track.setStereoVolume(0f,0f);track.play();musicTracks[i]=track;
+   }catch(Exception ignored){}
+  }
+  void pauseMusic(){musicPaused=true;for(AudioTrack track:musicTracks)if(track!=null)try{track.pause();}catch(Exception ignored){}}
+  void resumeMusic(){musicPaused=false;for(AudioTrack track:musicTracks)if(track!=null)try{track.play();}catch(Exception ignored){}}
+  void releaseMusic(){for(int i=0;i<musicTracks.length;i++)if(musicTracks[i]!=null){try{musicTracks[i].stop();musicTracks[i].release();}catch(Exception ignored){}musicTracks[i]=null;}}
+  void updateMusic(float dt){
+   int target=0;
+   if(indoors)target=2;
+   else if(!safeZone(px,py))for(Mob m:mobs)
+    if(!m.dead&&m.hostile()&&!safeZone(m.x,m.y)&&Math.hypot(px-m.x,py-m.y)<285){target=1;break;}
+   for(int i=0;i<3;i++){
+    float goal=i==target?.24f:0f;
+    float step=dt/.9f*.24f;
+    musicVolumes[i]+=Math.max(-step,Math.min(step,goal-musicVolumes[i]));
+    if(musicTracks[i]!=null&&!musicPaused)try{
+     musicTracks[i].setStereoVolume(musicVolumes[i],musicVolumes[i]);
+    }catch(Exception ignored){}
+   }
+  }
+  Game(){super(MainActivity.this);setFocusable(true);setFocusableInTouchMode(true);paint.setFilterBitmap(false);loadSprites();loadBuildings();loadClouds();loadItems();loadDecorations();spawnMobs();startMusic();}
   void spawnMobs(){
    String[] animals={"boar","fox","deer","black_grouse"};
    int animalCount=0,orcCount=0;
@@ -887,6 +945,7 @@ public class MainActivity extends Activity {
      refreshMerchantStocks();
     }
    }
+   updateMusic(dt);
    adventurerSpeechTime=Math.max(0,adventurerSpeechTime-dt);
    elapsed+=dt;noticeTime=Math.max(0,noticeTime-dt);swordTimer=Math.max(0,swordTimer-dt);sword=swordTimer>0;attackCooldown=Math.max(0,attackCooldown-dt);attackAnim=Math.max(0,attackAnim-dt);hurtAnim=Math.max(0,hurtAnim-dt);playerHealthVisible=Math.max(0,playerHealthVisible-dt);playerDamageTime=Math.max(0,playerDamageTime-dt);
    if(hp<=0){deathAnim+=dt;return;}if(inventoryOpen||shopOpen||pauseMenu||startScreen)return;
