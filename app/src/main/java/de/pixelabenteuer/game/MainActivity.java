@@ -217,10 +217,10 @@ public class MainActivity extends Activity {
    tile("Interior_objects",163,129,39,62,l+570,t+83,53,80);
    tile("Interior_objects",114,257,59,49,l+451,t+82,106,59);
    // Two separate COMPLETE purple rugs (source x=6..60, y=397..421).
-   tile("Interior_objects",70,385,55,40,l+432.5f,t+162,170,60);
-   tile("Interior_objects",70,385,55,40,l+432.5f,t+262,170,60);
+   tile("Interior_objects",70,385,55,40,l+405,t+162,170,60);
+   tile("Interior_objects",70,385,55,40,l+405,t+262,170,60);
    // The complete counter with its decorative vases, cropped as one object.
-   tile("Interior_objects",16,0,160,27,l+370,t+175,260,40);
+   tile("Interior_objects",16,0,160,27,l+398,t+175,260,40);
    // Separate shelf against the left wall, using the original unmodified sprite.
    tile("Interior_objects",98,70,46,59,l+18,t+266,56,69);
    // Mirror BOTH center shelves horizontally: long backs meet at x=l+340.
