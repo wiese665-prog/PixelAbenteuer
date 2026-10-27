@@ -299,12 +299,12 @@ public class MainActivity extends Activity {
    w=Math.min(w,size*.85f);
    tile(name,sx+minX,sy+minY,maxX-minX+1,maxY-minY+1,x-w/2,y-h,w,h);
   }
-  void sellerPortrait(float x,float y){
+  void sellerPortrait(float x,float y,int frame){
    Bitmap bitmap=buildingSprites.get("Seller");if(bitmap==null)return;
    // Seller.png is 96x96: each of the 3x2 cells is 32x48.
    // Its 48px-high cells contain an unwanted second row fragment.
    // Isolate the first standing character within the upper 32x32 area.
-   int sx=0,sy=0,sw=Math.min(32,bitmap.getWidth()),sh=Math.min(32,bitmap.getHeight());
+   int sx=Math.floorMod(frame,3)*32,sy=0,sw=Math.min(32,bitmap.getWidth()-sx),sh=Math.min(32,bitmap.getHeight());
    int minX=sw,minY=sh,maxX=-1,maxY=-1;
    for(int yy=0;yy<sh;yy++)for(int xx=0;xx<sw;xx++)
     if(Color.alpha(bitmap.getPixel(sx+xx,sy+yy))>32){
@@ -378,13 +378,13 @@ public class MainActivity extends Activity {
      int cw=right-left+1,ch=bottom-top+1;
      float scale=Math.min(92f/cw,99f/ch);
      float dw=cw*scale,dh=ch*scale;
-     tile("Forge",left,top,cw,ch,l+75+(114-dw)/2,t+40+(122-dh),dw,dh);
+     tile("Forge",left,top,cw,ch,l+75+(114-dw)/2,t+25+(122-dh),dw,dh);
     }
    }
    // Reuse the exact exterior crate and cart atlas rectangles without recropping.
    // Both props sit in the smithy area, clear of the forge and the central passage.
    tile("Exterior_house",70,162,32,38,l+24,t+198,50,52); // same crates as outside
-   tile("Exterior_house",116,160,34,34,l+180,t+258,55,55); // same complete cart, tucked into the lower smithy
+   tile("Exterior_house",116,160,34,34,l+70,t+259,55,55); // same complete cart, against the lower-left smithy wall
    // Two complete rear display shelves and one dragon picture.
    tile("Interior_objects",13,128,35,63,l+381,t+83,53,80);
    tile("Interior_objects",163,129,39,62,l+570,t+83,53,80);
@@ -411,7 +411,7 @@ public class MainActivity extends Activity {
    tile("Interior_objects",148,70,46,59,l+596,t+266,56,69);
    // The seller is drawn only once, using a single stable pose.
    characterTile("Master_Idle",3,2,(int)(elapsed*2)%3,l+236,t+175,81.4f);
-   sellerPortrait(l+510,t+198);
+   sellerPortrait(l+510,t+198,(int)(elapsed*3)%3);
    paint.setTextAlign(Paint.Align.CENTER);
    paint.setTypeface(Typeface.DEFAULT_BOLD);
    paint.setTextSize(13);paint.setColor(col("#ffe7aa"));
@@ -422,7 +422,7 @@ public class MainActivity extends Activity {
    if(Math.hypot(px-296,py-349)<50)canvas.drawText("E - Handeln",l+236,t+125,paint);
    if(Math.hypot(px-570,py-372)<50)canvas.drawText("E - Handeln",l+510,t+168,paint);
    paint.setTextAlign(Paint.Align.LEFT);
-   characterTile("Customer",3,2,0,l+562,t+288,52);
+   characterTile("Customer",3,2,(int)(elapsed*3)%3,l+562,t+288,52);
    paint.setTextAlign(Paint.Align.CENTER);paint.setTypeface(Typeface.DEFAULT_BOLD);
    paint.setColor(col("#ffe7aa"));paint.setTextSize(13);
    fantasyName("Abenteurer",l+562,t+241);
@@ -1262,9 +1262,9 @@ public class MainActivity extends Activity {
   boolean interiorObstacle(float x,float y){
    // Coordinates are interior-world coordinates; player center uses a small footprint.
    float[][] solids={
-    {135,249,249,336},  // forge
+    {135,234,249,321},  // forge shifted 15 up
     {84,372,134,424},   // interior crates (l+24,t+198)
-    {240,432,295,487}, // interior cart (l+180,t+258)
+    {130,433,185,488}, // interior cart (l+70,t+259)
     {441,255,494,337},  // upper-left shop shelf
     {630,255,683,337},  // upper-right shop shelf
     {458,349,718,389},  // counter
