@@ -223,15 +223,10 @@ public class MainActivity extends Activity {
    tile("Interior_objects",16,0,160,27,l+345.5f,t+175,309,46);
    // Separate shelf against the left wall, using the original unmodified sprite.
    tile("Interior_objects",98,70,46,59,l+18,t+266,56,69);
-   // Both center shelves rotated 180 degrees, aligned at the black floor seam.
-   canvas.save();
-   canvas.rotate(180f,l+312,t+300.5f);
+   // Opposite original stair-shelf sprites: long straight backs touch at x=l+340.
+   // No rotation: both shelves remain upright with their feet on the floor.
    tile("Interior_objects",98,70,46,59,l+284,t+266,56,69);
-   canvas.restore();
-   canvas.save();
-   canvas.rotate(180f,l+368,t+300.5f);
-   tile("Interior_objects",98,70,46,59,l+340,t+266,56,69);
-   canvas.restore();
+   tile("Interior_objects",148,70,46,59,l+340,t+266,56,69);
    // Complete stair-display shelves on the bottom wall, flanking the entry.
    // Door is at interior x=555 (screen x=l+495); keep a clear central aisle.
    // Removed duplicate entrance shelf overlapping center pair.
