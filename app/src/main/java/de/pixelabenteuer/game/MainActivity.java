@@ -79,21 +79,50 @@ public class MainActivity extends Activity {
    }
    return pcm;
   }
+  // Stream the generated PCM in a background writer: static AudioTrack buffers
+  // are not reliably supported at this length on all Android devices.
+  volatile boolean musicRunning=false;
+  Thread[] musicWriters=new Thread[3];
   void startMusic(){
-   for(int i=0;i<3;i++)try{
-    short[] data=makeMelody(i);
-    AudioTrack track=new AudioTrack(AudioManager.STREAM_MUSIC,22050,AudioFormat.CHANNEL_OUT_MONO,
-      AudioFormat.ENCODING_PCM_16BIT,data.length*2,AudioTrack.MODE_STATIC);
-    if(track.getState()!=AudioTrack.STATE_INITIALIZED){track.release();continue;}
-    int written=track.write(data,0,data.length);
-    if(written!=data.length){track.release();continue;}
-    track.setLoopPoints(0,data.length,-1);
-    track.setStereoVolume(0f,0f);track.play();musicTracks[i]=track;
-   }catch(Exception ignored){}
+   if(musicRunning)return;
+   musicRunning=true;
+   for(int i=0;i<3;i++){
+    final int index=i;
+    try{
+     final short[] data=makeMelody(i);
+     int buffer=Math.max(8192,AudioTrack.getMinBufferSize(22050,AudioFormat.CHANNEL_OUT_MONO,AudioFormat.ENCODING_PCM_16BIT));
+     final AudioTrack track=new AudioTrack(AudioManager.STREAM_MUSIC,22050,AudioFormat.CHANNEL_OUT_MONO,
+       AudioFormat.ENCODING_PCM_16BIT,buffer,AudioTrack.MODE_STREAM);
+     if(track.getState()!=AudioTrack.STATE_INITIALIZED){track.release();continue;}
+     musicTracks[i]=track;
+     track.setStereoVolume(0f,0f);
+     track.play();
+     musicWriters[i]=new Thread(()->{
+      int offset=0;
+      while(musicRunning){
+       try{
+        int count=Math.min(2048,data.length-offset);
+        int written=track.write(data,offset,count);
+        if(written<0)break;
+        if(written==0){Thread.yield();continue;}
+        offset=(offset+written)%data.length;
+       }catch(Exception e){break;}
+      }
+     },"PixelMusic-"+index);
+     musicWriters[i].setDaemon(true);
+     musicWriters[i].start();
+    }catch(Exception e){android.util.Log.e("PixelMusic","Cannot start track "+i,e);}
+   }
   }
   void pauseMusic(){musicPaused=true;for(AudioTrack track:musicTracks)if(track!=null)try{track.pause();}catch(Exception ignored){}}
   void resumeMusic(){musicPaused=false;for(AudioTrack track:musicTracks)if(track!=null)try{track.play();}catch(Exception ignored){}}
-  void releaseMusic(){for(int i=0;i<musicTracks.length;i++)if(musicTracks[i]!=null){try{musicTracks[i].stop();musicTracks[i].release();}catch(Exception ignored){}musicTracks[i]=null;}}
+  void releaseMusic(){
+   musicRunning=false;
+   for(int i=0;i<musicTracks.length;i++)if(musicTracks[i]!=null){
+    try{musicTracks[i].pause();musicTracks[i].flush();musicTracks[i].release();}catch(Exception ignored){}
+    musicTracks[i]=null;
+   }
+  }
   void updateMusic(float dt){
    int target=0;
    if(indoors)target=2;
@@ -334,7 +363,7 @@ public class MainActivity extends Activity {
    canvas.drawText("Abenteurer",l+562,t+235,paint);
    if(questAvailable()){
     paint.setColor(col("#50ef78"));paint.setTextSize(25);
-    canvas.drawText("?",l+562,t+220,paint);
+    canvas.drawText("?",l+562,t+240,paint);
     paint.setColor(col("#ffe7aa"));paint.setTextSize(13);
    }
    if(Math.hypot(px-622,py-462)<37.5f){
@@ -932,6 +961,7 @@ public class MainActivity extends Activity {
    }}
   }
   void drawHotbar(float vw,float vh){
+   if(inventoryOpen)canvas.saveLayerAlpha(vw/2-135,vh-58,vw/2+145,vh,155);
    for(int i=0;i<5;i++){
     float x=vw/2-128+i*53,y=vh-53;
     drawRect(inventoryOpen&&selectedHotbar==i?col("#f0ca78"):col("#141c23"),x-2,y-2,50,48);drawRect(col("#4d5b62"),x,y,46,44);
@@ -939,6 +969,7 @@ public class MainActivity extends Activity {
     paint.setColor(Color.WHITE);paint.setTextSize(12);canvas.drawText(""+(i+1),x+3,y+41,paint);
     if(hotbar[i]!=null){paint.setTextSize(11);canvas.drawText(""+inventory.getOrDefault(hotbar[i],0),x+32,y+41,paint);}
    }
+   if(inventoryOpen)canvas.restore();
   }
   void healthBar(float x,float y,float width,int current,int maximum){
    float ratio=Math.max(0,Math.min(1,current/(float)Math.max(1,maximum)));
