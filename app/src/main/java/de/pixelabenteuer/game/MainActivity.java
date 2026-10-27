@@ -42,7 +42,7 @@ public class MainActivity extends Activity {
   ArrayList<Mob> mobs=new ArrayList<>();ArrayList<Decoration> decorations=new ArrayList<>();ArrayList<Drop> drops=new ArrayList<>();LinkedHashMap<String,Integer> inventory=new LinkedHashMap<>();HashMap<String,Bitmap> itemImages=new HashMap<>();
   HashMap<String,Item> definitions=new HashMap<>();HashMap<String,String> equipped=new HashMap<>();
   String[] hotbar=new String[9];int selectedHotbar=-1;int copper=0,silver=0,gold=0,hoverSlot=-1;float hoverX=0,hoverY=0;
-  Item inspectedGear=null;String characterName="Abenteurer";int armorStyle=0,characterGender=0;boolean sprintHeld=false;int attackSequence=0;boolean creatorOpen=false;int hairType=0,hairColor=1,skinColor=1,eyeColor=0,combatStyle=0;boolean inventoryOpen=false,shopOpen=false,startScreen=true,pauseMenu=false;float merchantX=265,merchantY=215;
+  Item inspectedGear=null;String characterName="Abenteurer";int armorStyle=0,characterGender=0;boolean sprintHeld=false;int attackSequence=0;boolean creatorOpen=false;int hairType=0,hairColor=1,skinColor=1,eyeColor=0,combatStyle=0;boolean inventoryOpen=false,shopOpen=false,startScreen=true,pauseMenu=false,controlsOpen=false;float merchantX=265,merchantY=215;
   int activeMerchant=0; // 0 Orc-Händler, 1 Schmid, 2 Händlerin
   String[] shopStock={"Apple","Ham","Healthpotion","Healpotion med","Iron Sword","Silver Sword","Leather Armor","Iron Armor","Iron Helmet","Golden Sword"};
   String[] smithStock={"Wooden Sword [Common]","Wooden Sword [Legendär]","Iron Sword [Uncommon]","Iron Sword [Rare]","Silver Sword [Common]","Silver Sword [Legendär]","Golden Sword [Rare]","Golden Sword [Legendär]","Leather Armor [Rare]","Iron Armor [Rare]","Iron Helmet [Legendär]","Leather Boot [Uncommon]"};
@@ -1123,15 +1123,46 @@ public class MainActivity extends Activity {
    drawRect(col("#111c23"),sx,sy,sw,12);
    drawRect(col("#8c754d"),sx+2,sy+2,(sw-4)*masterMusicVolume,8);
    drawRect(col("#f6e7c6"),sx+masterMusicVolume*sw-5,sy-4,10,20);
-   paint.setColor(col("#e5cc9c"));paint.setTextSize(13);canvas.drawText("STEUERUNG",vw/2,top+361,paint);
-   paint.setTextSize(12);paint.setColor(col("#d8e2d9"));
-   canvas.drawText("WASD: Laufen  |  Linksklick: Angriff  |  E: Handeln",vw/2,top+378,paint);
-   canvas.drawText("I: Inventar   |   1-5: Hotbar   |   ESC: Pause",vw/2,top+396,paint);
+   drawRect(col("#c49b5d"),left+95,top+365,310,37);
+   drawRect(col("#294540"),left+98,top+368,304,31);
+   paint.setColor(col("#f6e7c6"));paint.setTypeface(Typeface.create("serif",Typeface.BOLD));paint.setTextSize(17);
+   canvas.drawText("STEUERUNG ANZEIGEN",vw/2,top+389,paint);paint.setTypeface(Typeface.DEFAULT);
 
    paint.setTextAlign(Paint.Align.LEFT);paint.setTypeface(Typeface.DEFAULT);
   }
+  void controlKey(String key,String meaning,float x,float y,float width){
+   drawRect(col("#b58e56"),x,y,width,38);
+   drawRect(col("#263f3c"),x+2,y+2,width-4,34);
+   paint.setTextAlign(Paint.Align.CENTER);paint.setColor(col("#ffdf9c"));paint.setTypeface(Typeface.DEFAULT_BOLD);
+   paint.setTextSize(key.length()>6?11:15);canvas.drawText(key,x+width/2,y+24,paint);
+   paint.setTypeface(Typeface.DEFAULT);paint.setTextAlign(Paint.Align.LEFT);
+   paint.setColor(col("#f3e7cc"));paint.setTextSize(13);canvas.drawText(meaning,x+width+12,y+24,paint);
+  }
+  void drawControls(float vw,float vh){
+   drawRect(col("#101820"),0,0,vw,vh);
+   float left=vw/2-290,top=vh/2-208;
+   panel(left,top,580,416);
+   paint.setTextAlign(Paint.Align.CENTER);fantasyHeading("Steuerung",vw/2,top+39,27);
+   paint.setTextAlign(Paint.Align.LEFT);
+   controlKey("W A S D","Bewegen",left+28,top+63,102);
+   controlKey("SHIFT","Sprinten",left+302,top+63,92);
+   controlKey("E","Handeln / Aufheben",left+28,top+110,102);
+   controlKey("I","Inventar",left+302,top+110,92);
+   controlKey("LEERTASTE","Angreifen",left+28,top+157,102);
+   controlKey("MAUS","Angreifen / Antippen",left+302,top+157,92);
+   controlKey("1 - 9","Hotbar benutzen",left+28,top+204,102);
+   controlKey("ESC","Pause / Zurueck",left+302,top+204,92);
+   paint.setColor(col("#d7c7a8"));paint.setTextSize(13);paint.setTextAlign(Paint.Align.CENTER);
+   canvas.drawText("Auf dem Handy: Joystick und Bildschirmtasten verwenden.",vw/2,top+281,paint);
+   drawRect(col("#c49b5d"),left+135,top+325,310,49);
+   drawRect(col("#294540"),left+138,top+328,304,43);
+   paint.setColor(col("#f6e7c6"));paint.setTypeface(Typeface.create("serif",Typeface.BOLD));paint.setTextSize(19);
+   canvas.drawText("ZURUECK ZUM ESC-MENUE",vw/2,top+357,paint);
+   paint.setTypeface(Typeface.DEFAULT);paint.setTextAlign(Paint.Align.LEFT);
+  }
   void menuClick(float x,float y,float vw,float vh){
    float top=vh/2-208,left=vw/2-250;
+   if(x>=left+95&&x<=left+405&&y>=top+365&&y<=top+402){controlsOpen=true;return;}
    if(x>=left+95&&x<=left+405&&y>=top+328&&y<=top+357){
     setMusicVolume((x-(left+110))/280f);return;
    }
@@ -1502,7 +1533,7 @@ public class MainActivity extends Activity {
    if(!inventoryOpen)drawHotbar(vw,vh);
    if(noticeTime>0){paint.setColor(col("#f7e0a6"));paint.setTextSize(17);c.drawText(pickupNotice,12,60,paint);}
    if(inventoryOpen){drawInventory(vw,vh);drawHotbar(vw,vh);}
-   if(startScreen||pauseMenu)drawMenu(vw,vh);
+   if(startScreen||pauseMenu){if(controlsOpen)drawControls(vw,vh);else drawMenu(vw,vh);}
    if(creatorOpen)drawCreator(vw,vh);
    if(shopOpen)drawShop(vw,vh);
    if(hp<=0){drawRect(col("#111111"),vw/2-180,vh/2-45,360,90);paint.setColor(Color.WHITE);paint.setTextSize(24);c.drawText("GAME OVER - Tippen",vw/2-145,vh/2+7,paint);}
@@ -1544,7 +1575,7 @@ public class MainActivity extends Activity {
    }
    if(type==MotionEvent.ACTION_DOWN){
     if(creatorOpen){float sc=Math.min(getWidth()/800f,getHeight()/450f);creatorClick(e.getX()/sc,e.getY()/sc,getWidth()/sc,getHeight()/sc);return true;}
-    if(startScreen||pauseMenu){float sc=Math.min(getWidth()/800f,getHeight()/450f),xx=e.getX()/sc,yy=e.getY()/sc,vw=getWidth()/sc,vh=getHeight()/sc;menuClick(xx,yy,vw,vh);return true;}
+    if(startScreen||pauseMenu){float sc=Math.min(getWidth()/800f,getHeight()/450f),xx=e.getX()/sc,yy=e.getY()/sc,vw=getWidth()/sc,vh=getHeight()/sc;if(controlsOpen)controlsOpen=false;else menuClick(xx,yy,vw,vh);return true;}
     if(shopOpen){
      float sc=Math.min(getWidth()/800f,getHeight()/450f),xx=e.getX()/sc,yy=e.getY()/sc,vw=getWidth()/sc,vh=getHeight()/sc;
      int idx=shopIndex(xx,yy,vw,vh,true);
@@ -1573,6 +1604,7 @@ public class MainActivity extends Activity {
    if(key==KeyEvent.KEYCODE_SHIFT_LEFT||key==KeyEvent.KEYCODE_SHIFT_RIGHT){sprintHeld=true;return true;}
    if(key==KeyEvent.KEYCODE_ESCAPE||key==KeyEvent.KEYCODE_BACK){
     if(creatorOpen)return true;
+    if(controlsOpen){controlsOpen=false;return true;}
     if(startScreen)return true;
     if(shopOpen)shopOpen=false;else if(inventoryOpen){inventoryOpen=false;inspectedGear=null;}else pauseMenu=!pauseMenu;
     joyX=joyY=0;return true;
