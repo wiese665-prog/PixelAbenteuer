@@ -448,7 +448,8 @@ public class MainActivity extends Activity {
    }
    paint.setTextAlign(Paint.Align.LEFT);paint.setTypeface(Typeface.DEFAULT);
    float cx=l+340+(px-400),cy=t+176+(py-350);
-   drawSprite(sword?"player_sword":"player_unarmed","idle",playerDir,cx,cy,94,94,elapsed,false);
+   String indoorAction=hp<=0?"death":hurtAnim>0?"hurt":attackAnim>0&&sword?"attack":Math.abs(joyX)+Math.abs(joyY)>.08f?(sprintHeld?"run":"walk"):"idle";
+   drawSprite(sword?"player_sword":"player_unarmed",indoorAction,playerDir,cx,cy,80.64f,80.64f,hp<=0?deathAnim:attackAnim>0?.4f-attackAnim:elapsed,hp<=0&&deathAnim>.8f);
    paint.setColor(col("#fff2d5"));paint.setTextSize(13);
    canvas.drawText("SCHMIEDE  |  Ausgang unten mittig",l+221,t+345,paint);
   }
@@ -1221,7 +1222,7 @@ public class MainActivity extends Activity {
    if(equipped.containsKey("Kopf"))characterLayer(page,"5hat","pfht",1,row,col,x,y,w,h);
    if(creatorOpen||fighting){
     String weapon=combatStyle==1?"ax01":combatStyle==2?"mc01":"sw01";
-    characterLayer(fighting?"pONE3":"pONE2","6tla",weapon,1,fighting?row:facing,fighting?col:0,x+(creatorOpen?3f:0f),y+(creatorOpen?4f:0f),w,h);
+    characterLayer(fighting?"pONE3":"pONE2","6tla",weapon,1,fighting?row:facing,fighting?col:0,x+(creatorOpen?-3f:0f),y+(creatorOpen?7f:0f),w,h);
     if(creatorOpen||equipped.containsKey("Schild"))characterLayer(fighting?"pONE3":"pONE2","7tlb",equipped.getOrDefault("Schild","").contains("Iron")?"sh03":"sh01",1,fighting?row:facing,fighting?col:0,x,y,w,h);
    }
   }
