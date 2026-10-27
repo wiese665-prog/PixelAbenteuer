@@ -1138,6 +1138,14 @@ public class MainActivity extends Activity {
    c.drawText("Lv. "+playerLevel+" EXP "+exp+"/"+expNeeded()+" DMG "+attackPower+" DEF "+armorValue(),12,25,paint);
    itemIcon("Golden Coin",vw-202,7,.85f);itemIcon("Silver Coin",vw-137,7,.85f);itemIcon("Copper Coin",vw-72,7,.85f);
    paint.setColor(Color.WHITE);paint.setTextSize(15);c.drawText(""+gold,vw-178,25,paint);c.drawText(""+silver,vw-113,25,paint);c.drawText(""+copper,vw-48,25,paint);
+   if(questActive){
+    String questLabel="AUFTRAG  Orks: "+questProgress+"/"+questGoal()+(questProgress>=questGoal()?"  - Beim Abenteurer abgeben!":"");
+    paint.setTextSize(13);paint.setTypeface(Typeface.DEFAULT_BOLD);
+    float qw=Math.max(225,paint.measureText(questLabel)+20);
+    drawRect(col("#142b24"),12,44,qw,29);
+    paint.setColor(questProgress>=questGoal()?col("#a9f2a1"):col("#f3d18a"));
+    canvas.drawText(questLabel,22,63,paint);paint.setTypeface(Typeface.DEFAULT);
+   }
    drawHotbar(vw,vh);
    if(noticeTime>0){paint.setColor(col("#f7e0a6"));paint.setTextSize(17);c.drawText(pickupNotice,12,60,paint);}
    if(inventoryOpen)drawInventory(vw,vh);
