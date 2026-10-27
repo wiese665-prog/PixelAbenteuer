@@ -1708,7 +1708,8 @@ public class MainActivity extends Activity {
      if(shopOpen)showShopTooltip(xx,yy,vw,vh);else showGearTooltip(xx,yy,vw,vh);
      return true;
     }
-   if(type==MotionEvent.ACTION_DOWN){
+   if(type==MotionEvent.ACTION_DOWN&&(inventoryOpen||shopOpen))return true;
+   if(type==MotionEvent.ACTION_DOWN||type==MotionEvent.ACTION_UP&&(inventoryOpen||shopOpen)){
     if(creatorOpen){float sc=Math.min(getWidth()/800f,getHeight()/450f);creatorClick(e.getX()/sc,e.getY()/sc,getWidth()/sc,getHeight()/sc);return true;}
     if(startScreen||pauseMenu){float sc=Math.min(getWidth()/800f,getHeight()/450f),xx=e.getX()/sc,yy=e.getY()/sc,vw=getWidth()/sc,vh=getHeight()/sc;if(controlsOpen){controlsBackClick(xx,yy,vw,vh);}else menuClick(xx,yy,vw,vh);return true;}
     if(shopOpen){
