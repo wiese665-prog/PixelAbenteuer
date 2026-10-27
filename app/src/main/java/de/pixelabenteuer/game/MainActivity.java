@@ -213,8 +213,8 @@ public class MainActivity extends Activity {
    // One complete original ore crate, no clipped fragments at entrance.
    
    // Two complete rear display shelves and one dragon picture.
-   tile("Interior_objects",13,128,34,51,l+381,t+95,53,68);
-   tile("Interior_objects",112,128,39,54,l+570,t+95,53,68);
+   tile("Interior_objects",13,128,35,63,l+381,t+83,53,80);
+   tile("Interior_objects",113,128,36,63,l+570,t+83,53,80);
    tile("Interior_objects",114,257,59,49,l+451,t+82,106,59);
    // Two separate COMPLETE purple rugs (source x=6..60, y=397..421).
    tile("Interior_objects",70,385,55,40,l+415,t+156,205,72);
@@ -222,7 +222,11 @@ public class MainActivity extends Activity {
    // The complete counter with its decorative vases, cropped as one object.
    tile("Interior_objects",16,0,160,27,l+345.5f,t+175,309,46);
    // Two complete decorative original sprites at the bottom of the forge.
-   tile("Interior_objects",0,328,65,60,l+69,t+265,64,65);
+   // Mirrored stepped shelf, facing away from its neighboring stepped display.
+   canvas.save();
+   canvas.scale(-1f,1f,l+101,t+300);
+   tile("Interior_objects",98,70,46,59,l+73,t+266,56,69);
+   canvas.restore();
    tile("Interior_objects",70,328,47,55,l+211,t+270,51,58);
    // Additional forge details from distinct atlas cells, not duplicated crates.
    tile("Interior_objects",8,328,45,56,l+135,t+270,47,58);
