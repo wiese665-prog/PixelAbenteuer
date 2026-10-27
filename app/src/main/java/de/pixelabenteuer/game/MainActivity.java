@@ -1115,6 +1115,14 @@ public class MainActivity extends Activity {
     case 5:armorStyle=Math.floorMod(armorStyle+delta,3);break;
    }
   }
+  int pressedMenuButton=-1;float pressedMenuTime=0f;
+  void runMenuButton(int i){
+   if(i==4){controlsOpen=true;return;}
+   if(i==0){if(startScreen){creatorOpen=true;pauseMenu=false;}else{startScreen=false;pauseMenu=false;previous=System.nanoTime();}}
+   if(i==1)saveGame();
+   if(i==2)loadGame();
+   if(i==3){restart();creatorOpen=true;startScreen=false;pauseMenu=false;}
+  }
   void drawMenu(float vw,float vh){
    drawRect(col("#101820"),0,0,vw,vh);
    float left=vw/2-250,top=vh/2-208;
@@ -1124,18 +1132,21 @@ public class MainActivity extends Activity {
    paint.setColor(col("#b6c8c2"));paint.setTextSize(13);
    canvas.drawText(startScreen?"Willkommen in deiner Welt":"PAUSE  /  SPIELMENUE",vw/2,top+70,paint);
    String[] buttons={startScreen?"SPIEL STARTEN":"WEITERSPIELEN","SPIEL SPEICHERN","SPIEL LADEN","NEUSTART"};
-   for(int i=0;i<buttons.length;i++){float y=top+89+i*49;drawRect(col("#c49b5d"),left+95,y,310,42);
-    drawRect(col("#294540"),left+98,y+3,304,36);paint.setColor(col("#f6e7c6"));paint.setTypeface(Typeface.create("serif",Typeface.BOLD));paint.setTextSize(18);canvas.drawText(buttons[i],vw/2,y+26,paint);paint.setTypeface(Typeface.DEFAULT);}
+   for(int i=0;i<buttons.length;i++){float y=top+89+i*49;boolean pressed=pressedMenuButton==i;float offset=pressed?3f:0f;
+    drawRect(col(pressed?"#716b60":"#c49b5d"),left+95,y+offset,310,42-offset);
+    drawRect(col(pressed?"#29332f":"#294540"),left+98,y+3+offset,304,36-offset);
+    paint.setColor(col(pressed?"#a6a7a1":"#f6e7c6"));paint.setTypeface(Typeface.create("serif",Typeface.BOLD));paint.setTextSize(18);canvas.drawText(buttons[i],vw/2,y+26+offset,paint);paint.setTypeface(Typeface.DEFAULT);}
    paint.setColor(col("#e5cc9c"));paint.setTextSize(14);
    canvas.drawText("MUSIKLAUTSTAERKE  "+Math.round(masterMusicVolume*100)+"%",vw/2,top+319,paint);
    float sx=left+110,sy=top+337,sw=280;
    drawRect(col("#111c23"),sx,sy,sw,12);
    drawRect(col("#8c754d"),sx+2,sy+2,(sw-4)*masterMusicVolume,8);
    drawRect(col("#f6e7c6"),sx+masterMusicVolume*sw-5,sy-4,10,20);
-   drawRect(col("#c49b5d"),left+95,top+365,310,37);
-   drawRect(col("#294540"),left+98,top+368,304,31);
-   paint.setColor(col("#f6e7c6"));paint.setTypeface(Typeface.create("serif",Typeface.BOLD));paint.setTextSize(17);
-   canvas.drawText("STEUERUNG ANZEIGEN",vw/2,top+389,paint);paint.setTypeface(Typeface.DEFAULT);
+   boolean controlsPressed=pressedMenuButton==4;float controlsOffset=controlsPressed?3f:0f;
+   drawRect(col(controlsPressed?"#716b60":"#c49b5d"),left+95,top+365+controlsOffset,310,37-controlsOffset);
+   drawRect(col(controlsPressed?"#29332f":"#294540"),left+98,top+368+controlsOffset,304,31-controlsOffset);
+   paint.setColor(col(controlsPressed?"#a6a7a1":"#f6e7c6"));paint.setTypeface(Typeface.create("serif",Typeface.BOLD));paint.setTextSize(17);
+   canvas.drawText("STEUERUNG ANZEIGEN",vw/2,top+389+controlsOffset,paint);paint.setTypeface(Typeface.DEFAULT);
 
    paint.setTextAlign(Paint.Align.LEFT);paint.setTypeface(Typeface.DEFAULT);
   }
@@ -1171,17 +1182,14 @@ public class MainActivity extends Activity {
   }
   void menuClick(float x,float y,float vw,float vh){
    float top=vh/2-208,left=vw/2-250;
-   if(x>=left+95&&x<=left+405&&y>=top+365&&y<=top+402){controlsOpen=true;return;}
+   if(pressedMenuButton>=0)return;
+   if(x>=left+95&&x<=left+405&&y>=top+365&&y<=top+402){pressedMenuButton=4;pressedMenuTime=.15f;invalidate();return;}
    if(x>=left+95&&x<=left+405&&y>=top+328&&y<=top+357){
     setMusicVolume((x-(left+110))/280f);return;
    }
    if(x<left+95||x>left+405)return;
    for(int i=0;i<4;i++){float by=top+89+i*49;if(y>=by&&y<=by+42){
-    if(i==0){if(startScreen){creatorOpen=true;pauseMenu=false;}else{startScreen=false;pauseMenu=false;previous=System.nanoTime();}}
-    if(i==1)saveGame();
-    if(i==2)loadGame();
-    if(i==3){restart();creatorOpen=true;startScreen=false;pauseMenu=false;}
-    return;
+    pressedMenuButton=i;pressedMenuTime=.15f;invalidate();return;
    }}
   }
   void drawHotbar(float vw,float vh){
@@ -1354,6 +1362,7 @@ public class MainActivity extends Activity {
   }
   // Attack animation window; the next group can act immediately afterward.
   void update(float dt){
+   if(pressedMenuButton>=0){pressedMenuTime-=dt;if(pressedMenuTime<=0f){int button=pressedMenuButton;pressedMenuButton=-1;runMenuButton(button);}}
    if(!startScreen&&!pauseMenu&&!creatorOpen&&!inventoryOpen&&!shopOpen){
     int previousDay=(int)(worldTime/240f);
     worldTime+=dt;
