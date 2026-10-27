@@ -252,7 +252,7 @@ public class MainActivity extends Activity {
    // Clouds always have 30% transparency (70% opacity), regardless of time of day.
    final int alpha=179;
    // Screen-space cloud shadows drift across the landscape independently of the camera.
-   for(int i=0;i<11;i++){
+   for(int i=0;i<5;i++){
     // Day: white Cloud + grey Cloud2. Night: black Cloud1 + grey Cloud2.
     // Fade the changing family smoothly at sunrise and sunset.
     int family=(i%2==0)?2:(night>=.5f?1:0);
@@ -541,6 +541,7 @@ public class MainActivity extends Activity {
    if(Math.hypot(x-merchantX,y-merchantY)<85f)return false;
    float left=x-w/2f,right=x+w/2f,top=y-h*.8f,bottom=top+h;
    for(Decoration d:decorations){
+    if(d.x+d.w<px-vw/2-60||d.x-d.w>px+vw/2+60||d.y+d.h<py-vh/2-60||d.y-d.h>py+vh/2+60)continue;
     float dl=d.x-d.w/2f,dt=d.y-d.h*.8f;
     if(left<dl+d.w+12&&right>dl-12&&top<dt+d.h+12&&bottom>dt-12)return false;
    }
@@ -1649,7 +1650,7 @@ public class MainActivity extends Activity {
     paint.setTypeface(Typeface.DEFAULT);
    }
    if(hp<=0){drawRect(col("#111111"),vw/2-180,vh/2-45,360,90);paint.setColor(Color.WHITE);paint.setTextSize(24);c.drawText("GAME OVER - Tippen",vw/2-145,vh/2+7,paint);}
-   c.restore();postInvalidateDelayed(16);
+   c.restore();postInvalidateDelayed(25);
   }
   int inventoryIndex(float x,float y,float vw,float vh){
    float left=invLeft(vw),top=invTop(vh);
