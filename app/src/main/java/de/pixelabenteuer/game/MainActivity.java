@@ -231,7 +231,7 @@ public class MainActivity extends Activity {
    canvas.restore();
    // Complete stair-display shelves on the bottom wall, flanking the entry.
    // Door is at interior x=555 (screen x=l+495); keep a clear central aisle.
-   tile("Interior_objects",98,70,46,59,l+341,t+267,61,72);
+   // Removed duplicate entrance shelf overlapping center pair.
    tile("Interior_objects",148,70,46,59,l+596,t+267,61,72);
    // The seller is drawn only once, using a single stable pose.
    characterTile("Master_Idle",3,2,(int)(elapsed*2)%3,l+236,t+175,81.4f);
