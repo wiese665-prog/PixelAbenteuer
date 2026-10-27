@@ -218,7 +218,7 @@ public class MainActivity extends Activity {
    tile("Interior_objects",114,257,59,49,l+451,t+82,106,59);
    // Two separate COMPLETE purple rugs (source x=6..60, y=397..421).
    tile("Interior_objects",70,385,55,40,l+415,t+156,205,72);
-   tile("Interior_objects",0,385,59,40,l+415,t+256,205,72);
+   tile("Interior_objects",70,385,55,40,l+415,t+256,205,72);
    // The complete counter with its decorative vases, cropped as one object.
    tile("Interior_objects",16,0,160,27,l+345.5f,t+175,309,46);
    // Two complete decorative original sprites at the bottom of the forge.
