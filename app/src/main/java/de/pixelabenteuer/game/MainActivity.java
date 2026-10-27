@@ -434,12 +434,12 @@ public class MainActivity extends Activity {
    paint.setTextAlign(Paint.Align.CENTER);
    paint.setTypeface(Typeface.DEFAULT_BOLD);
    paint.setTextSize(13);paint.setColor(col("#ffe7aa"));
-   fantasyName("Schmid",l+246,t+99);
+   fantasyName("Schmid",l+251,t+99);
    fantasyName("Händlerin",l+510,t+159);
    paint.setTypeface(Typeface.DEFAULT);paint.setTextSize(11);
    paint.setColor(col("#ffffff"));
-   if(Math.hypot(px-296,py-349)<50)canvas.drawText("E - Handeln",l+236,t+125,paint);
-   if(Math.hypot(px-570,py-372)<50)canvas.drawText("E - Handeln",l+510,t+168,paint);
+   if(Math.hypot(px-296,py-349)<50)drawInteractionKey(l+236,t+125);
+   if(Math.hypot(px-570,py-372)<50)drawInteractionKey(l+510,t+168);
    paint.setTextAlign(Paint.Align.LEFT);
    characterTile("Customer",3,2,(int)(elapsed*3)%3,l+562,t+288,52);
    paint.setTextAlign(Paint.Align.CENTER);paint.setTypeface(Typeface.DEFAULT_BOLD);
@@ -447,7 +447,7 @@ public class MainActivity extends Activity {
    fantasyName("Abenteurer",l+562,t+241);
    if(questAvailable()){
     paint.setColor(col("#50ef78"));paint.setTextSize(25);
-    outlinedText("?",l+562,t+240);
+    outlinedText("?",l+562,t+235);
     paint.setColor(col("#ffe7aa"));paint.setTextSize(13);
    }
    if(Math.hypot(px-622,py-462)<37.5f){
@@ -1248,6 +1248,16 @@ public class MainActivity extends Activity {
    outlinedText(value,x,y);
    paint.setTextSize(oldSize);paint.setTypeface(old);
   }
+  // Compact keyboard prompt for BlueStacks; coordinates mark the key center.
+  void drawInteractionKey(float x,float y){
+   Paint.Align oldAlign=paint.getTextAlign();Typeface oldFace=paint.getTypeface();float oldSize=paint.getTextSize();
+   drawRect(col("#111c22"),x-12,y-14,24,23);
+   drawRect(col("#b89b61"),x-10,y-12,20,19);
+   drawRect(col("#263c3b"),x-8,y-10,16,15);
+   paint.setColor(col("#fff0c6"));paint.setTypeface(Typeface.DEFAULT_BOLD);paint.setTextAlign(Paint.Align.CENTER);paint.setTextSize(14);
+   canvas.drawText("E",x,y+2,paint);
+   paint.setTextAlign(oldAlign);paint.setTypeface(oldFace);paint.setTextSize(oldSize);
+  }
   void outlinedText(String value,float x,float y){
    int color=paint.getColor();Paint.Style style=paint.getStyle();float width=paint.getStrokeWidth();
    paint.setStyle(Paint.Style.STROKE);paint.setStrokeJoin(Paint.Join.ROUND);
@@ -1298,7 +1308,10 @@ public class MainActivity extends Activity {
     // blade and handle cannot disappear behind the character sprite.
     if(creatorOpen||equipped.containsKey("Schild"))characterLayer(fighting?"pONE3":"pONE2","7tlb",equipped.getOrDefault("Schild","").contains("Iron")?"sh03":"sh01",1,fighting?row:facing,fighting?col:0,x,y,w,h);
     // Preview weapon is the foremost layer, including in front of the shield.
-    if(creatorOpen)characterLayer("pONE2","6tla",weapon,1,facing,0,x-4f,y+8f,w,h);
+    if(creatorOpen){
+     // Render the weapon last and slightly enlarged so its blade is not obscured by the body.
+     characterLayer("pONE2","6tla",weapon,1,facing,0,x-9f,y+5f,w*1.20f,h*1.20f);
+    }
     else characterLayer("pONE3","6tla",weapon,1,row,col,x,y,w,h);
    }
   }
@@ -1487,7 +1500,7 @@ public class MainActivity extends Activity {
    paint.setTextAlign(Paint.Align.CENTER);paint.setColor(col("#ffe7aa"));paint.setTextSize(13);
    fantasyName("Orc-Händler",merchantX,merchantY-39);paint.setTextAlign(Paint.Align.LEFT);
    if(Math.hypot(px-merchantX,py-merchantY)<50&&!shopOpen){paint.setColor(Color.WHITE);paint.setTextSize(12);
-    canvas.drawText("E - Handeln",merchantX-37,merchantY-58,paint);}
+    drawInteractionKey(merchantX,merchantY-58);}
    for(Drop d:drops){float bob=(float)Math.sin(elapsed*3+d.bob)*2;
     drawRect(col("#28342b"),d.x-11,d.y+7,22,5);itemIcon(d.item,d.x-10,d.y-15+bob,.82f);
    }
