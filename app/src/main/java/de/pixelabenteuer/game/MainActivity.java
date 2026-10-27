@@ -354,12 +354,18 @@ public class MainActivity extends Activity {
    // Original wall blocks at their native proportions; no stretched long strip.
    for(int ix=0;ix<14;ix++)
     tile("Walls_interior",48+(ix%2)*32,0,32,32,l+16+ix*46,t,46,70);
+   // Side walls: use the matching stone wall cells with a continuous
+   // masonry rhythm. Original atlas cells are kept intact.
    for(int iy=0;iy<6;iy++){
-    tile("Walls_interior",49,128,23,42,l,t+67+iy*44,22,44);
-    tile("Walls_interior",193,128,23,42,l+658,t+67+iy*44,22,44);
+    float wallY=t+67+iy*44;
+    tile("Walls_interior",49,128,23,42,l,wallY,22,44);
+    tile("Walls_interior",193,128,23,42,l+658,wallY,22,44);
    }
-   // Divider: two original stone piers with a broad passable gap.
-   tile("Walls_interior",49,128,23,42,l+329,t+52,22,161);
+   // Central divider: individual stone segments instead of one vertically
+   // stretched wall sprite. This matches the side-wall masonry and avoids
+   // the smeared pillar visible between the two shop floors.
+   for(int iy=0;iy<4;iy++)
+    tile("Walls_interior",49,128,23,42,l+329,t+52+iy*40,22,40);
    // No lower partition: leave the forge/shop walkway open.
    // Floors meet directly beneath the stone divider; no overlaid floor strip.
    // Forge: show one complete furnace cell, not half an animation sheet.
