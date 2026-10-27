@@ -1417,7 +1417,7 @@ public class MainActivity extends Activity {
    }
    String playerKind=sword?"player_sword":"player_unarmed";
    String playerAction=hp<=0?"death":hurtAnim>0?"hurt":attackAnim>0&&sword?"attack":Math.abs(joyX)+Math.abs(joyY)>.08f?(sprintHeld?"run":"walk"):"idle";
-   drawSprite(playerKind,playerAction,playerDir,px,py,89.6f,89.6f,hp<=0?deathAnim:attackAnim>0?.4f-attackAnim:elapsed,hp<=0&&deathAnim>.8f);
+   drawSprite(playerKind,playerAction,playerDir,px,py,80.64f,80.64f,hp<=0?deathAnim:attackAnim>0?.4f-attackAnim:elapsed,hp<=0&&deathAnim>.8f);
    if(playerHealthVisible>0)healthBar(px,py-56,52,hp,maxHp);
    damageText(px,py-66,lastPlayerDamage,playerDamageTime);
    Drop nearby=nearestDrop();
