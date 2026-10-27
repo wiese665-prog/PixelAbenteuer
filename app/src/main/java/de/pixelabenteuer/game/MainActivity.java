@@ -873,7 +873,6 @@ public class MainActivity extends Activity {
    return false;
   }
   float orcTurnCooldown=0f;
-  int nextOrcTurn=0;
   void update(float dt){
    if(!startScreen&&!pauseMenu&&!inventoryOpen&&!shopOpen){
     int previousDay=(int)(worldTime/240f);
@@ -921,18 +920,18 @@ public class MainActivity extends Activity {
     if(!candidate.dead&&candidate.kind.startsWith("orc")&&!safeZone(candidate.x,candidate.y)
        &&Math.hypot(px-candidate.x,py-candidate.y)<285f)engagedOrcs.add(candidate);
    }
-   Mob attackingOrc=null;
+   ArrayList<Mob> attackingOrcs=new ArrayList<>();
+   // Rebuild the attack order after each exchange, with at most two attackers.
    if(!engagedOrcs.isEmpty()&&orcTurnCooldown<=0f){
-    for(int offset=0;offset<engagedOrcs.size();offset++){
-     int idx=(nextOrcTurn+offset)%engagedOrcs.size();
-     Mob candidate=engagedOrcs.get(idx);
-     if(Math.hypot(px-candidate.x,py-candidate.y)<=48f&&candidate.hurtTimer<=0f){
-      attackingOrc=candidate;
-      nextOrcTurn=(idx+1)%engagedOrcs.size();
-      orcTurnCooldown=1.5f;
-      break;
+    Collections.shuffle(engagedOrcs,random);
+    for(Mob candidate:engagedOrcs){
+     if(attackingOrcs.size()>=2)break;
+     if(Math.hypot(px-candidate.x,py-candidate.y)<=48f
+        &&candidate.hurtTimer<=0f&&candidate.attackTimer<=0f){
+      attackingOrcs.add(candidate);
      }
     }
+    if(!attackingOrcs.isEmpty())orcTurnCooldown=1.5f;
    }
    for(Mob m:mobs){
     if(m.dead){m.deathTimer+=dt;continue;}
@@ -942,7 +941,7 @@ public class MainActivity extends Activity {
     if(m.hurtTimer>0){action="hurt";}
     else if(m.hostile()&&distance<285&&!safeZone(m.x,m.y)&&!safeZone(px,py)){
      m.dir=direction(px-m.x,py-m.y);
-     if(m==attackingOrc){
+     if(attackingOrcs.contains(m)){
       action="attack";
       int dealt=Math.max(1,m.damage);
       hp=Math.max(0,hp-Math.max(1,dealt-armorValue()));
@@ -995,7 +994,7 @@ public class MainActivity extends Activity {
    }
   }
   void restart(){
-   indoors=false;currentHouse=0;playerLevel=1;exp=0;attackPower=3;maxHp=12;hp=maxHp;maxMana=20;mana=20;worldTime=0;orcTurnCooldown=0;nextOrcTurn=0;stockRefreshTimer=0;refreshMerchantStocks();equipped.clear();copper=silver=gold=0;java.util.Arrays.fill(hotbar,null);selectedHotbar=-1;playerDamageTime=0;px=180;py=180;joyX=joyY=0;deathAnim=0;swordTimer=0;sword=false;attackAnim=0;playerHealthVisible=0;kills=animalKills=0;mobs.clear();drops.clear();inventory.clear();inventoryOpen=false;shopOpen=false;pauseMenu=false;spawnMobs();
+   indoors=false;currentHouse=0;playerLevel=1;exp=0;attackPower=3;maxHp=12;hp=maxHp;maxMana=20;mana=20;worldTime=0;orcTurnCooldown=0;stockRefreshTimer=0;refreshMerchantStocks();equipped.clear();copper=silver=gold=0;java.util.Arrays.fill(hotbar,null);selectedHotbar=-1;playerDamageTime=0;px=180;py=180;joyX=joyY=0;deathAnim=0;swordTimer=0;sword=false;attackAnim=0;playerHealthVisible=0;kills=animalKills=0;mobs.clear();drops.clear();inventory.clear();inventoryOpen=false;shopOpen=false;pauseMenu=false;spawnMobs();
   }
   @Override protected void onDraw(Canvas c){
    canvas=c;float dt=Math.min(.05f,(System.nanoTime()-previous)/1000000000f);previous=System.nanoTime();update(dt);
@@ -1035,6 +1034,13 @@ public class MainActivity extends Activity {
     float size=m.hostile()?79:m.kind.equals("boar")?45:m.kind.equals("deer")?43:36;
     drawSprite(m.kind,action,m.dir,m.x,m.y,size,size,m.dead?m.deathTimer:m.anim,m.dead&&m.deathTimer>.7f);
     if(!m.dead){paint.setColor(Color.WHITE);paint.setTextSize(12);paint.setTextAlign(Paint.Align.CENTER);canvas.drawText("Lv. "+m.level,m.x,m.y-size*.64f,paint);paint.setTextAlign(Paint.Align.LEFT);}
+    if(!m.dead&&m.hostile()&&!indoors&&!safeZone(px,py)&&!safeZone(m.x,m.y)
+       &&Math.hypot(px-m.x,py-m.y)<285f){
+     paint.setTextAlign(Paint.Align.CENTER);paint.setTypeface(Typeface.DEFAULT_BOLD);
+     paint.setTextSize(24);paint.setColor(col("#ffdb55"));
+     canvas.drawText("!",m.x,m.y-size*.64f-16,paint);
+     paint.setTypeface(Typeface.DEFAULT);paint.setTextAlign(Paint.Align.LEFT);
+    }
     if(m.healthVisible>0&&(!m.dead||m.deathTimer<1f))healthBar(m.x,m.y-size*.65f-12,42,m.hp,m.maxHp);
     damageText(m.x,m.y-size*.65f-22,m.lastDamage,m.damageNumberTime);
    }
