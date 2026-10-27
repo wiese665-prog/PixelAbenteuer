@@ -214,19 +214,26 @@ public class MainActivity extends Activity {
   }
   Game(){super(MainActivity.this);setFocusable(true);setFocusableInTouchMode(true);paint.setFilterBitmap(false);loadSprites();loadBuildings();loadClouds();loadItems();loadDecorations();spawnMobs();masterMusicVolume=getContext().getSharedPreferences("pixel_settings",MODE_PRIVATE).getFloat("music_volume",0.05f);startMusic();initHitSounds();}
   void spawnMobs(){
-   String[] animals={"boar","fox","deer","black_grouse"};
-   int animalCount=0,orcCount=0;
-   for(Mob mob:mobs)if(!mob.dead){if(mob.kind.startsWith("orc"))orcCount++;else animalCount++;}
-   for(int i=0,attempts=0;i<28-animalCount&&attempts<400;attempts++){
-    float x=80+random.nextInt(1440),y=80+random.nextInt(840);
-    if(!blocked(x,y)&&!safeZone(x,y)&&Math.hypot(x-merchantX,y-merchantY)>110){
-     mobs.add(new Mob(animals[(animalCount+i)%animals.length],x,y));i++;
-    }
-   }
-   for(int i=0,attempts=0;i<18-orcCount&&attempts<300;attempts++){
-    float x=380+random.nextInt(1100),y=80+random.nextInt(840);
-    if(!blocked(x,y)&&!safeZone(x,y)&&Math.hypot(x-merchantX,y-merchantY)>110){
-     mobs.add(new Mob("orc"+(1+(orcCount+i)%3),x,y));i++;
+   String[] types={"boar","deer","orc1","orc2","orc3","fox","black_grouse"};
+   int animals=0,orcs=0;
+   for(Mob m:mobs)if(!m.dead){if(m.kind.startsWith("orc"))orcs++;else animals++;}
+   for(int attempts=0;attempts<180&&(animals<28||orcs<18);attempts++){
+    String kind=types[random.nextInt(types.length)];
+    boolean orc=kind.startsWith("orc");
+    if((orc&&orcs>=18)||(!orc&&animals>=28))continue;
+    float x=orc?380+random.nextInt(1100):80+random.nextInt(1440),y=80+random.nextInt(840);
+    if(blocked(x,y)||safeZone(x,y)||Math.hypot(x-merchantX,y-merchantY)<110)continue;
+    int available=(orc?18-orcs:28-animals);
+    int groupSize=(kind.equals("boar")||kind.equals("deer")||orc)?Math.min(available,3+random.nextInt(2)):1;
+    Mob alpha=new Mob(kind,x,y);
+    if((orc||kind.equals("boar"))&&groupSize>1){alpha.alpha=true;alpha.maxHp=Math.round(alpha.maxHp*1.7f);alpha.hp=alpha.maxHp;alpha.damage+=2;}
+    mobs.add(alpha);if(orc)orcs++;else animals++;
+    for(int n=1;n<groupSize;n++){
+     float angle=(float)(n*6.2831853f/groupSize),radius=28+random.nextInt(15);
+     float gx=x+(float)Math.cos(angle)*radius,gy=y+(float)Math.sin(angle)*radius;
+     if(blocked(gx,gy)||safeZone(gx,gy))continue;
+     Mob follower=new Mob(kind,gx,gy);follower.leader=alpha;mobs.add(follower);
+     if(orc)orcs++;else animals++;
     }
    }
   }
