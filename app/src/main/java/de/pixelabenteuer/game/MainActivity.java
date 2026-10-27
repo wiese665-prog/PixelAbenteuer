@@ -75,7 +75,7 @@ public class MainActivity extends Activity {
     double bass=Math.sin(phase*(hz/2)*2*Math.PI);
     double env=Math.min(1.0,(i%samplesPerStep)/450.0)*Math.min(1.0,(samplesPerStep-i%samplesPerStep)/1500.0);
     double rhythm=theme==1?Math.sin(phase*110*2*Math.PI)*.15:0;
-    pcm[i]=(short)(Math.max(-1,Math.min(1,(wave*.65+bass*.25+rhythm)*env))*7500);
+    pcm[i]=(short)(Math.max(-1,Math.min(1,(wave*.65+bass*.25+rhythm)*env))*24000);
    }
    return pcm;
   }
@@ -85,7 +85,8 @@ public class MainActivity extends Activity {
     AudioTrack track=new AudioTrack(AudioManager.STREAM_MUSIC,22050,AudioFormat.CHANNEL_OUT_MONO,
       AudioFormat.ENCODING_PCM_16BIT,data.length*2,AudioTrack.MODE_STATIC);
     if(track.getState()!=AudioTrack.STATE_INITIALIZED){track.release();continue;}
-    track.write(data,0,data.length);
+    int written=track.write(data,0,data.length);
+    if(written!=data.length){track.release();continue;}
     track.setLoopPoints(0,data.length,-1);
     track.setStereoVolume(0f,0f);track.play();musicTracks[i]=track;
    }catch(Exception ignored){}
@@ -99,8 +100,8 @@ public class MainActivity extends Activity {
    else if(!safeZone(px,py))for(Mob m:mobs)
     if(!m.dead&&m.hostile()&&!safeZone(m.x,m.y)&&Math.hypot(px-m.x,py-m.y)<285){target=1;break;}
    for(int i=0;i<3;i++){
-    float goal=i==target?.24f:0f;
-    float step=dt/.9f*.24f;
+    float goal=i==target?.85f:0f;
+    float step=dt/.9f*.85f;
     musicVolumes[i]+=Math.max(-step,Math.min(step,goal-musicVolumes[i]));
     if(musicTracks[i]!=null&&!musicPaused)try{
      musicTracks[i].setStereoVolume(musicVolumes[i]*masterMusicVolume,musicVolumes[i]*masterMusicVolume);
@@ -333,7 +334,7 @@ public class MainActivity extends Activity {
    canvas.drawText("Abenteurer",l+562,t+235,paint);
    if(questAvailable()){
     paint.setColor(col("#50ef78"));paint.setTextSize(25);
-    canvas.drawText("?",l+562,t+192,paint);
+    canvas.drawText("?",l+562,t+220,paint);
     paint.setColor(col("#ffe7aa"));paint.setTextSize(13);
    }
    if(Math.hypot(px-622,py-462)<37.5f){
@@ -945,7 +946,7 @@ public class MainActivity extends Activity {
   }
   // Camera-centered outdoor minimap, clipped to its frame.
   void drawMinimap(float vw,float vh){
-   float size=136f,x=vw-size-12f,y=45f,zoom=.18f;
+   float size=104f,x=vw-size-12f,y=45f,zoom=.18f;
    drawRect(col("#101b21"),x-4,y-4,size+8,size+8);
    drawRect(col("#b89c69"),x-2,y-2,size+4,size+4);
    canvas.save();
@@ -1215,9 +1216,9 @@ public class MainActivity extends Activity {
     canvas.drawText(questProgress>=questGoal()?"Fertig! Beim Abenteurer abgeben":("Orks besiegt: "+questProgress+" / "+questGoal()),qx+10,qy+60,paint);
    }
    if(!indoors&&!startScreen&&!pauseMenu&&!inventoryOpen&&!shopOpen)drawMinimap(vw,vh);
-   drawHotbar(vw,vh);
+   if(!inventoryOpen)drawHotbar(vw,vh);
    if(noticeTime>0){paint.setColor(col("#f7e0a6"));paint.setTextSize(17);c.drawText(pickupNotice,12,60,paint);}
-   if(inventoryOpen)drawInventory(vw,vh);
+   if(inventoryOpen){drawInventory(vw,vh);drawHotbar(vw,vh);}
    if(startScreen||pauseMenu)drawMenu(vw,vh);
    if(shopOpen)drawShop(vw,vh);
    if(hp<=0){drawRect(col("#111111"),vw/2-180,vh/2-45,360,90);paint.setColor(Color.WHITE);paint.setTextSize(24);c.drawText("GAME OVER - Tippen",vw/2-145,vh/2+7,paint);}
