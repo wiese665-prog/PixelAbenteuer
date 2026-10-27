@@ -192,7 +192,7 @@ public class MainActivity extends Activity {
    drawRect(col("#18141a"),0,0,vw,vh);
    // Gray square paving from the dedicated right-hand tile strip of Walls_interior.
    for(int iy=0;iy<19;iy++)for(int ix=0;ix<20;ix++)
-    tile("Walls_interior",240,128,16,16,l+16+ix*16,t+52+iy*16,16,16);
+    tile("Walls_interior",240,128,16,16,l+20+ix*16,t+52+iy*16,16,16);
    // Keep the approved wooden sales floor.
    for(int iy=0;iy<18;iy++)for(int ix=0;ix<20;ix++)
     tile("Walls_interior",145,21,12,12,l+340+ix*16,t+52+iy*16,16,16);
