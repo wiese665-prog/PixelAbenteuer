@@ -950,7 +950,7 @@ public class MainActivity extends Activity {
     float x=left+329+(i%6)*67,y=top+104+(i/6)*64;
     slotFrame(x,y,56,names[i]);
     Item item=definitions.get(names[i]);paint.setColor(item!=null&&item.equipment()?rarityColor(item.rarity):col("#d5dad9"));
-    paint.setTextSize(9);String label=names[i];if(label.length()>10)label=label.substring(0,9)+".";
+    paint.setTextSize(9);String label=names[i].replaceAll(" \\{[0-9]+\\}$","");if(label.length()>10)label=label.substring(0,9)+".";
     canvas.drawText(label,x+2,y+49,paint);
     paint.setColor(col("#ffe4a5"));paint.setTextSize(10);canvas.drawText(""+inventory.get(names[i]),x+42,y+12,paint);
    }
@@ -972,7 +972,7 @@ public class MainActivity extends Activity {
    drawRect(col("#26303a"),tx+3,ty+3,226,135);
    itemIcon(item.name,tx+9,ty+8,1.4f);
    paint.setTypeface(Typeface.DEFAULT_BOLD);paint.setColor(rarityColor(item.rarity));paint.setTextSize(13);
-   canvas.drawText(item.name,tx+47,ty+23,paint);
+   canvas.drawText(item.name.replaceAll(" \\{[0-9]+\\}$",""),tx+47,ty+23,paint);
    paint.setTextSize(11);canvas.drawText(item.rarity,tx+47,ty+41,paint);
    paint.setTypeface(Typeface.DEFAULT);paint.setColor(col("#e8e9dc"));
    canvas.drawText("Slot: "+item.slot,tx+10,ty+63,paint);
@@ -1005,7 +1005,7 @@ public class MainActivity extends Activity {
      itemIcon(names[i],x+4,y+5,1.45f);
      Item item=definitions.get(names[i]);
      paint.setTextSize(10);paint.setColor(item!=null&&item.equipment()?rarityColor(item.rarity):col("#f1eee1"));
-     String label=names[i];if(label.length()>13)label=label.substring(0,12)+".";
+     String label=names[i].replaceAll(" \\{[0-9]+\\}$","");if(label.length()>13)label=label.substring(0,12)+".";
      canvas.drawText(label,x+38,y+20,paint);
      if(side==1){paint.setColor(col("#ffffff"));paint.setTextSize(11);canvas.drawText("x"+inventory.getOrDefault(names[i],0),x+7,y+17,paint);}
      paint.setColor(col("#eac582"));paint.setTextSize(11);
