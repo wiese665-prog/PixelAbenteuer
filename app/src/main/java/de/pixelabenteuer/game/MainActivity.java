@@ -223,14 +223,19 @@ public class MainActivity extends Activity {
    tile("Interior_objects",16,0,160,27,l+345.5f,t+175,309,46);
    // Separate shelf against the left wall, using the original unmodified sprite.
    tile("Interior_objects",98,70,46,59,l+18,t+266,56,69);
-   // Opposite original stair-shelf sprites: long straight backs touch at x=l+340.
-   // No rotation: both shelves remain upright with their feet on the floor.
+   // Mirror BOTH center shelves horizontally: long backs meet at x=l+340.
+   canvas.save();
+   canvas.scale(-1f,1f,l+312,t+300.5f);
    tile("Interior_objects",98,70,46,59,l+284,t+266,56,69);
+   canvas.restore();
+   canvas.save();
+   canvas.scale(-1f,1f,l+368,t+300.5f);
    tile("Interior_objects",148,70,46,59,l+340,t+266,56,69);
+   canvas.restore();
    // Complete stair-display shelves on the bottom wall, flanking the entry.
    // Door is at interior x=555 (screen x=l+495); keep a clear central aisle.
    // Removed duplicate entrance shelf overlapping center pair.
-   tile("Interior_objects",148,70,46,59,l+596,t+267,61,72);
+   tile("Interior_objects",148,70,46,59,l+596,t+266,56,69);
    // The seller is drawn only once, using a single stable pose.
    characterTile("Master_Idle",3,2,(int)(elapsed*2)%3,l+236,t+175,81.4f);
    sellerPortrait(l+497,t+198);
