@@ -861,7 +861,7 @@ public class MainActivity extends Activity {
    paint.setTextSize(14);paint.setColor(col("#f5d7a5"));canvas.drawText("CHARAKTER",left+28,top+87,paint);
    drawRect(col("#1b302e"),left+85,top+143,132,152);
    drawRect(col("#32564a"),left+89,top+147,124,144);
-   drawSprite(sword?"player_sword":"player_unarmed","idle",0,left+151,top+217,125,143,elapsed,false);
+   drawSprite(sword?"player_sword":"player_unarmed","idle",0,left+151,top+217,150,165,elapsed,false);
    paint.setTextSize(12);paint.setTypeface(Typeface.DEFAULT_BOLD);paint.setColor(col("#f2deb6"));canvas.drawText("ABENTEURER  -  Lv. "+playerLevel,left+75,top+316,paint);paint.setTypeface(Typeface.DEFAULT);
    String[] slots={"Kopf","Waffe","Brust","Fuesse","Guertel"};
    float[][] positions={{left+129,top+97},{left+21,top+155},{left+222,top+155},{left+21,top+246},{left+222,top+246}};
@@ -994,7 +994,7 @@ public class MainActivity extends Activity {
    paint.setTextAlign(Paint.Align.CENTER);paint.setTypeface(Typeface.DEFAULT_BOLD);
    paint.setColor(col("#f2cf8b"));paint.setTextSize(25);canvas.drawText("CHARAKTER ERSTELLEN",vw/2,top+37,paint);
    drawRect(col("#29463e"),left+22,top+62,205,285);
-   drawCharacter(left+124,top+202,170,170,0,"idle",elapsed);
+   drawCharacter(left+124,top+202,205,205,0,"idle",elapsed);
    paint.setTextSize(12);paint.setColor(col("#b9d5ca"));canvas.drawText("VORSCHAU",left+124,top+330,paint);
    String[] names={"FRISUR","HAUTFARBE","HAARFARBE","AUGENFARBE","KAMPFSTIL"};
    String[] values={hairType==0?"Bob":"Kurzhaar","Variante "+skinColor,"Farbe "+hairColor, new String[]{"Braun","Blau","Gruen"}[eyeColor],new String[]{"Schwert + Schild","Axt + Schild","Streitkolben + Schild"}[combatStyle]};
@@ -1130,7 +1130,7 @@ public class MainActivity extends Activity {
   int col(String hex){return Color.parseColor(hex);}
   String characterPath(String page,String layer,String type,int variant){
    String file="char_a_"+page+"_"+layer+"_"+type+"_v"+String.format(java.util.Locale.US,"%02d",variant)+".png";
-   String folder=layer.equals("6tla")||layer.equals("7tlb")?layer+"/":"";
+   String folder=layer.equals("0bas")?"":layer+"/";
    return "sprites/ManaSeedCharacter/char_a_"+page+"/"+folder+file;
   }
   Bitmap characterSheet(String page,String layer,String type,int variant){
@@ -1156,13 +1156,13 @@ public class MainActivity extends Activity {
    // Combat pages use four directions in consecutive rows per animation.
    if(fighting)row=(dir==0?1:dir==1?0:dir==2?2:3);
    characterLayer(page,"0bas","humn",skinColor,row,col,x,y,w,h);
-   characterLayer(page,"1out","pfpn",1,row,col,x,y,w,h);
+   characterLayer(page,"1out",equipped.containsKey("Brust")?"fstr":"pfpn",1,row,col,x,y,w,h);
    characterLayer(page,"4har",hairType==0?"bob1":"dap1",hairColor,row,col,x,y,w,h);
    if(equipped.containsKey("Kopf"))characterLayer(page,"5hat","pfht",1,row,col,x,y,w,h);
    if(fighting||sword||equipped.containsKey("Waffe")){
     String weapon=combatStyle==1?"ax01":combatStyle==2?"mc01":"sw01";
     characterLayer("pONE"+(fighting?"3":"2"),"6tla",weapon,1,row,col,x,y,w,h);
-    characterLayer("pONE"+(fighting?"3":"2"),"7tlb","sh01",1,row,col,x,y,w,h);
+    if(equipped.containsKey("Schild")||combatStyle>=0)characterLayer("pONE"+(fighting?"3":"2"),"7tlb","sh01",1,row,col,x,y,w,h);
    }
   }
   void drawSprite(String kind,String action,int dir,float x,float y,float w,float h,float time,boolean freeze){
@@ -1202,7 +1202,7 @@ public class MainActivity extends Activity {
   }
   // Attack animation window; the next group can act immediately afterward.
   void update(float dt){
-   if(!startScreen&&!pauseMenu&&!inventoryOpen&&!shopOpen){
+   if(!startScreen&&!pauseMenu&&!creatorOpen&&!inventoryOpen&&!shopOpen){
     int previousDay=(int)(worldTime/240f);
     worldTime+=dt;
     if((int)(worldTime/240f)>previousDay){
@@ -1309,7 +1309,7 @@ public class MainActivity extends Activity {
   }
   int direction(float vx,float vy){return Math.abs(vx)>Math.abs(vy)?(vx<0?2:3):(vy<0?1:0);}
   void attack(){
-   if(hp<=0||attackCooldown>0||inventoryOpen||shopOpen||pauseMenu||startScreen)return;
+   if(hp<=0||attackCooldown>0||inventoryOpen||shopOpen||pauseMenu||startScreen||creatorOpen)return;
    attackCooldown=.42f;attackAnim=.4f;swordTimer=3f;sword=true;
    float fx=playerDir==2?-1:playerDir==3?1:0,fy=playerDir==1?-1:playerDir==0?1:0;
    for(Mob m:mobs){
@@ -1375,7 +1375,7 @@ public class MainActivity extends Activity {
    }
    String playerKind=sword?"player_sword":"player_unarmed";
    String playerAction=hp<=0?"death":hurtAnim>0?"hurt":attackAnim>0&&sword?"attack":Math.abs(joyX)+Math.abs(joyY)>.08f?"run":"idle";
-   drawSprite(playerKind,playerAction,playerDir,px,py,94,94,hp<=0?deathAnim:attackAnim>0?.4f-attackAnim:elapsed,hp<=0&&deathAnim>.8f);
+   drawSprite(playerKind,playerAction,playerDir,px,py,112,112,hp<=0?deathAnim:attackAnim>0?.4f-attackAnim:elapsed,hp<=0&&deathAnim>.8f);
    if(playerHealthVisible>0)healthBar(px,py-56,52,hp,maxHp);
    damageText(px,py-66,lastPlayerDamage,playerDamageTime);
    Drop nearby=nearestDrop();
