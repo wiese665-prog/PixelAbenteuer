@@ -214,7 +214,7 @@ public class MainActivity extends Activity {
    
    // Two complete rear display shelves and one dragon picture.
    tile("Interior_objects",13,128,34,51,l+381,t+95,53,68);
-   tile("Interior_objects",63,129,34,33,l+570,t+112,53,51);
+   tile("Interior_objects",113,129,34,51,l+570,t+95,53,68);
    tile("Interior_objects",114,257,59,49,l+451,t+82,106,59);
    // Two separate COMPLETE purple rugs (source x=6..60, y=397..421).
    tile("Interior_objects",0,385,59,40,l+415,t+156,205,72);
@@ -223,14 +223,14 @@ public class MainActivity extends Activity {
    tile("Interior_objects",16,0,160,27,l+345.5f,t+213,309,46);
    // Two complete decorative original sprites at the bottom of the forge.
    tile("Interior_objects",0,328,65,60,l+69,t+265,64,65);
-   tile("Interior_objects",71,444,45,34,l+211,t+285,55,41);
+   tile("Interior_objects",70,328,47,55,l+211,t+270,51,58);
    // Additional forge details from distinct atlas cells, not duplicated crates.
-   tile("Interior_objects",139,440,36,36,l+135,t+286,42,42);
-   tile("Interior_objects",174,440,31,39,l+271,t+282,37,46);
+   tile("Interior_objects",8,328,45,56,l+135,t+270,47,58);
+   tile("Interior_objects",70,328,47,55,l+271,t+270,47,58);
    // Complete stair-display shelves on the bottom wall, flanking the entry.
    // Door is at interior x=555 (screen x=l+495); keep a clear central aisle.
-   tile("Interior_objects",98,70,46,59,l+356,t+263,61,72);
-   tile("Interior_objects",148,70,46,59,l+574,t+263,61,72);
+   tile("Interior_objects",98,70,46,59,l+341,t+267,61,72);
+   tile("Interior_objects",148,70,46,59,l+596,t+267,61,72);
    // The seller is drawn only once, using a single stable pose.
    characterTile("Master_Idle",3,2,(int)(elapsed*2)%3,l+236,t+175,81.4f);
    sellerPortrait(l+497,t+236);
