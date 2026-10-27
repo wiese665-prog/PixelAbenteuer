@@ -41,7 +41,7 @@ public class MainActivity extends Activity {
   ArrayList<Mob> mobs=new ArrayList<>();ArrayList<Decoration> decorations=new ArrayList<>();ArrayList<Drop> drops=new ArrayList<>();LinkedHashMap<String,Integer> inventory=new LinkedHashMap<>();HashMap<String,Bitmap> itemImages=new HashMap<>();
   HashMap<String,Item> definitions=new HashMap<>();HashMap<String,String> equipped=new HashMap<>();
   String[] hotbar=new String[5];int selectedHotbar=-1;int copper=0,silver=0,gold=0,hoverSlot=-1;float hoverX=0,hoverY=0;
-  boolean inventoryOpen=false,shopOpen=false,startScreen=true,pauseMenu=false;float merchantX=265,merchantY=215;
+  Item inspectedGear=null;boolean inventoryOpen=false,shopOpen=false,startScreen=true,pauseMenu=false;float merchantX=265,merchantY=215;
   int activeMerchant=0; // 0 Orc-Händler, 1 Schmid, 2 Händlerin
   String[] shopStock={"Apple","Ham","Healthpotion","Healpotion med","Iron Sword","Silver Sword","Leather Armor","Iron Armor","Iron Helmet","Golden Sword"};
   String[] smithStock={"Wooden Sword [Common]","Wooden Sword [Legendär]","Iron Sword [Uncommon]","Iron Sword [Rare]","Silver Sword [Common]","Silver Sword [Legendär]","Golden Sword [Rare]","Golden Sword [Legendär]","Leather Armor [Rare]","Iron Armor [Rare]","Iron Helmet [Legendär]","Leather Boot [Uncommon]"};
@@ -794,10 +794,12 @@ public class MainActivity extends Activity {
     canvas.drawText(label,x+2,y+49,paint);
     paint.setColor(col("#ffe4a5"));paint.setTextSize(10);canvas.drawText(""+inventory.get(names[i]),x+42,y+12,paint);
    }
+   Item tooltip=inspectedGear;
    if(hoverSlot>=0&&hoverSlot<names.length){
-    Item item=definitions.get(names[hoverSlot]);
-    if(item!=null&&item.equipment())drawGearTooltip(item,hoverX,hoverY,vw,vh);
+    Item hovered=definitions.get(names[hoverSlot]);
+    if(hovered!=null&&hovered.equipment())tooltip=hovered;
    }
+   if(tooltip!=null)drawGearTooltip(tooltip,hoverX,hoverY,vw,vh);
    paint.setTypeface(Typeface.DEFAULT);
   }
   void drawGearTooltip(Item item,float mx,float my,float vw,float vh){
@@ -1269,9 +1271,13 @@ public class MainActivity extends Activity {
     }
     if(inventoryOpen){updateInventoryHover(e);float sc=Math.min(getWidth()/800f,getHeight()/450f),xx=e.getX()/sc,yy=e.getY()/sc,vw=getWidth()/sc,vh=getHeight()/sc;
      int barSlot=hotbarIndexAt(xx,yy,vw,vh);
-     if(barSlot>=0){if(selectedHotbar==barSlot){hotbar[barSlot]=null;selectedHotbar=-1;}else selectedHotbar=barSlot;return true;}
-     int equippedIndex=equippedSlotAt(xx,yy,vw,vh);if(equippedIndex>=0){unequip(new String[]{"Kopf","Waffe","Brust","Fuesse","Guertel"}[equippedIndex]);return true;}
-     int idx=inventoryIndex(xx,yy,vw,vh);if(idx>=0){String[] names=inventoryNames();if(idx<names.length){String name=names[idx];Item item=definitions.get(name);if(item!=null){if(item.equipment())equip(name);else if(item.heal>0)assignHotbar(name);}}}return true;}
+     if(barSlot>=0){inspectedGear=null;if(selectedHotbar==barSlot){hotbar[barSlot]=null;selectedHotbar=-1;}else selectedHotbar=barSlot;return true;}
+     int equippedIndex=equippedSlotAt(xx,yy,vw,vh);if(equippedIndex>=0){
+      String slot=new String[]{"Kopf","Waffe","Brust","Fuesse","Guertel"}[equippedIndex];
+      inspectedGear=definitions.get(equipped.get(slot));hoverX=xx;hoverY=yy;
+      unequip(slot);return true;
+     }
+     int idx=inventoryIndex(xx,yy,vw,vh);if(idx>=0){String[] names=inventoryNames();if(idx<names.length){String name=names[idx];Item item=definitions.get(name);if(item!=null){inspectedGear=item.equipment()?item:null;hoverX=xx;hoverY=yy;if(item.equipment())equip(name);else if(item.heal>0)assignHotbar(name);}}}return true;}
     if(hp<=0){restart();return true;}
     // In BlueStacks, a left mouse click arrives as a primary mouse/touch press.
     if((e.getSource()&InputDevice.SOURCE_MOUSE)==InputDevice.SOURCE_MOUSE){
@@ -1283,7 +1289,7 @@ public class MainActivity extends Activity {
   @Override public boolean onKeyDown(int key,KeyEvent e){
    if(key==KeyEvent.KEYCODE_ESCAPE||key==KeyEvent.KEYCODE_BACK){
     if(startScreen)return true;
-    if(shopOpen)shopOpen=false;else if(inventoryOpen)inventoryOpen=false;else pauseMenu=!pauseMenu;
+    if(shopOpen)shopOpen=false;else if(inventoryOpen){inventoryOpen=false;inspectedGear=null;}else pauseMenu=!pauseMenu;
     joyX=joyY=0;return true;
    }
    if(startScreen||pauseMenu){if(key==KeyEvent.KEYCODE_ENTER){startScreen=false;pauseMenu=false;}return true;}
@@ -1300,7 +1306,7 @@ public class MainActivity extends Activity {
      else if(Math.hypot(px-merchantX,py-merchantY)<50)openShop();
      else pickup();
      break;
-    case KeyEvent.KEYCODE_I:if(shopOpen)shopOpen=false;else inventoryOpen=!inventoryOpen;hoverSlot=-1;break;
+    case KeyEvent.KEYCODE_I:if(shopOpen)shopOpen=false;else inventoryOpen=!inventoryOpen;inspectedGear=null;hoverSlot=-1;break;
     case KeyEvent.KEYCODE_1:useHotbar(0);break;
     case KeyEvent.KEYCODE_2:useHotbar(1);break;
     case KeyEvent.KEYCODE_3:useHotbar(2);break;
