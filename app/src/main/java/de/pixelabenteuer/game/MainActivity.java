@@ -1019,13 +1019,13 @@ public class MainActivity extends Activity {
      drawRect(col("#9b7c4c"),x+2,y+2,97,56);
      drawRect(col("#253c3a"),x+4,y+4,93,52);
      itemIcon(names[itemIndex],x+4,y+5,1.45f);
-     Item item=definitions.get(names[i]);
+     Item item=definitions.get(names[itemIndex]);
      paint.setTextSize(10);paint.setColor(item!=null&&item.equipment()?rarityColor(item.rarity):col("#f1eee1"));
-     String label=names[i].replaceAll(" \\{[0-9]+\\}$","");if(label.length()>13)label=label.substring(0,12)+".";
+     String label=names[itemIndex].replaceAll(" \\{[0-9]+\\}$","");if(label.length()>13)label=label.substring(0,12)+".";
      canvas.drawText(label,x+38,y+20,paint);
      if(side==1){paint.setColor(col("#ffffff"));paint.setTextSize(11);canvas.drawText("x"+inventory.getOrDefault(names[itemIndex],0),x+7,y+17,paint);}
      paint.setColor(col("#eac582"));paint.setTextSize(11);
-     canvas.drawText((side==0?price(names[itemIndex]:Math.max(1,price(names[i])/2))+" Kupfer",x+38,y+40,paint);
+     canvas.drawText((side==0?price(names[itemIndex]):Math.max(1,price(names[itemIndex])/2))+" Kupfer",x+38,y+40,paint);
     }
    }
    if(inspectedGear!=null&&gearTooltipTime>0f)drawGearTooltip(inspectedGear,hoverX,hoverY,vw,vh);
