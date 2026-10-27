@@ -966,6 +966,7 @@ public class MainActivity extends Activity {
    if(item!=null&&item.equipment()){inspectedGear=item;gearTooltipTime=8f;hoverX=xx;hoverY=yy;invalidate();}
   }
   void drawGearTooltip(Item item,float mx,float my,float vw,float vh){
+   paint.setTextAlign(Paint.Align.LEFT);
    float tx=Math.max(4,Math.min(vw-240,mx+18)),ty=Math.max(4,Math.min(vh-150,my+12));
    drawRect(col("#10151d"),tx-3,ty-3,238,147);
    drawRect(rarityColor(item.rarity),tx,ty,232,141);
@@ -1663,10 +1664,12 @@ public class MainActivity extends Activity {
    float sc=Math.min(getWidth()/800f,getHeight()/450f),vw=getWidth()/sc,vh=getHeight()/sc;
    hoverX=e.getX()/sc;hoverY=e.getY()/sc;
    hoverSlot=inventoryIndex(hoverX,hoverY,vw,vh);
+   showGearTooltip(hoverX,hoverY,vw,vh);
    invalidate();
   }
   @Override public boolean onHoverEvent(MotionEvent e){
    if(inventoryOpen){updateInventoryHover(e);return true;}
+   if(shopOpen){float sc=Math.min(getWidth()/800f,getHeight()/450f);showShopTooltip(e.getX()/sc,e.getY()/sc,getWidth()/sc,getHeight()/sc);return true;}
    return super.onHoverEvent(e);
   }
   @Override public boolean onGenericMotionEvent(MotionEvent e){
@@ -1676,6 +1679,7 @@ public class MainActivity extends Activity {
    if(shopOpen&&(e.getActionMasked()==MotionEvent.ACTION_BUTTON_PRESS||e.getActionMasked()==MotionEvent.ACTION_DOWN)&&(e.getActionButton()==MotionEvent.BUTTON_SECONDARY||(e.getButtonState()&MotionEvent.BUTTON_SECONDARY)!=0)){float sc=Math.min(getWidth()/800f,getHeight()/450f);showShopTooltip(e.getX()/sc,e.getY()/sc,getWidth()/sc,getHeight()/sc);return true;}
    if((inventoryOpen||shopOpen)&&e.getActionMasked()==MotionEvent.ACTION_BUTTON_PRESS&&e.getActionButton()==MotionEvent.BUTTON_TERTIARY){float sc=Math.min(getWidth()/800f,getHeight()/450f);if(shopOpen)showShopTooltip(e.getX()/sc,e.getY()/sc,getWidth()/sc,getHeight()/sc);else showGearTooltip(e.getX()/sc,e.getY()/sc,getWidth()/sc,getHeight()/sc);return true;}
    if(inventoryOpen){updateInventoryHover(e);return true;}
+   if(shopOpen&&e.getActionMasked()==MotionEvent.ACTION_HOVER_MOVE){float sc=Math.min(getWidth()/800f,getHeight()/450f);showShopTooltip(e.getX()/sc,e.getY()/sc,getWidth()/sc,getHeight()/sc);return true;}
    if((e.getSource()&InputDevice.SOURCE_MOUSE)==InputDevice.SOURCE_MOUSE&&e.getActionMasked()==MotionEvent.ACTION_BUTTON_PRESS
       &&e.getActionButton()==MotionEvent.BUTTON_PRIMARY){attack();return true;}
    return super.onGenericMotionEvent(e);
