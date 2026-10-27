@@ -1154,7 +1154,9 @@ public class MainActivity extends Activity {
    String page=fighting?"pONE3":"p1";
    // Mana Seed p1: rows 0-3 = stand/push/pull/jump; rows 4-7 = walk/run.
    // Each group contains the four facing directions; never use push frames for walking.
-   int facing=dir==0?1:dir==1?0:dir==2?2:3;
+   // Sprite-sheet direction order differs from the game's front/back/left/right order.
+   // Mana Seed: row 0 front, row 1 back, row 2 right, row 3 left.
+   int facing=dir==0?0:dir==1?1:dir==2?3:2;
    boolean moving=action.equals("walk")||action.equals("run");
    int row=fighting?(action.equals("attack")?(attackSequence%2)*4+facing:action.equals("hurt")?facing:4+facing):(moving?4+facing:facing);
    int col=fighting?Math.min(3,Math.max(0,(int)(time*10))):(moving?(action.equals("run")?6+((int)(elapsed*10)%2):(int)(elapsed*8)%6):0);
