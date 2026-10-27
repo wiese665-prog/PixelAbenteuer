@@ -1152,11 +1152,12 @@ public class MainActivity extends Activity {
   void drawCharacter(float x,float y,float w,float h,int dir,String action,float time){
    boolean fighting=action.equals("attack")||action.equals("hurt")||action.equals("death");
    String page=fighting?"pONE3":"p1";
-   int row=(dir==0?1:dir==1?0:dir==2?2:3);
-   int frame=fighting?Math.min(3,(int)(time*12)%4):(action.equals("walk")||action.equals("run")?(int)(elapsed*8)%6:0);
-   int col=fighting?frame:(action.equals("walk")||action.equals("run")?frame:0);
-   // Combat pages use four directions in consecutive rows per animation.
-   if(fighting)row=(dir==0?1:dir==1?0:dir==2?2:3);
+   // Mana Seed p1: rows 0-3 = stand/push/pull/jump; rows 4-7 = walk/run.
+   // Each group contains the four facing directions; never use push frames for walking.
+   int facing=dir==0?1:dir==1?0:dir==2?2:3;
+   boolean moving=action.equals("walk")||action.equals("run");
+   int row=fighting?facing:(moving?4+facing:facing);
+   int col=fighting?Math.min(3,Math.max(0,(int)(time*10))):(moving?(int)(elapsed*8)%6:0);
    characterLayer(page,"0bas","humn",skinColor,row,col,x,y,w,h);
    characterLayer(page,"1out",equipped.containsKey("Brust")?"fstr":"pfpn",1,row,col,x,y,w,h);
    characterLayer(page,"4har",hairType==0?"bob1":"dap1",hairColor,row,col,x,y,w,h);
