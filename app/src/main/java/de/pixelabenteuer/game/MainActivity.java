@@ -22,9 +22,9 @@ public class MainActivity extends Activity {
  @Override protected void onDestroy(){if(gameView!=null)gameView.releaseMusic();super.onDestroy();}
  Game gameView;
  class Mob {
-  String kind,action="idle";float x,y,vx,vy,anim=0,decision=0,attackTimer=0,hurtTimer=0,deathTimer=0,healthVisible=0;int hp,maxHp,level,damage,dir=0;boolean dead=false;float pathTimer=0;int pathIndex=0;java.util.ArrayList<float[]> path=new java.util.ArrayList<>();float damageNumberTime=0;int lastDamage=0;
+  String kind,action="idle";float x,y,vx,vy,anim=0,decision=0,attackTimer=0,hurtTimer=0,deathTimer=0,healthVisible=0;int hp,maxHp,level,damage,dir=0;boolean dead=false,alpha=false;Mob leader=null;float pathTimer=0;int pathIndex=0;java.util.ArrayList<float[]> path=new java.util.ArrayList<>();float damageNumberTime=0;int lastDamage=0;
   Mob(String k,float xx,float yy) {kind=k;x=xx;y=yy;level=1+(int)(Math.random()*(k.startsWith("orc")?6:4));int baseHp=k.equals("orc3")?12:k.equals("orc2")?9:k.equals("orc1")?7:k.equals("boar")?8:k.equals("deer")?5:k.equals("fox")?4:2;maxHp=baseHp+(level-1)*(k.equals("boar")||k.startsWith("orc")?3:2);hp=maxHp;damage=(k.equals("orc3")?3:k.equals("orc2")?2:k.equals("orc1")?1:0)+(level-1)/3;}
-  boolean hostile(){return kind.startsWith("orc");}
+  boolean hostile(){return kind.startsWith("orc")||kind.equals("boar");}
  }
  class Decoration {
   Bitmap image,mask;float x,y,w,h;boolean solid;
@@ -71,7 +71,7 @@ public class MainActivity extends Activity {
   SoundPool hitSounds;
   int enemyHitSound=0,playerHitSound=0;
   float[] musicVolumes=new float[3];
-  float masterMusicVolume=0.7f;
+  float masterMusicVolume=0.05f;
   void setMusicVolume(float value){masterMusicVolume=Math.max(0f,Math.min(1f,value));getContext().getSharedPreferences("pixel_settings",MODE_PRIVATE).edit().putFloat("music_volume",masterMusicVolume).apply();}
   boolean musicPaused=false;
   // Three original looping 8-bit melodies, generated locally without external audio assets.
@@ -212,7 +212,7 @@ public class MainActivity extends Activity {
     }catch(Exception ignored){}
    }
   }
-  Game(){super(MainActivity.this);setFocusable(true);setFocusableInTouchMode(true);paint.setFilterBitmap(false);loadSprites();loadBuildings();loadClouds();loadItems();loadDecorations();spawnMobs();masterMusicVolume=getContext().getSharedPreferences("pixel_settings",MODE_PRIVATE).getFloat("music_volume",0.7f);startMusic();initHitSounds();}
+  Game(){super(MainActivity.this);setFocusable(true);setFocusableInTouchMode(true);paint.setFilterBitmap(false);loadSprites();loadBuildings();loadClouds();loadItems();loadDecorations();spawnMobs();masterMusicVolume=getContext().getSharedPreferences("pixel_settings",MODE_PRIVATE).getFloat("music_volume",0.05f);startMusic();initHitSounds();}
   void spawnMobs(){
    String[] animals={"boar","fox","deer","black_grouse"};
    int animalCount=0,orcCount=0;
@@ -978,9 +978,11 @@ public class MainActivity extends Activity {
    paint.setTextSize(11);canvas.drawText(item.rarity,tx+47,ty+41,paint);
    paint.setTypeface(Typeface.DEFAULT);paint.setColor(col("#e8e9dc"));
    canvas.drawText("Slot: "+item.slot,tx+10,ty+63,paint);
-   paint.setColor(col("#8ee4a0"));canvas.drawText("Schaden +"+item.dmg,tx+10,ty+83,paint);
-   canvas.drawText("Verteidigung +"+item.armor,tx+10,ty+102,paint);
-   canvas.drawText("Max. HP +"+item.hp+"     Mana +"+item.mana,tx+10,ty+121,paint);
+   paint.setColor(col("#8ee4a0"));float statY=ty+83;
+   if(item.dmg>0){canvas.drawText("Schaden +"+item.dmg,tx+10,statY,paint);statY+=19;}
+   if(item.armor>0){canvas.drawText("Verteidigung +"+item.armor,tx+10,statY,paint);statY+=19;}
+   if(item.hp>0){canvas.drawText("Max. HP +"+item.hp,tx+10,statY,paint);statY+=19;}
+   if(item.mana>0)canvas.drawText("Mana +"+item.mana,tx+10,statY,paint);
   }
   void showShopTooltip(float x,float y,float vw,float vh){int idx=shopIndex(x,y,vw,vh,true);String[] names=activeStock();if(idx<0){idx=shopIndex(x,y,vw,vh,false);names=inventoryNames();}if(idx>=0&&idx<names.length){Item item=definitions.get(names[idx]);if(item!=null&&item.equipment()){inspectedGear=item;gearTooltipTime=8f;hoverX=x;hoverY=y;invalidate();}}}
   void drawShop(float vw,float vh){
@@ -1451,7 +1453,7 @@ public class MainActivity extends Activity {
    if(indoors)return;
    ArrayList<Mob> engagedOrcs=new ArrayList<>();
    if(!safeZone(px,py))for(Mob candidate:mobs){
-    if(!candidate.dead&&candidate.kind.startsWith("orc")&&!safeZone(candidate.x,candidate.y)
+    if(!candidate.dead&&candidate.hostile()&&!safeZone(candidate.x,candidate.y)
        &&Math.hypot(px-candidate.x,py-candidate.y)<285f)engagedOrcs.add(candidate);
    }
    ArrayList<Mob> attackingOrcs=new ArrayList<>();
@@ -1473,7 +1475,7 @@ public class MainActivity extends Activity {
     float distance=(float)Math.hypot(px-m.x,py-m.y);
     float vx=0,vy=0;String action="idle";
     if(m.hurtTimer>0){action="hurt";}
-    else if(m.hostile()&&distance<285&&!safeZone(m.x,m.y)&&!safeZone(px,py)){
+    else if(m.hostile()&&distance<(m.kind.equals("boar")?135:285)&&!safeZone(m.x,m.y)&&!safeZone(px,py)){
      m.dir=direction(px-m.x,py-m.y);
      if(attackingOrcs.contains(m)){
       action="attack";
@@ -1490,6 +1492,8 @@ public class MainActivity extends Activity {
       vy=(px-m.x)/Math.max(1,distance)*orbit*23f;
       action="walk";
      }
+    }else if(m.leader!=null&&!m.leader.dead&&Math.hypot(m.x-m.leader.x,m.y-m.leader.y)>42){
+     float dx=m.leader.x-m.x,dy=m.leader.y-m.y,len=(float)Math.hypot(dx,dy);vx=dx/Math.max(1,len)*55;vy=dy/Math.max(1,len)*55;action="walk";
     }else if(!m.hostile()&&distance<110){
      vx=(m.x-px)/Math.max(1,distance)*105;vy=(m.y-py)/Math.max(1,distance)*105;
      action=m.kind.equals("black_grouse")?"flight":"run";
@@ -1599,9 +1603,9 @@ public class MainActivity extends Activity {
     if(m.dead&&m.deathTimer>2.5f)continue;
     if(m.x<px-vw/2-90||m.x>px+vw/2+90||m.y<py-vh/2-90||m.y>py+vh/2+90)continue;
     String action=m.dead?"death":m.hurtTimer>0?"hurt":m.action;
-    float size=m.hostile()?79:m.kind.equals("boar")?45:m.kind.equals("deer")?43:36;
+    float size=(m.kind.startsWith("orc")?79:m.kind.equals("boar")?45:m.kind.equals("deer")?43:36)*(m.alpha?1.28f:1f);
     drawSprite(m.kind,action,m.dir,m.x,m.y,size,size,m.dead?m.deathTimer:m.anim,m.dead&&m.deathTimer>.7f);
-    if(!m.dead){paint.setColor(Color.WHITE);paint.setTextSize(12);paint.setTextAlign(Paint.Align.CENTER);paint.setTypeface(Typeface.create("serif",Typeface.BOLD_ITALIC));paint.setTextSize(7);outlinedText("Lv. "+m.level,m.x,m.y-size*(m.hostile()?.53f:.64f));paint.setTypeface(Typeface.DEFAULT);paint.setTextAlign(Paint.Align.LEFT);}
+    if(!m.dead){paint.setColor(Color.WHITE);paint.setTextSize(12);paint.setTextAlign(Paint.Align.CENTER);paint.setTypeface(Typeface.create("serif",Typeface.BOLD_ITALIC));paint.setTextSize(7);outlinedText((m.alpha?"Alpha ":"")+"Lv. "+m.level,m.x,m.y-size*(m.hostile()?.53f:.64f));paint.setTypeface(Typeface.DEFAULT);paint.setTextAlign(Paint.Align.LEFT);}
     if(!m.dead&&m.hostile()&&!indoors&&!safeZone(px,py)&&!safeZone(m.x,m.y)
        &&Math.hypot(px-m.x,py-m.y)<285f){
      paint.setTextAlign(Paint.Align.CENTER);paint.setTypeface(Typeface.DEFAULT_BOLD);
