@@ -963,7 +963,7 @@ public class MainActivity extends Activity {
    int equippedIndex=equippedSlotAt(xx,yy,vw,vh);
    if(equippedIndex>=0){String slot=new String[]{"Kopf","Waffe","Brust","Fuesse","Guertel"}[equippedIndex];item=definitions.get(equipped.get(slot));}
    else{int idx=inventoryIndex(xx,yy,vw,vh);String[] names=inventoryNames();if(idx>=0&&idx<names.length)item=definitions.get(names[idx]);}
-   if(item!=null&&item.equipment()){inspectedGear=item;gearTooltipTime=2f;hoverX=xx;hoverY=yy;}
+   if(item!=null&&item.equipment()){inspectedGear=item;gearTooltipTime=8f;hoverX=xx;hoverY=yy;invalidate();}
   }
   void drawGearTooltip(Item item,float mx,float my,float vw,float vh){
    float tx=Math.max(4,Math.min(vw-240,mx+18)),ty=Math.max(4,Math.min(vh-150,my+12));
@@ -980,7 +980,7 @@ public class MainActivity extends Activity {
    canvas.drawText("Verteidigung +"+item.armor,tx+10,ty+102,paint);
    canvas.drawText("Max. HP +"+item.hp+"     Mana +"+item.mana,tx+10,ty+121,paint);
   }
-  void showShopTooltip(float x,float y,float vw,float vh){int idx=shopIndex(x,y,vw,vh,true);String[] names=activeStock();if(idx>=0&&idx<names.length){Item item=definitions.get(names[idx]);if(item!=null&&item.equipment()){inspectedGear=item;gearTooltipTime=2f;hoverX=x;hoverY=y;}}}
+  void showShopTooltip(float x,float y,float vw,float vh){int idx=shopIndex(x,y,vw,vh,true);String[] names=activeStock();if(idx<0){idx=shopIndex(x,y,vw,vh,false);names=inventoryNames();}if(idx>=0&&idx<names.length){Item item=definitions.get(names[idx]);if(item!=null&&item.equipment()){inspectedGear=item;gearTooltipTime=8f;hoverX=x;hoverY=y;invalidate();}}}
   void drawShop(float vw,float vh){
    float left=vw/2-365,top=vh/2-185;
    panel(left,top,730,370);drawRect(col("#c5a36a"),left+365,top+48,2,302);
@@ -1641,10 +1641,10 @@ public class MainActivity extends Activity {
    return super.onHoverEvent(e);
   }
   @Override public boolean onGenericMotionEvent(MotionEvent e){
-   if(inventoryOpen&&(e.getSource()&InputDevice.SOURCE_MOUSE)==InputDevice.SOURCE_MOUSE&&e.getActionMasked()==MotionEvent.ACTION_BUTTON_PRESS&&e.getActionButton()==MotionEvent.BUTTON_SECONDARY){
+   if(inventoryOpen&&(e.getActionMasked()==MotionEvent.ACTION_BUTTON_PRESS||e.getActionMasked()==MotionEvent.ACTION_DOWN)&&(e.getActionButton()==MotionEvent.BUTTON_SECONDARY||(e.getButtonState()&MotionEvent.BUTTON_SECONDARY)!=0)){
     float sc=Math.min(getWidth()/800f,getHeight()/450f);showGearTooltip(e.getX()/sc,e.getY()/sc,getWidth()/sc,getHeight()/sc);invalidate();return true;
    }
-   if(shopOpen&&(e.getSource()&InputDevice.SOURCE_MOUSE)==InputDevice.SOURCE_MOUSE&&e.getActionMasked()==MotionEvent.ACTION_BUTTON_PRESS&&e.getActionButton()==MotionEvent.BUTTON_SECONDARY){float sc=Math.min(getWidth()/800f,getHeight()/450f);showShopTooltip(e.getX()/sc,e.getY()/sc,getWidth()/sc,getHeight()/sc);return true;}
+   if(shopOpen&&(e.getActionMasked()==MotionEvent.ACTION_BUTTON_PRESS||e.getActionMasked()==MotionEvent.ACTION_DOWN)&&(e.getActionButton()==MotionEvent.BUTTON_SECONDARY||(e.getButtonState()&MotionEvent.BUTTON_SECONDARY)!=0)){float sc=Math.min(getWidth()/800f,getHeight()/450f);showShopTooltip(e.getX()/sc,e.getY()/sc,getWidth()/sc,getHeight()/sc);return true;}
    if(inventoryOpen){updateInventoryHover(e);return true;}
    if((e.getSource()&InputDevice.SOURCE_MOUSE)==InputDevice.SOURCE_MOUSE&&e.getActionMasked()==MotionEvent.ACTION_BUTTON_PRESS
       &&e.getActionButton()==MotionEvent.BUTTON_PRIMARY){attack();return true;}
@@ -1659,10 +1659,10 @@ public class MainActivity extends Activity {
     if(yy>=top+316&&yy<=top+353&&xx>=left+95&&xx<=left+405)setMusicVolume((xx-(left+110))/280f);
     return true;
    }
-   if(inventoryOpen&&type==MotionEvent.ACTION_DOWN&&(e.getButtonState()&MotionEvent.BUTTON_SECONDARY)!=0){
+   if(inventoryOpen&&(type==MotionEvent.ACTION_DOWN||type==MotionEvent.ACTION_BUTTON_PRESS)&&((e.getButtonState()&MotionEvent.BUTTON_SECONDARY)!=0||e.getActionButton()==MotionEvent.BUTTON_SECONDARY)){
     float sc=Math.min(getWidth()/800f,getHeight()/450f);showGearTooltip(e.getX()/sc,e.getY()/sc,getWidth()/sc,getHeight()/sc);return true;
    }
-   if(shopOpen&&type==MotionEvent.ACTION_DOWN&&(e.getButtonState()&MotionEvent.BUTTON_SECONDARY)!=0){float sc=Math.min(getWidth()/800f,getHeight()/450f);showShopTooltip(e.getX()/sc,e.getY()/sc,getWidth()/sc,getHeight()/sc);return true;}
+   if(shopOpen&&(type==MotionEvent.ACTION_DOWN||type==MotionEvent.ACTION_BUTTON_PRESS)&&((e.getButtonState()&MotionEvent.BUTTON_SECONDARY)!=0||e.getActionButton()==MotionEvent.BUTTON_SECONDARY)){float sc=Math.min(getWidth()/800f,getHeight()/450f);showShopTooltip(e.getX()/sc,e.getY()/sc,getWidth()/sc,getHeight()/sc);return true;}
    if(type==MotionEvent.ACTION_DOWN){
     if(creatorOpen){float sc=Math.min(getWidth()/800f,getHeight()/450f);creatorClick(e.getX()/sc,e.getY()/sc,getWidth()/sc,getHeight()/sc);return true;}
     if(startScreen||pauseMenu){float sc=Math.min(getWidth()/800f,getHeight()/450f),xx=e.getX()/sc,yy=e.getY()/sc,vw=getWidth()/sc,vh=getHeight()/sc;if(controlsOpen){controlsBackClick(xx,yy,vw,vh);}else menuClick(xx,yy,vw,vh);return true;}
