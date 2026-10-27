@@ -957,8 +957,8 @@ public class MainActivity extends Activity {
    for(int i=0;i<Math.min(24,names.length);i++){
     float x=left+329+(i%6)*67,y=top+104+(i/6)*64;
     slotFrame(x,y,56,names[i]);
-    Item item=definitions.get(names[itemIndex]);paint.setColor(item!=null&&item.equipment()?rarityColor(item.rarity):col("#d5dad9"));
-    paint.setTextSize(9);String label=names[itemIndex].replaceAll(" \\{[0-9]+\\}$","");if(label.length()>10)label=label.substring(0,9)+".";
+    Item item=definitions.get(names[i]);paint.setColor(item!=null&&item.equipment()?rarityColor(item.rarity):col("#d5dad9"));
+    paint.setTextSize(9);String label=names[i].replaceAll(" \\{[0-9]+\\}$","");if(label.length()>10)label=label.substring(0,9)+".";
     canvas.drawText(label,x+2,y+49,paint);
     paint.setColor(col("#ffe4a5"));paint.setTextSize(10);canvas.drawText(""+inventory.get(names[i]),x+42,y+12,paint);
    }
