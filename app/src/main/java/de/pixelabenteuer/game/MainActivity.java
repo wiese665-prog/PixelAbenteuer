@@ -56,6 +56,8 @@ public class MainActivity extends Activity {
   long previous=System.nanoTime();
   AudioTrack[] musicTracks=new AudioTrack[3];
   float[] musicVolumes=new float[3];
+  float masterMusicVolume=0.7f;
+  void setMusicVolume(float value){masterMusicVolume=Math.max(0f,Math.min(1f,value));getContext().getSharedPreferences("pixel_settings",MODE_PRIVATE).edit().putFloat("music_volume",masterMusicVolume).apply();}
   boolean musicPaused=false;
   // Three original looping 8-bit melodies, generated locally without external audio assets.
   short[] makeMelody(int theme){
@@ -101,11 +103,11 @@ public class MainActivity extends Activity {
     float step=dt/.9f*.24f;
     musicVolumes[i]+=Math.max(-step,Math.min(step,goal-musicVolumes[i]));
     if(musicTracks[i]!=null&&!musicPaused)try{
-     musicTracks[i].setStereoVolume(musicVolumes[i],musicVolumes[i]);
+     musicTracks[i].setStereoVolume(musicVolumes[i]*masterMusicVolume,musicVolumes[i]*masterMusicVolume);
     }catch(Exception ignored){}
    }
   }
-  Game(){super(MainActivity.this);setFocusable(true);setFocusableInTouchMode(true);paint.setFilterBitmap(false);loadSprites();loadBuildings();loadClouds();loadItems();loadDecorations();spawnMobs();startMusic();}
+  Game(){super(MainActivity.this);setFocusable(true);setFocusableInTouchMode(true);paint.setFilterBitmap(false);loadSprites();loadBuildings();loadClouds();loadItems();loadDecorations();spawnMobs();masterMusicVolume=getContext().getSharedPreferences("pixel_settings",MODE_PRIVATE).getFloat("music_volume",0.7f);startMusic();}
   void spawnMobs(){
    String[] animals={"boar","fox","deer","black_grouse"};
    int animalCount=0,orcCount=0;
@@ -861,16 +863,24 @@ public class MainActivity extends Activity {
    String[] buttons={startScreen?"SPIEL STARTEN":"WEITERSPIELEN","SPIEL SPEICHERN","SPIEL LADEN","NEUSTART"};
    for(int i=0;i<buttons.length;i++){float y=top+89+i*49;drawRect(col("#7b7259"),left+95,y,310,42);
     drawRect(col("#334a4c"),left+98,y+3,304,36);paint.setColor(col("#f6e7c6"));paint.setTextSize(17);canvas.drawText(buttons[i],vw/2,y+26,paint);}
-   paint.setColor(col("#e5cc9c"));paint.setTextSize(15);canvas.drawText("STEUERUNG",vw/2,top+311,paint);
+   paint.setColor(col("#e5cc9c"));paint.setTextSize(14);
+   canvas.drawText("MUSIKLAUTSTAERKE  "+Math.round(masterMusicVolume*100)+"%",vw/2,top+308,paint);
+   float sx=left+110,sy=top+329,sw=280;
+   drawRect(col("#111c23"),sx,sy,sw,12);
+   drawRect(col("#8c754d"),sx+2,sy+2,(sw-4)*masterMusicVolume,8);
+   drawRect(col("#f6e7c6"),sx+masterMusicVolume*sw-5,sy-4,10,20);
+   paint.setColor(col("#e5cc9c"));paint.setTextSize(13);canvas.drawText("STEUERUNG",vw/2,top+361,paint);
    paint.setTextSize(12);paint.setColor(col("#d8e2d9"));
-   canvas.drawText("WASD: Laufen  |  Linksklick: Angriff  |  E: Aufheben / Handeln / Tür",vw/2,top+335,paint);
-   canvas.drawText("I: Inventar   |   1-5: Hotbar   |   ESC: Pause",vw/2,top+355,paint);
-   canvas.drawText("Ausrüstung: Im Inventar anklicken zum An- oder Ausziehen",vw/2,top+376,paint);
-   canvas.drawText("Schmid / Orc-Händler: Sortiment wechselt alle 5 Spielminuten",vw/2,top+394,paint);
+   canvas.drawText("WASD: Laufen  |  Linksklick: Angriff  |  E: Handeln",vw/2,top+378,paint);
+   canvas.drawText("I: Inventar   |   1-5: Hotbar   |   ESC: Pause",vw/2,top+396,paint);
+
    paint.setTextAlign(Paint.Align.LEFT);paint.setTypeface(Typeface.DEFAULT);
   }
   void menuClick(float x,float y,float vw,float vh){
    float top=vh/2-208,left=vw/2-250;
+   if(x>=left+95&&x<=left+405&&y>=top+316&&y<=top+353){
+    setMusicVolume((x-(left+110))/280f);return;
+   }
    if(x<left+95||x>left+405)return;
    for(int i=0;i<4;i++){float by=top+89+i*49;if(y>=by&&y<=by+42){
     if(i==0){startScreen=false;pauseMenu=false;previous=System.nanoTime();}
@@ -1152,6 +1162,12 @@ public class MainActivity extends Activity {
   @Override public boolean onTouchEvent(MotionEvent e){
    int type=e.getActionMasked();
    if(inventoryOpen&&(type==MotionEvent.ACTION_MOVE||type==MotionEvent.ACTION_HOVER_MOVE)){updateInventoryHover(e);return true;}
+   if(type==MotionEvent.ACTION_MOVE&&(startScreen||pauseMenu)){
+    float sc=Math.min(getWidth()/800f,getHeight()/450f),xx=e.getX()/sc,yy=e.getY()/sc,vw=getWidth()/sc,vh=getHeight()/sc;
+    float top=vh/2-208,left=vw/2-250;
+    if(yy>=top+316&&yy<=top+353&&xx>=left+95&&xx<=left+405)setMusicVolume((xx-(left+110))/280f);
+    return true;
+   }
    if(type==MotionEvent.ACTION_DOWN){
     if(startScreen||pauseMenu){float sc=Math.min(getWidth()/800f,getHeight()/450f),xx=e.getX()/sc,yy=e.getY()/sc,vw=getWidth()/sc,vh=getHeight()/sc;menuClick(xx,yy,vw,vh);return true;}
     if(shopOpen){
