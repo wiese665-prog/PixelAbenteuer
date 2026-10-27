@@ -1047,7 +1047,7 @@ public class MainActivity extends Activity {
     if(json==null){pickupNotice="Kein Spielstand";noticeTime=3f;return;}
     org.json.JSONObject root=new org.json.JSONObject(json);
     if(!root.has("inventory")||!root.has("equipped")||!root.has("hotbar")||!root.has("mobs")||!root.has("drops"))throw new org.json.JSONException("Incomplete save");
-    characterName=root.optString("characterName","Abenteurer");armorStyle=root.optInt("armorStyle",0);characterGender=root.optInt("characterGender",0);hairType=root.optInt("hairType",0);hairColor=root.optInt("hairColor",1);skinColor=root.optInt("skinColor",1);eyeColor=root.optInt("eyeColor",0);combatStyle=root.optInt("combatStyle",0);creatorOpen=false;
+    characterName=root.optString("characterName","Abenteurer");armorStyle=0;characterGender=root.optInt("characterGender",0);hairType=root.optInt("hairType",0);hairColor=root.optInt("hairColor",1);skinColor=root.optInt("skinColor",1);eyeColor=root.optInt("eyeColor",0);combatStyle=root.optInt("combatStyle",0);creatorOpen=false;
     px=(float)root.getDouble("px");py=(float)root.getDouble("py");
     if(!Float.isFinite(px)||!Float.isFinite(py))throw new org.json.JSONException("Invalid position");indoors=root.optBoolean("indoors",false);currentHouse=root.optInt("currentHouse",0);worldTime=(float)root.optDouble("worldTime",0);playerLevel=root.getInt("level");exp=root.getInt("exp");
     gold=root.getInt("gold");silver=root.getInt("silver");copper=root.getInt("copper");kills=root.optInt("kills");animalKills=root.optInt("animalKills");nextQuestDay=root.has("nextQuestDay")?root.optInt("nextQuestDay"):root.optInt("questsCompletedToday")>0?currentQuestDay()+2:0;questTier=root.optInt("questTier");questProgress=root.optInt("questProgress");questActive=root.optBoolean("questActive");
@@ -1088,7 +1088,7 @@ public class MainActivity extends Activity {
    drawRect(col("#b59a68"),left+22,top+55,205,291);
    drawRect(col("#152d2b"),left+25,top+58,199,285);
    drawRect(col("#2c4b43"),left+31,top+64,187,271);
-   drawCharacter(left+124,top+202,205,205,0,"idle",elapsed);
+   drawCharacter(left+124,top+202,170,225,0,"idle",elapsed);
    paint.setColor(col("#f0d6a0"));paint.setTextSize(12);
    canvas.drawText("CHARAKTERVORSCHAU",left+124,top+332,paint);
    paint.setColor(col("#c7a977"));canvas.drawText("✦",left+124,top+78,paint);
@@ -1098,9 +1098,9 @@ public class MainActivity extends Activity {
    drawRect(col("#1a3033"),left+249,top+73,290,29);
    paint.setColor(Color.WHITE);paint.setTextSize(15);
    canvas.drawText(characterName,left+394,top+94,paint);
-   String[] names={"GESCHLECHT","FRISUR","HAUTFARBE","HAARFARBE","KAMPFSTIL","KLEIDUNG"};
-   String[] values={characterGender==0?"Maennlich":"Weiblich",hairType==0?"Bob":"Kurzhaar","Variante "+skinColor,"Farbe "+hairColor,new String[]{"Schwert + Schild","Axt + Schild","Streitkolben + Schild"}[combatStyle],new String[]{"Reisekleidung","Nackt","Kampfkleidung"}[armorStyle]};
-   for(int i=0;i<6;i++){
+   String[] names={"GESCHLECHT","FRISUR","HAUTFARBE","HAARFARBE","KAMPFSTIL"};
+   String[] values={characterGender==0?"Maennlich":"Weiblich",hairType==0?"Bob":"Kurzhaar","Variante "+skinColor,"Farbe "+hairColor,new String[]{"Schwert + Schild","Axt + Schild","Streitkolben + Schild"}[combatStyle]};
+   for(int i=0;i<5;i++){
     float yy=top+121+i*38;
     paint.setTextSize(12);paint.setTypeface(Typeface.DEFAULT_BOLD);
     paint.setTextAlign(Paint.Align.LEFT);paint.setColor(col("#fff0c7"));canvas.drawText(names[i],left+249,yy+19,paint);
@@ -1133,7 +1133,7 @@ public class MainActivity extends Activity {
    }
    if(x<left+357||x>left+541)return;
    int index=(int)((y-(top+121))/38);
-   if(index<0||index>5||y>top+121+index*38+29)return;
+   if(index<0||index>4||y>top+121+index*38+29)return;
    int delta=x<left+449?-1:1;
    switch(index){
     case 0:characterGender=Math.floorMod(characterGender+delta,2);break;
@@ -1141,7 +1141,7 @@ public class MainActivity extends Activity {
     case 2:skinColor=Math.floorMod(skinColor+delta,11);break;
     case 3:hairColor=Math.floorMod(hairColor+delta,14);break;
     case 4:combatStyle=Math.floorMod(combatStyle+delta,3);break;
-    case 5:armorStyle=Math.floorMod(armorStyle+delta,3);break;
+    
    }
   }
   int pressedMenuButton=-1;float pressedMenuTime=0f;
@@ -1345,7 +1345,7 @@ public class MainActivity extends Activity {
    int row=fighting?(action.equals("attack")?(attackSequence%2)*4+facing:action.equals("hurt")?facing:4+facing):(moving?4+facing:facing);
    int col=fighting?Math.min(3,Math.max(0,(int)(time*10))):(moving?(action.equals("run")?((int)(elapsed*12)%6):(int)(elapsed*8)%6):0);
    characterLayer(page,"0bas","humn",skinColor,row,col,x,y,w,h);
-   characterLayer(page,"1out",armorStyle==2||equipped.containsKey("Brust")?"fstr":armorStyle==1?(characterGender==0?"boxr":"undi"):"pfpn",1,row,col,x,y,w,h);
+   characterLayer(page,"1out",equipped.containsKey("Brust")?"fstr":(characterGender==0?"boxr":"undi"),1,row,col,x,y,w,h);
    characterLayer(page,"4har",hairType==0?"bob1":"dap1",hairColor,row,col,x,y,w,h);
    if(equipped.containsKey("Kopf"))characterLayer(page,"5hat","pfht",1,row,col,x,y,w,h);
    if(creatorOpen||fighting){
@@ -1693,7 +1693,7 @@ public class MainActivity extends Activity {
     float sc=Math.min(getWidth()/800f,getHeight()/450f);showGearTooltip(e.getX()/sc,e.getY()/sc,getWidth()/sc,getHeight()/sc);return true;
    }
    if(shopOpen&&(type==MotionEvent.ACTION_DOWN||type==MotionEvent.ACTION_BUTTON_PRESS)&&((e.getButtonState()&MotionEvent.BUTTON_SECONDARY)!=0||e.getActionButton()==MotionEvent.BUTTON_SECONDARY)){float sc=Math.min(getWidth()/800f,getHeight()/450f);showShopTooltip(e.getX()/sc,e.getY()/sc,getWidth()/sc,getHeight()/sc);return true;}
-   if(type==MotionEvent.ACTION_DOWN&&(inventoryOpen||shopOpen)&&(e.isShiftPressed()||e.isCtrlPressed())){float sc=Math.min(getWidth()/800f,getHeight()/450f);float xx=e.getX()/sc,yy=e.getY()/sc,vw=getWidth()/sc,vh=getHeight()/sc;if(shopOpen)showShopTooltip(xx,yy,vw,vh);else showGearTooltip(xx,yy,vw,vh);return true;}
+   if(type==MotionEvent.ACTION_DOWN&&(inventoryOpen||shopOpen)&&((e.getMetaState()&(KeyEvent.META_SHIFT_ON|KeyEvent.META_CTRL_ON))!=0)){float sc=Math.min(getWidth()/800f,getHeight()/450f);float xx=e.getX()/sc,yy=e.getY()/sc,vw=getWidth()/sc,vh=getHeight()/sc;if(shopOpen)showShopTooltip(xx,yy,vw,vh);else showGearTooltip(xx,yy,vw,vh);return true;}
    if(type==MotionEvent.ACTION_DOWN){
     if(creatorOpen){float sc=Math.min(getWidth()/800f,getHeight()/450f);creatorClick(e.getX()/sc,e.getY()/sc,getWidth()/sc,getHeight()/sc);return true;}
     if(startScreen||pauseMenu){float sc=Math.min(getWidth()/800f,getHeight()/450f),xx=e.getX()/sc,yy=e.getY()/sc,vw=getWidth()/sc,vh=getHeight()/sc;if(controlsOpen){controlsBackClick(xx,yy,vw,vh);}else menuClick(xx,yy,vw,vh);return true;}
