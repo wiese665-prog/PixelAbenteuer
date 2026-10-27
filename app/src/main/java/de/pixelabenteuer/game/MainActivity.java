@@ -584,10 +584,22 @@ public class MainActivity extends Activity {
   String merchantTitle(){return activeMerchant==1?"SCHMID":activeMerchant==2?"HAENDLERIN":"ORC-HAENDLER";}
   void showMerchant(int merchant){activeMerchant=merchant;shopOpen=true;inventoryOpen=false;hoverSlot=-1;joyX=joyY=0;}
   String adventurerSpeech="";float adventurerSpeechTime=0f;
+  // Repeatable adventurer contracts: accept, complete and claim rewards by speaking.
+  int questTier=0,questProgress=0;
+  boolean questActive=false;
+  int questGoal(){return 3+questTier*2;}
   void talkAdventurer(){
-   String[] lines={"Bleib wachsam da draussen!","Gute Beute gibt's nicht geschenkt.","Mein Schwert braucht eine Pause.","Hast du schon den Wald erkundet?","Ein Trank kann dein Leben retten."};
-   adventurerSpeech=lines[random.nextInt(lines.length)];
-   adventurerSpeechTime=3.5f;
+   if(!questActive){
+    questActive=true;questProgress=0;
+    adventurerSpeech="Auftrag: Besiege "+questGoal()+" Orks!";
+   }else if(questProgress>=questGoal()){
+    int reward=25+questTier*15;
+    copper+=reward;silver+=copper/100;copper%=100;gold+=silver/100;silver%=100;
+    earnExp(12+questTier*5);
+    adventurerSpeech="Gut gemacht! +"+reward+" Kupfer und EP!";
+    questTier++;questActive=false;questProgress=0;
+   }else adventurerSpeech="Orks besiegt: "+questProgress+"/"+questGoal()+". Weiter so!";
+   adventurerSpeechTime=4f;
   }
   boolean openInteriorMerchant(){
    if(!indoors)return false;
@@ -823,7 +835,7 @@ public class MainActivity extends Activity {
    try{
     org.json.JSONObject root=new org.json.JSONObject();
     root.put("px",px);root.put("py",py);root.put("indoors",indoors);root.put("currentHouse",currentHouse);root.put("worldTime",worldTime);root.put("mana",mana);root.put("hp",hp);root.put("level",playerLevel);root.put("exp",exp);
-    root.put("gold",gold);root.put("silver",silver);root.put("copper",copper);root.put("kills",kills);root.put("animalKills",animalKills);
+    root.put("gold",gold);root.put("silver",silver);root.put("copper",copper);root.put("kills",kills);root.put("animalKills",animalKills);root.put("questTier",questTier);root.put("questProgress",questProgress);root.put("questActive",questActive);
     org.json.JSONObject bag=new org.json.JSONObject();for(String name:inventory.keySet())bag.put(name,inventory.get(name));root.put("inventory",bag);
     org.json.JSONObject gear=new org.json.JSONObject();for(String slot:equipped.keySet())gear.put(slot,equipped.get(slot));root.put("equipped",gear);
     org.json.JSONArray bar=new org.json.JSONArray();for(String item:hotbar)bar.put(item==null?org.json.JSONObject.NULL:item);root.put("hotbar",bar);
@@ -840,7 +852,7 @@ public class MainActivity extends Activity {
     if(json==null){pickupNotice="Kein Spielstand";noticeTime=3f;return;}
     org.json.JSONObject root=new org.json.JSONObject(json);
     px=(float)root.getDouble("px");py=(float)root.getDouble("py");indoors=root.optBoolean("indoors",false);currentHouse=root.optInt("currentHouse",0);worldTime=(float)root.optDouble("worldTime",0);playerLevel=root.getInt("level");exp=root.getInt("exp");
-    gold=root.getInt("gold");silver=root.getInt("silver");copper=root.getInt("copper");kills=root.optInt("kills");animalKills=root.optInt("animalKills");
+    gold=root.getInt("gold");silver=root.getInt("silver");copper=root.getInt("copper");kills=root.optInt("kills");animalKills=root.optInt("animalKills");questTier=root.optInt("questTier");questProgress=root.optInt("questProgress");questActive=root.optBoolean("questActive");
     inventory.clear();org.json.JSONObject bag=root.getJSONObject("inventory");java.util.Iterator<String> keys=bag.keys();while(keys.hasNext()){String k=keys.next();inventory.put(k,bag.getInt(k));}
     equipped.clear();org.json.JSONObject gear=root.getJSONObject("equipped");keys=gear.keys();while(keys.hasNext()){String k=keys.next();equipped.put(k,gear.getString(k));}
     java.util.Arrays.fill(hotbar,null);selectedHotbar=-1;org.json.JSONArray bar=root.getJSONArray("hotbar");for(int i=0;i<Math.min(5,bar.length());i++)if(!bar.isNull(i))hotbar[i]=bar.getString(i);
@@ -1058,11 +1070,11 @@ public class MainActivity extends Activity {
     if(d>64||d<.01f)continue;
     if((dx*fx+dy*fy)/d<-.1f)continue;
     m.hp-=attackPower;m.lastDamage=attackPower;m.damageNumberTime=.9f;m.hurtTimer=.28f;m.healthVisible=3f;m.anim=0;
-    if(m.hp<=0){m.dead=true;m.deathTimer=0;if(m.hostile())kills++;else animalKills++;earnExp((m.hostile()?8:3)+m.level*2);loot(m);}
+    if(m.hp<=0){m.dead=true;m.deathTimer=0;if(m.hostile()){kills++;if(questActive&&questProgress<questGoal())questProgress++;}else animalKills++;earnExp((m.hostile()?8:3)+m.level*2);loot(m);}
    }
   }
   void restart(){
-   indoors=false;currentHouse=0;playerLevel=1;exp=0;attackPower=3;maxHp=12;hp=maxHp;maxMana=20;mana=20;worldTime=0;stockRefreshTimer=0;refreshMerchantStocks();equipped.clear();copper=silver=gold=0;java.util.Arrays.fill(hotbar,null);selectedHotbar=-1;playerDamageTime=0;px=180;py=180;joyX=joyY=0;deathAnim=0;swordTimer=0;sword=false;attackAnim=0;playerHealthVisible=0;kills=animalKills=0;mobs.clear();drops.clear();inventory.clear();inventoryOpen=false;shopOpen=false;pauseMenu=false;spawnMobs();
+   indoors=false;currentHouse=0;playerLevel=1;exp=0;attackPower=3;maxHp=12;hp=maxHp;maxMana=20;mana=20;worldTime=0;stockRefreshTimer=0;refreshMerchantStocks();equipped.clear();copper=silver=gold=0;java.util.Arrays.fill(hotbar,null);selectedHotbar=-1;playerDamageTime=0;px=180;py=180;joyX=joyY=0;deathAnim=0;swordTimer=0;sword=false;attackAnim=0;playerHealthVisible=0;kills=animalKills=0;questTier=questProgress=0;questActive=false;mobs.clear();drops.clear();inventory.clear();inventoryOpen=false;shopOpen=false;pauseMenu=false;spawnMobs();
   }
   @Override protected void onDraw(Canvas c){
    canvas=c;float dt=Math.min(.05f,(System.nanoTime()-previous)/1000000000f);previous=System.nanoTime();update(dt);
