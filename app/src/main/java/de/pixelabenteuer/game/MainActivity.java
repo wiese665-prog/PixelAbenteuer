@@ -358,8 +358,8 @@ public class MainActivity extends Activity {
     tile("Walls_interior",48+(ix%2)*32,0,32,32,l+16+ix*46,t,46,70);
    // Side walls: use the matching stone wall cells with a continuous
    // masonry rhythm. Original atlas cells are kept intact.
-   for(int iy=0;iy<6;iy++){
-    float wallY=t+67+iy*44;
+   for(int iy=0;iy<7;iy++){
+    float wallY=t+23+iy*44;
     // Alternate the two matching stone variants on both outer walls.
     int stoneX=(iy%2==0)?49:193;
     tile("Walls_interior",stoneX,128,23,42,l,wallY,22,44);
@@ -368,8 +368,8 @@ public class MainActivity extends Activity {
    // Central divider: individual stone segments instead of one vertically
    // stretched wall sprite. This matches the side-wall masonry and avoids
    // the smeared pillar visible between the two shop floors.
-   for(int iy=0;iy<4;iy++)
-    tile("Walls_interior",49,128,23,42,l+329,t+52+iy*40,22,40);
+   for(int iy=0;iy<5;iy++)
+    tile("Walls_interior",49,128,23,42,l+329,t+12+iy*40,22,40);
    // No lower partition: leave the forge/shop walkway open.
    // Floors meet directly beneath the stone divider; no overlaid floor strip.
    // Forge: show one complete furnace cell, not half an animation sheet.
@@ -1252,9 +1252,10 @@ public class MainActivity extends Activity {
     String weapon=combatStyle==1?"ax01":combatStyle==2?"mc01":"sw01";
     // Creator preview: draw the weapon AFTER the body and outfit, so the
     // blade and handle cannot disappear behind the character sprite.
+    if(creatorOpen||equipped.containsKey("Schild"))characterLayer(fighting?"pONE3":"pONE2","7tlb",equipped.getOrDefault("Schild","").contains("Iron")?"sh03":"sh01",1,fighting?row:facing,fighting?col:0,x,y,w,h);
+    // Preview weapon is the foremost layer, including in front of the shield.
     if(creatorOpen)characterLayer("pONE2","6tla",weapon,1,facing,0,x-4f,y+8f,w,h);
     else characterLayer("pONE3","6tla",weapon,1,row,col,x,y,w,h);
-    if(creatorOpen||equipped.containsKey("Schild"))characterLayer(fighting?"pONE3":"pONE2","7tlb",equipped.getOrDefault("Schild","").contains("Iron")?"sh03":"sh01",1,fighting?row:facing,fighting?col:0,x,y,w,h);
    }
   }
   void drawSprite(String kind,String action,int dir,float x,float y,float w,float h,float time,boolean freeze){
