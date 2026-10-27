@@ -350,7 +350,7 @@ public class MainActivity extends Activity {
    paint.setTextAlign(Paint.Align.CENTER);
    paint.setTypeface(Typeface.DEFAULT_BOLD);
    paint.setTextSize(13);paint.setColor(col("#ffe7aa"));
-   canvas.drawText("Schmid",l+236,t+109,paint);
+   outlinedText("Schmid",l+236,t+109);
    canvas.drawText("Händlerin",l+510,t+153,paint);
    paint.setTypeface(Typeface.DEFAULT);paint.setTextSize(11);
    paint.setColor(col("#ffffff"));
@@ -360,10 +360,10 @@ public class MainActivity extends Activity {
    characterTile("Customer",3,2,0,l+562,t+288,52);
    paint.setTextAlign(Paint.Align.CENTER);paint.setTypeface(Typeface.DEFAULT_BOLD);
    paint.setColor(col("#ffe7aa"));paint.setTextSize(13);
-   canvas.drawText("Abenteurer",l+562,t+235,paint);
+   outlinedText("Abenteurer",l+562,t+235);
    if(questAvailable()){
     paint.setColor(col("#50ef78"));paint.setTextSize(25);
-    canvas.drawText("?",l+562,t+240,paint);
+    outlinedText("?",l+562,t+240);
     paint.setColor(col("#ffe7aa"));paint.setTextSize(13);
    }
    if(Math.hypot(px-622,py-462)<37.5f){
@@ -1015,6 +1015,13 @@ public class MainActivity extends Activity {
    paint.setColor(col("#f5e8cb"));paint.setTextSize(10);paint.setTextAlign(Paint.Align.CENTER);
    canvas.drawText("N",x+size/2,y+11,paint);paint.setTextAlign(Paint.Align.LEFT);
   }
+  void outlinedText(String value,float x,float y){
+   int color=paint.getColor();Paint.Style style=paint.getStyle();float width=paint.getStrokeWidth();
+   paint.setStyle(Paint.Style.STROKE);paint.setStrokeJoin(Paint.Join.ROUND);
+   paint.setStrokeWidth(3.2f);paint.setColor(Color.BLACK);canvas.drawText(value,x,y,paint);
+   paint.setStyle(Paint.Style.FILL);paint.setColor(color);canvas.drawText(value,x,y,paint);
+   paint.setStyle(style);paint.setStrokeWidth(width);
+  }
   void drawRect(int col,float x,float y,float w,float h){paint.setColor(col);canvas.drawRect(x,y,x+w,y+h,paint);}
   int col(String hex){return Color.parseColor(hex);}
   void drawSprite(String kind,String action,int dir,float x,float y,float w,float h,float time,boolean freeze){
@@ -1195,7 +1202,7 @@ public class MainActivity extends Activity {
    drawHouse(forgeX,forgeY,true);
    drawSprite("orc2","idle",0,merchantX,merchantY,79,79,elapsed,false);
    paint.setTextAlign(Paint.Align.CENTER);paint.setColor(col("#ffe7aa"));paint.setTextSize(13);
-   canvas.drawText("Orc-Händler",merchantX,merchantY-45,paint);paint.setTextAlign(Paint.Align.LEFT);
+   outlinedText("Orc-Händler",merchantX,merchantY-45);paint.setTextAlign(Paint.Align.LEFT);
    if(Math.hypot(px-merchantX,py-merchantY)<50&&!shopOpen){paint.setColor(Color.WHITE);paint.setTextSize(12);
     canvas.drawText("E - Handeln",merchantX-37,merchantY-58,paint);}
    for(Drop d:drops){float bob=(float)Math.sin(elapsed*3+d.bob)*2;
@@ -1211,12 +1218,12 @@ public class MainActivity extends Activity {
     String action=m.dead?"death":m.hurtTimer>0?"hurt":m.action;
     float size=m.hostile()?79:m.kind.equals("boar")?45:m.kind.equals("deer")?43:36;
     drawSprite(m.kind,action,m.dir,m.x,m.y,size,size,m.dead?m.deathTimer:m.anim,m.dead&&m.deathTimer>.7f);
-    if(!m.dead){paint.setColor(Color.WHITE);paint.setTextSize(12);paint.setTextAlign(Paint.Align.CENTER);canvas.drawText("Lv. "+m.level,m.x,m.y-size*.64f,paint);paint.setTextAlign(Paint.Align.LEFT);}
+    if(!m.dead){paint.setColor(Color.WHITE);paint.setTextSize(12);paint.setTextAlign(Paint.Align.CENTER);outlinedText("Lv. "+m.level,m.x,m.y-size*.64f);paint.setTextAlign(Paint.Align.LEFT);}
     if(!m.dead&&m.hostile()&&!indoors&&!safeZone(px,py)&&!safeZone(m.x,m.y)
        &&Math.hypot(px-m.x,py-m.y)<285f){
      paint.setTextAlign(Paint.Align.CENTER);paint.setTypeface(Typeface.DEFAULT_BOLD);
      paint.setTextSize(24);paint.setColor(col(m.attackTimer>1.15f?"#ff3b36":"#ffdb55"));
-     canvas.drawText("!",m.x,m.y-size*.64f-16,paint);
+     outlinedText("!",m.x,m.y-size*.64f-16);
      paint.setTypeface(Typeface.DEFAULT);paint.setTextAlign(Paint.Align.LEFT);
     }
     if(m.healthVisible>0&&(!m.dead||m.deathTimer<1f))healthBar(m.x,m.y-size*.65f-12,42,m.hp,m.maxHp);
