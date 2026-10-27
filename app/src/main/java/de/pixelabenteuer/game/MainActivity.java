@@ -245,6 +245,16 @@ public class MainActivity extends Activity {
    // The seller is drawn only once, using a single stable pose.
    characterTile("Master_Idle",3,2,(int)(elapsed*2)%3,l+236,t+175,81.4f);
    sellerPortrait(l+510,t+198);
+   paint.setTextAlign(Paint.Align.CENTER);
+   paint.setTypeface(Typeface.DEFAULT_BOLD);
+   paint.setTextSize(13);paint.setColor(col("#ffe7aa"));
+   canvas.drawText("Schmid",l+236,t+80,paint);
+   canvas.drawText("Händlerin",l+510,t+153,paint);
+   paint.setTypeface(Typeface.DEFAULT);paint.setTextSize(11);
+   paint.setColor(col("#ffffff"));
+   if(Math.hypot(px-296,py-349)<100)canvas.drawText("E - Handeln",l+236,t+96,paint);
+   if(Math.hypot(px-570,py-372)<100)canvas.drawText("E - Handeln",l+510,t+168,paint);
+   paint.setTextAlign(Paint.Align.LEFT);
    characterTile("Customer",3,2,0,l+507,t+288,52);
    float cx=l+340+(px-400),cy=t+176+(py-350);
    drawSprite(sword?"player_sword":"player_unarmed","idle",playerDir,cx,cy,94,94,elapsed,false);
@@ -451,7 +461,7 @@ public class MainActivity extends Activity {
   boolean openInteriorMerchant(){
    if(!indoors)return false;
    if(Math.hypot(px-296,py-349)<100){showMerchant(1);return true;}
-   if(Math.hypot(px-557,py-372)<100){showMerchant(2);return true;}
+   if(Math.hypot(px-570,py-372)<100){showMerchant(2);return true;}
    return false;
   }
   void openShop(){if(Math.hypot(px-merchantX,py-merchantY)<100)showMerchant(0);}
@@ -723,9 +733,10 @@ public class MainActivity extends Activity {
     drawRect(col("#334a4c"),left+98,y+3,304,36);paint.setColor(col("#f6e7c6"));paint.setTextSize(17);canvas.drawText(buttons[i],vw/2,y+26,paint);}
    paint.setColor(col("#e5cc9c"));paint.setTextSize(15);canvas.drawText("STEUERUNG",vw/2,top+311,paint);
    paint.setTextSize(12);paint.setColor(col("#d8e2d9"));
-   canvas.drawText("WASD: Laufen   |   Linksklick: Angriff   |   E: Aufheben / Handel",vw/2,top+335,paint);
+   canvas.drawText("WASD: Laufen  |  Linksklick: Angriff  |  E: Aufheben / Handeln / Tür",vw/2,top+335,paint);
    canvas.drawText("I: Inventar   |   1-5: Hotbar   |   ESC: Pause",vw/2,top+355,paint);
    canvas.drawText("Ausrüstung: Im Inventar anklicken zum An- oder Ausziehen",vw/2,top+376,paint);
+   canvas.drawText("Schmid / Orc-Händler: Sortiment wechselt alle 5 Spielminuten",vw/2,top+394,paint);
    paint.setTextAlign(Paint.Align.LEFT);paint.setTypeface(Typeface.DEFAULT);
   }
   void menuClick(float x,float y,float vw,float vh){
