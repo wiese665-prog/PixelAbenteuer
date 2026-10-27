@@ -1576,13 +1576,24 @@ public class MainActivity extends Activity {
    hairType=0;hairColor=1;skinColor=1;eyeColor=0;combatStyle=0;armorStyle=0;characterGender=0;characterName="Abenteurer";creatorOpen=false;sprintHeld=false;attackSequence=0;
    indoors=false;currentHouse=0;playerLevel=1;exp=0;attackPower=3;maxHp=12;hp=maxHp;maxMana=20;mana=20;worldTime=0;stockRefreshTimer=0;refreshMerchantStocks();equipped.clear();copper=silver=gold=0;java.util.Arrays.fill(hotbar,null);selectedHotbar=-1;playerDamageTime=0;px=180;py=180;joyX=joyY=0;deathAnim=0;swordTimer=0;sword=false;attackAnim=0;playerHealthVisible=0;kills=animalKills=0;questTier=questProgress=nextQuestDay=0;questActive=false;mobs.clear();drops.clear();inventory.clear();inventoryOpen=false;shopOpen=false;pauseMenu=false;spawnMobs();
   }
+  // Experimental fixed 2.5D camera: ground is foreshortened, sprites stay upright.
+  static final float CAMERA_GROUND_Y=0.82f;
+  void groundShadow(float x,float y,float rx,float ry){
+   paint.setColor(Color.argb(75,12,25,17));paint.setStyle(Paint.Style.FILL);
+   canvas.drawOval(new RectF(x-rx,y-ry,x+rx,y+ry),paint);
+  }
+  void billboard(String kind,String action,int dir,float x,float y,float w,float h,float time,boolean freeze){
+   canvas.save();canvas.scale(1f,1f/CAMERA_GROUND_Y,x,y);
+   drawSprite(kind,action,dir,x,y,w,h,time,freeze);
+   canvas.restore();
+  }
   @Override protected void onDraw(Canvas c){
    canvas=c;float dt=Math.min(.05f,(System.nanoTime()-previous)/1000000000f);previous=System.nanoTime();update(dt);
    float w=getWidth(),h=getHeight(),scale=Math.min(w/800f,h/450f),vw=w/scale,vh=h/scale;
    paint.reset();paint.setAntiAlias(false);paint.setFilterBitmap(false);paint.setColor(Color.WHITE);
    paint.setColorFilter(null);paint.setAlpha(255);paint.setStyle(Paint.Style.FILL);
    // Clear the entire frame, including any emulator-provided dirty region.
-   c.drawColor(col("#47884a"),android.graphics.PorterDuff.Mode.SRC);c.save();c.scale(scale,scale);c.save();c.translate(vw/2-px,vh/2-py);
+   c.drawColor(col("#47884a"),android.graphics.PorterDuff.Mode.SRC);c.save();c.scale(scale,scale);c.save();c.translate(vw/2-px,vh/2-py);c.scale(1f,CAMERA_GROUND_Y,px,py);
    int startX=(int)Math.floor((px-vw/2)/32f)*32-32,endX=(int)Math.ceil((px+vw/2)/32f)*32+32;
    int startY=(int)Math.floor((py-vh/2)/32f)*32-32,endY=(int)Math.ceil((py+vh/2)/32f)*32+32;
    for(int x=startX;x<endX;x+=32)for(int y=startY;y<endY;y+=32){
@@ -1596,7 +1607,7 @@ public class MainActivity extends Activity {
     else drawRect(col("#82776b"),d.x-d.w/2,d.y-d.h/2,d.w,d.h);
    }
    drawHouse(forgeX,forgeY,true);
-   drawSprite("orc2","idle",0,merchantX,merchantY,79,79,elapsed,false);
+   groundShadow(merchantX,merchantY+25,22,7);billboard("orc2","idle",0,merchantX,merchantY,79,79,elapsed,false);
    paint.setTextAlign(Paint.Align.CENTER);paint.setColor(col("#ffe7aa"));paint.setTextSize(13);
    fantasyName("Orc-Händler",merchantX,merchantY-39);paint.setTextAlign(Paint.Align.LEFT);
    if(Math.hypot(px-merchantX,py-merchantY)<50&&!shopOpen){paint.setColor(Color.WHITE);paint.setTextSize(12);
@@ -1616,7 +1627,7 @@ public class MainActivity extends Activity {
     if(m.x<px-vw/2-90||m.x>px+vw/2+90||m.y<py-vh/2-90||m.y>py+vh/2+90)continue;
     String action=m.dead?"death":m.hurtTimer>0?"hurt":m.action;
     float size=(m.kind.startsWith("orc")?79:m.kind.equals("boar")?45:m.kind.equals("deer")?43:36)*(m.alpha?1.28f:1f);
-    drawSprite(m.kind,action,m.dir,m.x,m.y,size,size,m.dead?m.deathTimer:m.anim,m.dead&&m.deathTimer>.7f);
+    if(!m.dead)groundShadow(m.x,m.y+size*.30f,size*.27f,6);billboard(m.kind,action,m.dir,m.x,m.y,size,size,m.dead?m.deathTimer:m.anim,m.dead&&m.deathTimer>.7f);
     if(!m.dead){paint.setColor(Color.WHITE);paint.setTextSize(12);paint.setTextAlign(Paint.Align.CENTER);paint.setTypeface(Typeface.create("serif",Typeface.BOLD_ITALIC));paint.setTextSize(7);outlinedText((m.alpha?"Alpha ":"")+"Lv. "+m.level,m.x,m.y-size*(m.hostile()?.53f:.64f));paint.setTypeface(Typeface.DEFAULT);paint.setTextAlign(Paint.Align.LEFT);}
     if(!m.dead&&m.hostile()&&!indoors&&!safeZone(px,py)&&!safeZone(m.x,m.y)
        &&Math.hypot(px-m.x,py-m.y)<285f){
@@ -1630,7 +1641,7 @@ public class MainActivity extends Activity {
    }
    String playerKind=sword?"player_sword":"player_unarmed";
    String playerAction=hp<=0?"death":hurtAnim>0?"hurt":attackAnim>0&&sword?"attack":Math.abs(joyX)+Math.abs(joyY)>.08f?(sprintHeld?"run":"walk"):"idle";
-   drawSprite(playerKind,playerAction,playerDir,px,py,80.64f,80.64f,hp<=0?deathAnim:attackAnim>0?.4f-attackAnim:elapsed,hp<=0&&deathAnim>.8f);
+   groundShadow(px,py+26,22,7);billboard(playerKind,playerAction,playerDir,px,py,80.64f,80.64f,hp<=0?deathAnim:attackAnim>0?.4f-attackAnim:elapsed,hp<=0&&deathAnim>.8f);
    if(playerHealthVisible>0)healthBar(px,py-56,52,hp,maxHp);
    damageText(px,py-66,lastPlayerDamage,playerDamageTime);
    Drop nearby=nearestDrop();
