@@ -1172,7 +1172,7 @@ public class MainActivity extends Activity {
   void fantasyName(String value,float x,float y){
    Typeface old=paint.getTypeface();float oldSize=paint.getTextSize();
    paint.setTypeface(Typeface.create("serif",Typeface.BOLD_ITALIC));
-   paint.setTextSize(oldSize*.5f);
+   paint.setTextSize(oldSize*.6f);
    outlinedText(value,x,y);
    paint.setTextSize(oldSize);paint.setTypeface(old);
   }
@@ -1222,7 +1222,7 @@ public class MainActivity extends Activity {
    if(equipped.containsKey("Kopf"))characterLayer(page,"5hat","pfht",1,row,col,x,y,w,h);
    if(creatorOpen||fighting){
     String weapon=combatStyle==1?"ax01":combatStyle==2?"mc01":"sw01";
-    characterLayer(fighting?"pONE3":"pONE2","6tla",weapon,1,fighting?row:facing,fighting?col:0,x+(creatorOpen?-3f:0f),y+(creatorOpen?7f:0f),w,h);
+    characterLayer(fighting?"pONE3":"pONE2","6tla",weapon,1,fighting?row:facing,fighting?col:0,x+(creatorOpen?-4f:0f),y+(creatorOpen?8f:0f),w,h);
     if(creatorOpen||equipped.containsKey("Schild"))characterLayer(fighting?"pONE3":"pONE2","7tlb",equipped.getOrDefault("Schild","").contains("Iron")?"sh03":"sh01",1,fighting?row:facing,fighting?col:0,x,y,w,h);
    }
   }
@@ -1423,7 +1423,7 @@ public class MainActivity extends Activity {
     String action=m.dead?"death":m.hurtTimer>0?"hurt":m.action;
     float size=m.hostile()?79:m.kind.equals("boar")?45:m.kind.equals("deer")?43:36;
     drawSprite(m.kind,action,m.dir,m.x,m.y,size,size,m.dead?m.deathTimer:m.anim,m.dead&&m.deathTimer>.7f);
-    if(!m.dead){paint.setColor(Color.WHITE);paint.setTextSize(12);paint.setTextAlign(Paint.Align.CENTER);paint.setTypeface(Typeface.create("serif",Typeface.BOLD_ITALIC));paint.setTextSize(6);outlinedText("Lv. "+m.level,m.x,m.y-size*(m.hostile()?.53f:.64f));paint.setTypeface(Typeface.DEFAULT);paint.setTextAlign(Paint.Align.LEFT);}
+    if(!m.dead){paint.setColor(Color.WHITE);paint.setTextSize(12);paint.setTextAlign(Paint.Align.CENTER);paint.setTypeface(Typeface.create("serif",Typeface.BOLD_ITALIC));paint.setTextSize(7);outlinedText("Lv. "+m.level,m.x,m.y-size*(m.hostile()?.53f:.64f));paint.setTypeface(Typeface.DEFAULT);paint.setTextAlign(Paint.Align.LEFT);}
     if(!m.dead&&m.hostile()&&!indoors&&!safeZone(px,py)&&!safeZone(m.x,m.y)
        &&Math.hypot(px-m.x,py-m.y)<285f){
      paint.setTextAlign(Paint.Align.CENTER);paint.setTypeface(Typeface.DEFAULT_BOLD);
