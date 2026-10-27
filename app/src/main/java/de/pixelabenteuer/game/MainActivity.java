@@ -938,13 +938,16 @@ public class MainActivity extends Activity {
     canvas.drawText(label,x+2,y+49,paint);
     paint.setColor(col("#ffe4a5"));paint.setTextSize(10);canvas.drawText(""+inventory.get(names[i]),x+42,y+12,paint);
    }
-   Item tooltip=inspectedGear;
-   if(hoverSlot>=0&&hoverSlot<names.length){
-    Item hovered=definitions.get(names[hoverSlot]);
-    if(hovered!=null&&hovered.equipment())tooltip=hovered;
-   }
-   if(tooltip!=null)drawGearTooltip(tooltip,hoverX,hoverY,vw,vh);
+   if(inspectedGear!=null&&gearTooltipTime>0f)drawGearTooltip(inspectedGear,hoverX,hoverY,vw,vh);
    paint.setTypeface(Typeface.DEFAULT);
+  }
+  float gearTooltipTime=0f;
+  void showGearTooltip(float xx,float yy,float vw,float vh){
+   Item item=null;
+   int equippedIndex=equippedSlotAt(xx,yy,vw,vh);
+   if(equippedIndex>=0){String slot=new String[]{"Kopf","Waffe","Brust","Fuesse","Guertel"}[equippedIndex];item=definitions.get(equipped.get(slot));}
+   else{int idx=inventoryIndex(xx,yy,vw,vh);String[] names=inventoryNames();if(idx>=0&&idx<names.length)item=definitions.get(names[idx]);}
+   if(item!=null&&item.equipment()){inspectedGear=item;gearTooltipTime=2f;hoverX=xx;hoverY=yy;}
   }
   void drawGearTooltip(Item item,float mx,float my,float vw,float vh){
    float tx=Math.max(4,Math.min(vw-240,mx+18)),ty=Math.max(4,Math.min(vh-150,my+12));
@@ -1362,6 +1365,8 @@ public class MainActivity extends Activity {
   }
   // Attack animation window; the next group can act immediately afterward.
   void update(float dt){
+   gearTooltipTime=Math.max(0f,gearTooltipTime-dt);
+   if(!inventoryOpen){inspectedGear=null;gearTooltipTime=0f;}
    if(pressedMenuButton>=0){pressedMenuTime-=dt;if(pressedMenuTime<=0f){int button=pressedMenuButton;pressedMenuButton=-1;runMenuButton(button);}}
    if(!startScreen&&!pauseMenu&&!creatorOpen&&!inventoryOpen&&!shopOpen){
     int previousDay=(int)(worldTime/240f);
@@ -1562,11 +1567,20 @@ public class MainActivity extends Activity {
    }
    if(!indoors&&!startScreen&&!pauseMenu&&!inventoryOpen&&!shopOpen)drawMinimap(vw,vh);
    if(!inventoryOpen)drawHotbar(vw,vh);
-   if(noticeTime>0){paint.setColor(col("#f7e0a6"));paint.setTextSize(17);c.drawText(pickupNotice,12,60,paint);}
    if(inventoryOpen){drawInventory(vw,vh);drawHotbar(vw,vh);}
    if(startScreen||pauseMenu){if(controlsOpen)drawControls(vw,vh);else drawMenu(vw,vh);}
    if(creatorOpen)drawCreator(vw,vh);
    if(shopOpen)drawShop(vw,vh);
+   // Notifications are drawn after every overlay, so shop and inventory cannot hide them.
+   if(noticeTime>0){
+    paint.setTextAlign(Paint.Align.LEFT);paint.setTypeface(Typeface.DEFAULT_BOLD);paint.setTextSize(17);
+    float noticeWidth=Math.min(vw-24,paint.measureText(pickupNotice)+24);
+    drawRect(col("#101820"),8,43,noticeWidth,32);
+    drawRect(col("#b89b61"),10,45,noticeWidth-4,28);
+    drawRect(col("#263c3b"),12,47,noticeWidth-8,24);
+    paint.setColor(col("#f7e0a6"));c.drawText(pickupNotice,20,65,paint);
+    paint.setTypeface(Typeface.DEFAULT);
+   }
    if(hp<=0){drawRect(col("#111111"),vw/2-180,vh/2-45,360,90);paint.setColor(Color.WHITE);paint.setTextSize(24);c.drawText("GAME OVER - Tippen",vw/2-145,vh/2+7,paint);}
    c.restore();postInvalidateDelayed(16);
   }
@@ -1590,6 +1604,9 @@ public class MainActivity extends Activity {
    return super.onHoverEvent(e);
   }
   @Override public boolean onGenericMotionEvent(MotionEvent e){
+   if(inventoryOpen&&(e.getSource()&InputDevice.SOURCE_MOUSE)==InputDevice.SOURCE_MOUSE&&e.getActionMasked()==MotionEvent.ACTION_BUTTON_PRESS&&e.getActionButton()==MotionEvent.BUTTON_SECONDARY){
+    float sc=Math.min(getWidth()/800f,getHeight()/450f);showGearTooltip(e.getX()/sc,e.getY()/sc,getWidth()/sc,getHeight()/sc);invalidate();return true;
+   }
    if(inventoryOpen){updateInventoryHover(e);return true;}
    if((e.getSource()&InputDevice.SOURCE_MOUSE)==InputDevice.SOURCE_MOUSE&&e.getActionMasked()==MotionEvent.ACTION_BUTTON_PRESS
       &&e.getActionButton()==MotionEvent.BUTTON_PRIMARY){attack();return true;}
@@ -1604,6 +1621,9 @@ public class MainActivity extends Activity {
     if(yy>=top+316&&yy<=top+353&&xx>=left+95&&xx<=left+405)setMusicVolume((xx-(left+110))/280f);
     return true;
    }
+   if(inventoryOpen&&type==MotionEvent.ACTION_DOWN&&(e.getButtonState()&MotionEvent.BUTTON_SECONDARY)!=0){
+    float sc=Math.min(getWidth()/800f,getHeight()/450f);showGearTooltip(e.getX()/sc,e.getY()/sc,getWidth()/sc,getHeight()/sc);return true;
+   }
    if(type==MotionEvent.ACTION_DOWN){
     if(creatorOpen){float sc=Math.min(getWidth()/800f,getHeight()/450f);creatorClick(e.getX()/sc,e.getY()/sc,getWidth()/sc,getHeight()/sc);return true;}
     if(startScreen||pauseMenu){float sc=Math.min(getWidth()/800f,getHeight()/450f),xx=e.getX()/sc,yy=e.getY()/sc,vw=getWidth()/sc,vh=getHeight()/sc;if(controlsOpen)controlsOpen=false;else menuClick(xx,yy,vw,vh);return true;}
@@ -1616,13 +1636,13 @@ public class MainActivity extends Activity {
     }
     if(inventoryOpen){updateInventoryHover(e);float sc=Math.min(getWidth()/800f,getHeight()/450f),xx=e.getX()/sc,yy=e.getY()/sc,vw=getWidth()/sc,vh=getHeight()/sc;
      int barSlot=hotbarIndexAt(xx,yy,vw,vh);
-     if(barSlot>=0){inspectedGear=null;if(selectedHotbar==barSlot){hotbar[barSlot]=null;selectedHotbar=-1;}else selectedHotbar=barSlot;return true;}
+     if(barSlot>=0){inspectedGear=null;gearTooltipTime=0f;if(selectedHotbar==barSlot){hotbar[barSlot]=null;selectedHotbar=-1;}else selectedHotbar=barSlot;return true;}
      int equippedIndex=equippedSlotAt(xx,yy,vw,vh);if(equippedIndex>=0){
       String slot=new String[]{"Kopf","Waffe","Brust","Fuesse","Guertel"}[equippedIndex];
-      inspectedGear=definitions.get(equipped.get(slot));hoverX=xx;hoverY=yy;
+      inspectedGear=null;gearTooltipTime=0f;
       unequip(slot);return true;
      }
-     int idx=inventoryIndex(xx,yy,vw,vh);if(idx>=0){String[] names=inventoryNames();if(idx<names.length){String name=names[idx];Item item=definitions.get(name);if(item!=null){inspectedGear=item.equipment()?item:null;hoverX=xx;hoverY=yy;if(item.equipment())equip(name);else if(item.heal>0)assignHotbar(name);}}}return true;}
+     int idx=inventoryIndex(xx,yy,vw,vh);if(idx>=0){String[] names=inventoryNames();if(idx<names.length){String name=names[idx];Item item=definitions.get(name);if(item!=null){inspectedGear=null;gearTooltipTime=0f;hoverX=xx;hoverY=yy;if(item.equipment())equip(name);else if(item.heal>0)assignHotbar(name);}}}return true;}
     if(hp<=0){restart();return true;}
     // In BlueStacks, a left mouse click arrives as a primary mouse/touch press.
     if((e.getSource()&InputDevice.SOURCE_MOUSE)==InputDevice.SOURCE_MOUSE){
@@ -1639,7 +1659,7 @@ public class MainActivity extends Activity {
     if(creatorOpen)return true;
     if(controlsOpen){controlsOpen=false;return true;}
     if(startScreen)return true;
-    if(shopOpen)shopOpen=false;else if(inventoryOpen){inventoryOpen=false;inspectedGear=null;}else pauseMenu=!pauseMenu;
+    if(shopOpen)shopOpen=false;else if(inventoryOpen){inventoryOpen=false;inspectedGear=null;gearTooltipTime=0f;}else pauseMenu=!pauseMenu;
     joyX=joyY=0;return true;
    }
    if(creatorOpen){if(key==KeyEvent.KEYCODE_ENTER){creatorOpen=false;startScreen=false;pauseMenu=false;}return true;}
@@ -1657,7 +1677,7 @@ public class MainActivity extends Activity {
      else if(Math.hypot(px-merchantX,py-merchantY)<50)openShop();
      else pickup();
      break;
-    case KeyEvent.KEYCODE_I:if(shopOpen)shopOpen=false;else inventoryOpen=!inventoryOpen;inspectedGear=null;hoverSlot=-1;break;
+    case KeyEvent.KEYCODE_I:if(shopOpen)shopOpen=false;else inventoryOpen=!inventoryOpen;inspectedGear=null;gearTooltipTime=0f;hoverSlot=-1;break;
     case KeyEvent.KEYCODE_1:useHotbar(0);break;
     case KeyEvent.KEYCODE_2:useHotbar(1);break;
     case KeyEvent.KEYCODE_3:useHotbar(2);break;
