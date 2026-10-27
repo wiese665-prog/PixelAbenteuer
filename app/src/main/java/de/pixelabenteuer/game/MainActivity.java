@@ -872,7 +872,7 @@ public class MainActivity extends Activity {
    if(x>389&&x<420&&y<389)return true;
    return false;
   }
-  float orcTurnCooldown=0f;
+  // Attack animation window; the next group can act immediately afterward.
   void update(float dt){
    if(!startScreen&&!pauseMenu&&!inventoryOpen&&!shopOpen){
     int previousDay=(int)(worldTime/240f);
@@ -914,24 +914,23 @@ public class MainActivity extends Activity {
     }
    }
    if(indoors)return;
-   orcTurnCooldown=Math.max(0f,orcTurnCooldown-dt);
    ArrayList<Mob> engagedOrcs=new ArrayList<>();
    if(!safeZone(px,py))for(Mob candidate:mobs){
     if(!candidate.dead&&candidate.kind.startsWith("orc")&&!safeZone(candidate.x,candidate.y)
        &&Math.hypot(px-candidate.x,py-candidate.y)<285f)engagedOrcs.add(candidate);
    }
    ArrayList<Mob> attackingOrcs=new ArrayList<>();
-   // Rebuild the attack order after each exchange, with at most two attackers.
-   if(!engagedOrcs.isEmpty()&&orcTurnCooldown<=0f){
+   int activeStrikes=0;
+   for(Mob candidate:engagedOrcs)if(candidate.attackTimer>1.15f)activeStrikes++;
+   // No shared round pause: fill open attack slots as soon as strikes finish.
+   if(activeStrikes<2){
     Collections.shuffle(engagedOrcs,random);
     for(Mob candidate:engagedOrcs){
-     if(attackingOrcs.size()>=2)break;
+     if(activeStrikes+attackingOrcs.size()>=2)break;
      if(Math.hypot(px-candidate.x,py-candidate.y)<=48f
-        &&candidate.hurtTimer<=0f&&candidate.attackTimer<=0f){
+        &&candidate.hurtTimer<=0f&&candidate.attackTimer<=0f)
       attackingOrcs.add(candidate);
-     }
     }
-    if(!attackingOrcs.isEmpty())orcTurnCooldown=1.5f;
    }
    for(Mob m:mobs){
     if(m.dead){m.deathTimer+=dt;continue;}
@@ -987,14 +986,14 @@ public class MainActivity extends Activity {
    for(Mob m:mobs){
     if(m.dead)continue;
     float dx=m.x-px,dy=m.y-py,d=(float)Math.hypot(dx,dy);
-    if(d>70||d<.01f)continue;
+    if(d>64||d<.01f)continue;
     if((dx*fx+dy*fy)/d<-.1f)continue;
     m.hp-=attackPower;m.lastDamage=attackPower;m.damageNumberTime=.9f;m.hurtTimer=.28f;m.healthVisible=3f;m.anim=0;
     if(m.hp<=0){m.dead=true;m.deathTimer=0;if(m.hostile())kills++;else animalKills++;earnExp((m.hostile()?8:3)+m.level*2);loot(m);}
    }
   }
   void restart(){
-   indoors=false;currentHouse=0;playerLevel=1;exp=0;attackPower=3;maxHp=12;hp=maxHp;maxMana=20;mana=20;worldTime=0;orcTurnCooldown=0;stockRefreshTimer=0;refreshMerchantStocks();equipped.clear();copper=silver=gold=0;java.util.Arrays.fill(hotbar,null);selectedHotbar=-1;playerDamageTime=0;px=180;py=180;joyX=joyY=0;deathAnim=0;swordTimer=0;sword=false;attackAnim=0;playerHealthVisible=0;kills=animalKills=0;mobs.clear();drops.clear();inventory.clear();inventoryOpen=false;shopOpen=false;pauseMenu=false;spawnMobs();
+   indoors=false;currentHouse=0;playerLevel=1;exp=0;attackPower=3;maxHp=12;hp=maxHp;maxMana=20;mana=20;worldTime=0;stockRefreshTimer=0;refreshMerchantStocks();equipped.clear();copper=silver=gold=0;java.util.Arrays.fill(hotbar,null);selectedHotbar=-1;playerDamageTime=0;px=180;py=180;joyX=joyY=0;deathAnim=0;swordTimer=0;sword=false;attackAnim=0;playerHealthVisible=0;kills=animalKills=0;mobs.clear();drops.clear();inventory.clear();inventoryOpen=false;shopOpen=false;pauseMenu=false;spawnMobs();
   }
   @Override protected void onDraw(Canvas c){
    canvas=c;float dt=Math.min(.05f,(System.nanoTime()-previous)/1000000000f);previous=System.nanoTime();update(dt);
@@ -1037,7 +1036,7 @@ public class MainActivity extends Activity {
     if(!m.dead&&m.hostile()&&!indoors&&!safeZone(px,py)&&!safeZone(m.x,m.y)
        &&Math.hypot(px-m.x,py-m.y)<285f){
      paint.setTextAlign(Paint.Align.CENTER);paint.setTypeface(Typeface.DEFAULT_BOLD);
-     paint.setTextSize(24);paint.setColor(col("#ffdb55"));
+     paint.setTextSize(24);paint.setColor(col(m.attackTimer>1.15f?"#ff3b36":"#ffdb55"));
      canvas.drawText("!",m.x,m.y-size*.64f-16,paint);
      paint.setTypeface(Typeface.DEFAULT);paint.setTextAlign(Paint.Align.LEFT);
     }
