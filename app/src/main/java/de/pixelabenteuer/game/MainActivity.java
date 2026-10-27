@@ -943,6 +943,44 @@ public class MainActivity extends Activity {
    drawRect(col("#7a2d2b"),x-width/2,y,width,5);
    drawRect(col("#60c86c"),x-width/2,y,width*ratio,5);
   }
+  // Camera-centered outdoor minimap, clipped to its frame.
+  void drawMinimap(float vw,float vh){
+   float size=136f,x=vw-size-12f,y=45f,zoom=.18f;
+   drawRect(col("#101b21"),x-4,y-4,size+8,size+8);
+   drawRect(col("#b89c69"),x-2,y-2,size+4,size+4);
+   canvas.save();
+   canvas.clipRect(x,y,x+size,y+size);
+   drawRect(col("#416c43"),x,y,size,size);
+   // Subtle world grid for orientation.
+   paint.setColor(col("#507b50"));paint.setStrokeWidth(1);
+   float step=32*zoom,offsetX=(px*zoom)%step,offsetY=(py*zoom)%step;
+   for(float gx=x+size/2-offsetX;gx<x+size;gx+=step)canvas.drawLine(gx,y,gx,y+size,paint);
+   for(float gy=y+size/2-offsetY;gy<y+size;gy+=step)canvas.drawLine(x,gy,x+size,gy,paint);
+   // Fixed world landmarks.
+   float fx=x+size/2+(forgeX-px)*zoom,fy=y+size/2+(forgeY-py)*zoom;
+   drawRect(col("#e8b975"),fx-5,fy-5,10,10);
+   float hx=x+size/2+(homeX-px)*zoom,hy=y+size/2+(homeY-py)*zoom;
+   drawRect(col("#c6d5b4"),hx-4,hy-4,8,8);
+   float tx=x+size/2+(merchantX-px)*zoom,ty=y+size/2+(merchantY-py)*zoom;
+   drawRect(col("#e6d05f"),tx-3,ty-3,6,6);
+   for(Decoration d:decorations){
+    float dx=x+size/2+(d.x-px)*zoom,dy=y+size/2+(d.y-py)*zoom;
+    if(dx<x||dx>x+size||dy<y||dy>y+size)continue;
+    drawRect(col("#2f5435"),dx-1,dy-1,3,3);
+   }
+   for(Mob m:mobs){
+    if(m.dead)continue;
+    float mx=x+size/2+(m.x-px)*zoom,my=y+size/2+(m.y-py)*zoom;
+    if(mx<x||mx>x+size||my<y||my>y+size)continue;
+    drawRect(m.hostile()?col("#dc6660"):col("#d2c5a1"),mx-2,my-2,4,4);
+   }
+   // Player is always at the center.
+   drawRect(col("#101b21"),x+size/2-4,y+size/2-4,8,8);
+   drawRect(col("#62c9ff"),x+size/2-3,y+size/2-3,6,6);
+   canvas.restore();
+   paint.setColor(col("#f5e8cb"));paint.setTextSize(10);paint.setTextAlign(Paint.Align.CENTER);
+   canvas.drawText("N",x+size/2,y+11,paint);paint.setTextAlign(Paint.Align.LEFT);
+  }
   void drawRect(int col,float x,float y,float w,float h){paint.setColor(col);canvas.drawRect(x,y,x+w,y+h,paint);}
   int col(String hex){return Color.parseColor(hex);}
   void drawSprite(String kind,String action,int dir,float x,float y,float w,float h,float time,boolean freeze){
@@ -1176,6 +1214,7 @@ public class MainActivity extends Activity {
     paint.setColor(questProgress>=questGoal()?col("#9bf09c"):col("#d7e4db"));
     canvas.drawText(questProgress>=questGoal()?"Fertig! Beim Abenteurer abgeben":("Orks besiegt: "+questProgress+" / "+questGoal()),qx+10,qy+60,paint);
    }
+   if(!indoors&&!startScreen&&!pauseMenu&&!inventoryOpen&&!shopOpen)drawMinimap(vw,vh);
    drawHotbar(vw,vh);
    if(noticeTime>0){paint.setColor(col("#f7e0a6"));paint.setTextSize(17);c.drawText(pickupNotice,12,60,paint);}
    if(inventoryOpen)drawInventory(vw,vh);
