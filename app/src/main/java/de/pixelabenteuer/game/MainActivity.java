@@ -321,9 +321,38 @@ public class MainActivity extends Activity {
     }
    }catch(Exception ignored){}
    java.util.Random terrainRandom=new java.util.Random(91827L);
-   for(int i=0;i<8;i++){float x=100+terrainRandom.nextInt(1400),y=80+terrainRandom.nextInt(820);Bitmap b=ruins.isEmpty()?null:ruins.get(i%ruins.size());if(Math.hypot(x-forgeX,y-forgeY)<220)continue;decorations.add(new Decoration(b,b,x,y,94,90,true));}
-   for(int i=0;i<85;i++){float x=60+terrainRandom.nextInt(1480),y=65+terrainRandom.nextInt(870);if(Math.hypot(x-180,y-180)<140||Math.hypot(x-forgeX,y-forgeY)<185)continue;Bitmap b=rocks.isEmpty()?null:rocks.get(i%rocks.size());decorations.add(new Decoration(b,rockMasks.isEmpty()?b:rockMasks.get(i%rockMasks.size()),x,y,20+(i%3)*4,19+(i%4)*4,true));}
-   for(int i=0;i<70&&!plants.isEmpty();i++){float x=30+(i*131)%1540,y=40+(i*223)%920;if(Math.hypot(x-forgeX,y-forgeY)<185)continue;decorations.add(new Decoration(plants.get(i%plants.size()),plants.get(i%plants.size()),x,y,34+(i%3)*12,40+(i%3)*10,true));}
+   // Reject intersecting decoration rectangles; keep house, entrance and spawn clear.
+   for(int i=0,tries=0;i<4&&tries<200;tries++){
+    float x=100+terrainRandom.nextInt(1400),y=80+terrainRandom.nextInt(820);
+    if(!decorationSpaceFree(x,y,94,90,230f))continue;
+    Bitmap b=ruins.isEmpty()?null:ruins.get(i%ruins.size());
+    decorations.add(new Decoration(b,b,x,y,94,90,true));i++;
+   }
+   for(int i=0,tries=0;i<85&&tries<1600;tries++){
+    float x=60+terrainRandom.nextInt(1480),y=65+terrainRandom.nextInt(870);
+    float w=20+(i%3)*4,h=19+(i%4)*4;
+    if(!decorationSpaceFree(x,y,w,h,210f))continue;
+    Bitmap b=rocks.isEmpty()?null:rocks.get(i%rocks.size());
+    decorations.add(new Decoration(b,rockMasks.isEmpty()?b:rockMasks.get(i%rockMasks.size()),x,y,w,h,true));i++;
+   }
+   for(int i=0,tries=0;i<70&&!plants.isEmpty()&&tries<1200;tries++){
+    float x=30+terrainRandom.nextInt(1540),y=40+terrainRandom.nextInt(920);
+    float w=34+(i%3)*12,h=40+(i%3)*10;
+    if(!decorationSpaceFree(x,y,w,h,210f))continue;
+    Bitmap b=plants.get(i%plants.size());
+    decorations.add(new Decoration(b,b,x,y,w,h,true));i++;
+   }
+  }
+  boolean decorationSpaceFree(float x,float y,float w,float h,float houseRadius){
+   if(Math.hypot(x-forgeX,y-forgeY)<houseRadius)return false;
+   if(Math.hypot(x-180f,y-180f)<145f)return false;
+   if(Math.hypot(x-merchantX,y-merchantY)<85f)return false;
+   float left=x-w/2f,right=x+w/2f,top=y-h*.8f,bottom=top+h;
+   for(Decoration d:decorations){
+    float dl=d.x-d.w/2f,dt=d.y-d.h*.8f;
+    if(left<dl+d.w+12&&right>dl-12&&top<dt+d.h+12&&bottom>dt-12)return false;
+   }
+   return true;
   }
   // Per-pixel collisions use the very same destination rectangle as rendering.
   // Test the feet/body of the moving character against opaque object pixels.
@@ -836,9 +865,9 @@ public class MainActivity extends Activity {
    for(float[] box:solids)
     if(x>box[0]-margin&&x<box[2]+margin&&y>box[1]-margin&&y<box[3]+margin)return true;
    // NPC footprints: block walking through their feet, not the whole sprite.
-   if(Math.hypot(x-296f,y-326f)<24f)return true; // Schmid
-   if(Math.hypot(x-570f,y-350f)<24f)return true; // Händlerin
-   if(Math.hypot(x-622f,y-441f)<22f)return true; // Abenteurer
+   if(x>249f&&x<343f&&y>283f&&y<340f)return true; // Schmid and worktable
+   if(Math.hypot(x-570f,y-340f)<24f)return true; // Händlerin
+   if(Math.hypot(x-622f,y-431f)<22f)return true; // Abenteurer
    // Upper stone partition; lower passage remains open.
    if(x>389&&x<420&&y<389)return true;
    return false;
