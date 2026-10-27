@@ -1650,7 +1650,7 @@ public class MainActivity extends Activity {
     paint.setTypeface(Typeface.DEFAULT);
    }
    if(hp<=0){drawRect(col("#111111"),vw/2-180,vh/2-45,360,90);paint.setColor(Color.WHITE);paint.setTextSize(24);c.drawText("GAME OVER - Tippen",vw/2-145,vh/2+7,paint);}
-   c.restore();postInvalidateDelayed(25);
+   c.restore();postInvalidateDelayed(16);
   }
   int inventoryIndex(float x,float y,float vw,float vh){
    float left=invLeft(vw),top=invTop(vh);
