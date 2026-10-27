@@ -541,7 +541,6 @@ public class MainActivity extends Activity {
    if(Math.hypot(x-merchantX,y-merchantY)<85f)return false;
    float left=x-w/2f,right=x+w/2f,top=y-h*.8f,bottom=top+h;
    for(Decoration d:decorations){
-    if(d.x+d.w<px-vw/2-60||d.x-d.w>px+vw/2+60||d.y+d.h<py-vh/2-60||d.y-d.h>py+vh/2+60)continue;
     float dl=d.x-d.w/2f,dt=d.y-d.h*.8f;
     if(left<dl+d.w+12&&right>dl-12&&top<dt+d.h+12&&bottom>dt-12)return false;
    }
@@ -1573,6 +1572,7 @@ public class MainActivity extends Activity {
     if(n==1)drawRect(col("#6a9a53"),x+8,y+7,5,4);
    }
    for(Decoration d:decorations){
+    if(d.x+d.w<px-vw/2-60||d.x-d.w>px+vw/2+60||d.y+d.h<py-vh/2-60||d.y-d.h>py+vh/2+60)continue;
     if(Math.hypot(d.x-forgeX,d.y-(forgeY+84))<82)continue;
     if(d.image!=null){paint.setColor(Color.WHITE);paint.setColorFilter(null);paint.setAlpha(255);paint.setStyle(Paint.Style.FILL);c.drawBitmap(d.image,null,new RectF(d.x-d.w/2,d.y-d.h*.8f,d.x+d.w/2,d.y+d.h*.2f),paint);}
     else drawRect(col("#82776b"),d.x-d.w/2,d.y-d.h/2,d.w,d.h);
