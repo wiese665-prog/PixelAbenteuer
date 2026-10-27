@@ -413,8 +413,8 @@ public class MainActivity extends Activity {
    paint.setTextAlign(Paint.Align.CENTER);
    paint.setTypeface(Typeface.DEFAULT_BOLD);
    paint.setTextSize(13);paint.setColor(col("#ffe7aa"));
-   outlinedText("Schmid",l+236,t+109);
-   outlinedText("Händlerin",l+510,t+153);
+   fantasyName("Schmid",l+236,t+109);
+   fantasyName("Händlerin",l+510,t+153);
    paint.setTypeface(Typeface.DEFAULT);paint.setTextSize(11);
    paint.setColor(col("#ffffff"));
    if(Math.hypot(px-296,py-349)<50)canvas.drawText("E - Handeln",l+236,t+125,paint);
@@ -423,7 +423,7 @@ public class MainActivity extends Activity {
    characterTile("Customer",3,2,0,l+562,t+288,52);
    paint.setTextAlign(Paint.Align.CENTER);paint.setTypeface(Typeface.DEFAULT_BOLD);
    paint.setColor(col("#ffe7aa"));paint.setTextSize(13);
-   outlinedText("Abenteurer",l+562,t+235);
+   fantasyName("Abenteurer",l+562,t+235);
    if(questAvailable()){
     paint.setColor(col("#50ef78"));paint.setTextSize(25);
     outlinedText("?",l+562,t+240);
@@ -1024,9 +1024,9 @@ public class MainActivity extends Activity {
    String[] names={"GESCHLECHT","FRISUR","HAUTFARBE","HAARFARBE","KAMPFSTIL","KLEIDUNG"};
    String[] values={characterGender==0?"Maennlich":"Weiblich",hairType==0?"Bob":"Kurzhaar","Variante "+skinColor,"Farbe "+hairColor,new String[]{"Schwert + Schild","Axt + Schild","Streitkolben + Schild"}[combatStyle],new String[]{"Reisekleidung","Nackt","Kampfkleidung"}[armorStyle]};
    for(int i=0;i<6;i++){
-    float yy=top+116+i*39;
-    paint.setTextSize(11);paint.setTypeface(Typeface.DEFAULT_BOLD);
-    paint.setColor(col("#e6c993"));canvas.drawText(names[i],left+394,yy-5,paint);
+    float yy=top+121+i*38;
+    paint.setTextSize(13);paint.setTypeface(Typeface.DEFAULT_BOLD);
+    paint.setColor(col("#fff0c7"));canvas.drawText(names[i],left+394,yy-5,paint);
     drawRect(col("#96794c"),left+247,yy,294,29);
     drawRect(col("#20383a"),left+249,yy+2,290,25);
     drawRect(col("#35524c"),left+251,yy+3,286,2);
@@ -1052,8 +1052,8 @@ public class MainActivity extends Activity {
     new android.app.AlertDialog.Builder(getContext()).setTitle("Charaktername").setView(edit).setPositiveButton("Uebernehmen",(d,w)->{String n=edit.getText().toString().trim();if(!n.isEmpty())characterName=n.length()>18?n.substring(0,18):n;}).setNegativeButton("Abbrechen",null).show();return;
    }
    if(x<left+248||x>left+540)return;
-   int index=(int)((y-(top+116))/39);
-   if(index<0||index>5||y>top+116+index*39+29)return;
+   int index=(int)((y-(top+121))/38);
+   if(index<0||index>5||y>top+121+index*38+29)return;
    int delta=x<left+390?-1:1;
    switch(index){
     case 0:characterGender=Math.floorMod(characterGender+delta,2);break;
@@ -1156,6 +1156,12 @@ public class MainActivity extends Activity {
    canvas.restore();
    paint.setColor(col("#f5e8cb"));paint.setTextSize(10);paint.setTextAlign(Paint.Align.CENTER);
    canvas.drawText("N",x+size/2,y+11,paint);paint.setTextAlign(Paint.Align.LEFT);
+  }
+  void fantasyName(String value,float x,float y){
+   Typeface old=paint.getTypeface();
+   paint.setTypeface(Typeface.create("serif",Typeface.BOLD_ITALIC));
+   outlinedText(value,x,y);
+   paint.setTypeface(old);
   }
   void outlinedText(String value,float x,float y){
    int color=paint.getColor();Paint.Style style=paint.getStyle();float width=paint.getStrokeWidth();
@@ -1388,7 +1394,7 @@ public class MainActivity extends Activity {
    drawHouse(forgeX,forgeY,true);
    drawSprite("orc2","idle",0,merchantX,merchantY,79,79,elapsed,false);
    paint.setTextAlign(Paint.Align.CENTER);paint.setColor(col("#ffe7aa"));paint.setTextSize(13);
-   outlinedText("Orc-Händler",merchantX,merchantY-45);paint.setTextAlign(Paint.Align.LEFT);
+   fantasyName("Orc-Händler",merchantX,merchantY-45);paint.setTextAlign(Paint.Align.LEFT);
    if(Math.hypot(px-merchantX,py-merchantY)<50&&!shopOpen){paint.setColor(Color.WHITE);paint.setTextSize(12);
     canvas.drawText("E - Handeln",merchantX-37,merchantY-58,paint);}
    for(Drop d:drops){float bob=(float)Math.sin(elapsed*3+d.bob)*2;
@@ -1404,7 +1410,7 @@ public class MainActivity extends Activity {
     String action=m.dead?"death":m.hurtTimer>0?"hurt":m.action;
     float size=m.hostile()?79:m.kind.equals("boar")?45:m.kind.equals("deer")?43:36;
     drawSprite(m.kind,action,m.dir,m.x,m.y,size,size,m.dead?m.deathTimer:m.anim,m.dead&&m.deathTimer>.7f);
-    if(!m.dead){paint.setColor(Color.WHITE);paint.setTextSize(12);paint.setTextAlign(Paint.Align.CENTER);outlinedText("Lv. "+m.level,m.x,m.y-size*.64f);paint.setTextAlign(Paint.Align.LEFT);}
+    if(!m.dead){paint.setColor(Color.WHITE);paint.setTextSize(12);paint.setTextAlign(Paint.Align.CENTER);paint.setTypeface(Typeface.create("serif",Typeface.BOLD_ITALIC));outlinedText("Lv. "+m.level,m.x,m.y-size*(m.hostile()?.53f:.64f));paint.setTypeface(Typeface.DEFAULT);paint.setTextAlign(Paint.Align.LEFT);}
     if(!m.dead&&m.hostile()&&!indoors&&!safeZone(px,py)&&!safeZone(m.x,m.y)
        &&Math.hypot(px-m.x,py-m.y)<285f){
      paint.setTextAlign(Paint.Align.CENTER);paint.setTypeface(Typeface.DEFAULT_BOLD);
