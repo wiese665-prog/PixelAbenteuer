@@ -38,6 +38,9 @@ public class MainActivity extends Activity {
   int activeMerchant=0; // 0 Orc-Händler, 1 Schmid, 2 Händlerin
   String[] shopStock={"Apple","Ham","Healthpotion","Healpotion med","Iron Sword","Silver Sword","Leather Armor","Iron Armor","Iron Helmet","Golden Sword"};
   String[] smithStock={"Wooden Sword [Common]","Wooden Sword [Legendär]","Iron Sword [Uncommon]","Iron Sword [Rare]","Silver Sword [Common]","Silver Sword [Legendär]","Golden Sword [Rare]","Golden Sword [Legendär]","Leather Armor [Rare]","Iron Armor [Rare]","Iron Helmet [Legendär]","Leather Boot [Uncommon]"};
+  final float STOCK_REFRESH_SECONDS=300f;
+  float stockRefreshTimer=0f;
+  int stockRotation=0;
   String[] sellerStock={"Apple","Green Apple","Ham","Cheese","Mushroom","Healthpotion","Healthpotion large","Healpotion med"};
   String pickupNotice="";float noticeTime=0;
   HashMap<String,Bitmap> sprites=new HashMap<>();
@@ -367,6 +370,7 @@ public class MainActivity extends Activity {
    define("Healthpotion large","Super Rare","",0,0,0,40);
    setManaBonuses();
    defineEquipmentVariants();
+   refreshMerchantStocks();
   }
   String baseEquipmentName(String name){
    int pos=name.lastIndexOf(" [");
@@ -418,6 +422,28 @@ public class MainActivity extends Activity {
     setWealth(wealth()+Math.max(1,cost/2));cleanupHotbar();pickupNotice=name+" verkauft";
    }
    noticeTime=2;
+  }
+  void refreshMerchantStocks(){
+   ArrayList<String> smithPool=new ArrayList<>();
+   for(String name:definitions.keySet()){
+    Item item=definitions.get(name);
+    if(item!=null&&item.equipment()&&(name.startsWith("Wooden ")||name.startsWith("Leather ")||name.startsWith("Iron ")||name.startsWith("Silver ")||name.startsWith("Golden ")))smithPool.add(name);
+   }
+   Collections.sort(smithPool);
+   Collections.shuffle(smithPool,random);
+   smithStock=smithPool.subList(0,Math.min(12,smithPool.size())).toArray(new String[0]);
+   ArrayList<String> orcPool=new ArrayList<>();
+   // Keep the Orc merchant's mixed food, potions, weapons and armor assortment.
+   String[] orcBasics={"Apple","Green Apple","Ham","Cheese","Mushroom","Healthpotion","Healthpotion large","Healpotion med"};
+   Collections.addAll(orcPool,orcBasics);
+   Collections.shuffle(orcPool,random);
+   ArrayList<String> orcGear=new ArrayList<>(smithPool);
+   Collections.shuffle(orcGear,random);
+   ArrayList<String> offer=new ArrayList<>();
+   for(int i=0;i<4&&i<orcPool.size();i++)offer.add(orcPool.get(i));
+   for(int i=0;i<6&&i<orcGear.size();i++)offer.add(orcGear.get(i));
+   shopStock=offer.toArray(new String[0]);
+   stockRotation++;
   }
   String[] activeStock(){return activeMerchant==1?smithStock:activeMerchant==2?sellerStock:shopStock;}
   String merchantTitle(){return activeMerchant==1?"SCHMID":activeMerchant==2?"HAENDLERIN":"ORC-HAENDLER";}
@@ -613,6 +639,11 @@ public class MainActivity extends Activity {
    panel(left,top,730,370);drawRect(col("#c5a36a"),left+365,top+48,2,302);
    paint.setColor(col("#f6dbab"));paint.setTypeface(Typeface.DEFAULT_BOLD);paint.setTextSize(21);
    canvas.drawText(merchantTitle(),left+17,top+30,paint);
+   if(activeMerchant!=2){
+    paint.setTextSize(10);paint.setColor(col("#9fc2c0"));
+    canvas.drawText("Neues Sortiment in "+Math.max(1,(int)Math.ceil((STOCK_REFRESH_SECONDS-stockRefreshTimer)/60f))+" Min.",left+17,top+44,paint);
+    paint.setTextSize(21);paint.setColor(col("#f6dbab"));
+   }
    paint.setTextSize(12);canvas.drawText("E / I schliessen   |   Klick: Kaufen / Verkaufen",left+302,top+28,paint);
    String[] selling=inventoryNames();
    for(int side=0;side<2;side++){
@@ -736,7 +767,14 @@ public class MainActivity extends Activity {
    canvas.drawBitmap(b,new Rect(frame*frameWidth,0,(frame+1)*frameWidth,b.getHeight()),new RectF(x-w/2,y-h/2,x+w/2,y+h/2),paint);
   }
   void update(float dt){
-   if(!startScreen&&!pauseMenu&&!inventoryOpen&&!shopOpen)worldTime+=dt;
+   if(!startScreen&&!pauseMenu&&!inventoryOpen&&!shopOpen){
+    worldTime+=dt;
+    stockRefreshTimer+=dt;
+    if(stockRefreshTimer>=STOCK_REFRESH_SECONDS){
+     stockRefreshTimer-=STOCK_REFRESH_SECONDS;
+     refreshMerchantStocks();
+    }
+   }
    elapsed+=dt;noticeTime=Math.max(0,noticeTime-dt);swordTimer=Math.max(0,swordTimer-dt);sword=swordTimer>0;attackCooldown=Math.max(0,attackCooldown-dt);attackAnim=Math.max(0,attackAnim-dt);hurtAnim=Math.max(0,hurtAnim-dt);playerHealthVisible=Math.max(0,playerHealthVisible-dt);playerDamageTime=Math.max(0,playerDamageTime-dt);
    if(hp<=0){deathAnim+=dt;return;}if(inventoryOpen||shopOpen||pauseMenu||startScreen)return;
    float mx=joyX,my=joyY,length=(float)Math.hypot(mx,my);
@@ -811,7 +849,7 @@ public class MainActivity extends Activity {
    }
   }
   void restart(){
-   indoors=false;currentHouse=0;playerLevel=1;exp=0;attackPower=3;maxHp=12;hp=maxHp;maxMana=20;mana=20;worldTime=0;equipped.clear();copper=silver=gold=0;java.util.Arrays.fill(hotbar,null);selectedHotbar=-1;playerDamageTime=0;px=180;py=180;joyX=joyY=0;deathAnim=0;swordTimer=0;sword=false;attackAnim=0;playerHealthVisible=0;kills=animalKills=0;mobs.clear();drops.clear();inventory.clear();inventoryOpen=false;shopOpen=false;pauseMenu=false;spawnMobs();
+   indoors=false;currentHouse=0;playerLevel=1;exp=0;attackPower=3;maxHp=12;hp=maxHp;maxMana=20;mana=20;worldTime=0;stockRefreshTimer=0;refreshMerchantStocks();equipped.clear();copper=silver=gold=0;java.util.Arrays.fill(hotbar,null);selectedHotbar=-1;playerDamageTime=0;px=180;py=180;joyX=joyY=0;deathAnim=0;swordTimer=0;sword=false;attackAnim=0;playerHealthVisible=0;kills=animalKills=0;mobs.clear();drops.clear();inventory.clear();inventoryOpen=false;shopOpen=false;pauseMenu=false;spawnMobs();
   }
   @Override protected void onDraw(Canvas c){
    canvas=c;float dt=Math.min(.05f,(System.nanoTime()-previous)/1000000000f);previous=System.nanoTime();update(dt);
