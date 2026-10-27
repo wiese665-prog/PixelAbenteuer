@@ -838,15 +838,28 @@ public class MainActivity extends Activity {
   }
   String[] inventoryNames(){return inventory.keySet().toArray(new String[0]);}
   void panel(float x,float y,float w,float h){
-   drawRect(col("#171b24"),x-5,y-5,w+10,h+10);
-   drawRect(col("#b59a68"),x-3,y-3,w+6,h+6);
-   drawRect(col("#26323a"),x,y,w,h);
-   drawRect(col("#34454c"),x+4,y+4,w-8,3);
+   drawRect(col("#101719"),x-5,y-5,w+10,h+10);
+   drawRect(col("#a88751"),x-3,y-3,w+6,h+6);
+   drawRect(col("#203638"),x,y,w,h);
+   drawRect(col("#36534d"),x+4,y+4,w-8,3);
+   drawRect(col("#765c38"),x+8,y+9,w-16,1);
+   drawRect(col("#765c38"),x+8,y+h-10,w-16,1);
+   for(int i=0;i<4;i++){
+    float cx=x+(i%2==0?11:w-11),cy=y+(i<2?13:h-13);
+    paint.setColor(col("#e1b86d"));canvas.drawCircle(cx,cy,3,paint);
+    paint.setColor(col("#493c2a"));canvas.drawCircle(cx,cy,1,paint);
+   }
+  }
+  void fantasyHeading(String value,float x,float y,int size){
+   paint.setTypeface(Typeface.create("serif",Typeface.BOLD_ITALIC));
+   paint.setTextSize(size);paint.setColor(col("#f6d89a"));
+   canvas.drawText(value,x,y,paint);
+   paint.setTypeface(Typeface.DEFAULT);
   }
   void slotFrame(float x,float y,float size,String item){
-   drawRect(col("#111c23"),x-2,y-2,size+4,size+4);
-   drawRect(col("#65737b"),x,y,size,size);
-   drawRect(col("#29333d"),x+3,y+3,size-6,size-6);
+   drawRect(col("#171d20"),x-2,y-2,size+4,size+4);
+   drawRect(col("#a08354"),x,y,size,size);
+   drawRect(col("#263d3b"),x+3,y+3,size-6,size-6);
    if(item!=null){Item i=definitions.get(item);if(i!=null&&i.equipment()){
     drawRect(rarityColor(i.rarity),x+3,y+size-5,size-6,3);
    }itemIcon(item,x+size*.15f,y+size*.10f,size/31f);}
@@ -856,11 +869,10 @@ public class MainActivity extends Activity {
   void drawInventory(float vw,float vh){
    float left=invLeft(vw),top=invTop(vh);
    panel(left,top,750,402);drawRect(col("#c6a66c"),left+10,top+56,730,2);drawRect(col("#8c754d"),left+304,top+67,2,300);
-   paint.setTypeface(Typeface.DEFAULT_BOLD);paint.setColor(col("#f3d7a1"));paint.setTextSize(22);
-   canvas.drawText("ABENTEURER  /  INVENTAR",left+18,top+30,paint);
+   fantasyHeading("Abenteurer  /  Inventar",left+18,top+30,23);
    paint.setTextSize(11);paint.setColor(col("#9fc2c0"));canvas.drawText("Hotbar anklicken: Platz waehlen / leeren  |  Item anklicken: zuweisen",left+18,top+48,paint);
    panel(left+14,top+65,285,313);
-   paint.setTextSize(14);paint.setColor(col("#f5d7a5"));canvas.drawText("CHARAKTER",left+28,top+87,paint);
+   fantasyHeading("Charakter",left+28,top+87,16);
    drawRect(col("#1b302e"),left+85,top+143,132,152);
    drawRect(col("#32564a"),left+89,top+147,124,144);
    drawSprite(sword?"player_sword":"player_unarmed","idle",0,left+151,top+217,150,165,elapsed,false);
@@ -878,7 +890,7 @@ public class MainActivity extends Activity {
    canvas.drawText("SCHADEN "+attackPower+"    RUESTUNG "+armorValue(),left+32,top+346,paint);
    paint.setColor(col("#91c8ed"));canvas.drawText("HP "+hp+"/"+maxHp+"    MANA "+mana+"/"+maxMana,left+32,top+362,paint);
    panel(left+315,top+65,419,313);
-   paint.setColor(col("#f1d5a5"));paint.setTextSize(14);canvas.drawText("RUCKSACK",left+330,top+87,paint);
+   fantasyHeading("Rucksack",left+330,top+87,16);
    String[] names=inventoryNames();
    for(int i=0;i<Math.min(24,names.length);i++){
     float x=left+329+(i%6)*67,y=top+104+(i/6)*64;
@@ -914,8 +926,7 @@ public class MainActivity extends Activity {
   void drawShop(float vw,float vh){
    float left=vw/2-365,top=vh/2-185;
    panel(left,top,730,370);drawRect(col("#c5a36a"),left+365,top+48,2,302);
-   paint.setColor(col("#f6dbab"));paint.setTypeface(Typeface.DEFAULT_BOLD);paint.setTextSize(21);
-   canvas.drawText(merchantTitle(),left+17,top+30,paint);
+   fantasyHeading(merchantTitle(),left+17,top+30,23);
    if(activeMerchant!=2){
     paint.setTextSize(10);paint.setColor(col("#9fc2c0"));
     canvas.drawText("Neues Sortiment in "+Math.max(1,(int)Math.ceil((STOCK_REFRESH_SECONDS-stockRefreshTimer)/60f))+" Min.",left+17,top+44,paint);
@@ -926,14 +937,13 @@ public class MainActivity extends Activity {
    for(int side=0;side<2;side++){
     float sx=left+(side==0?14:374);
     panel(sx,top+49,340,306);
-    paint.setTextSize(15);paint.setColor(col("#f1d7a4"));
-    canvas.drawText(side==0?"ANGEBOT":"DEIN VERKAUF",sx+13,top+72,paint);
+    fantasyHeading(side==0?"Angebot":"Dein Verkauf",sx+13,top+72,16);
     String[] names=side==0?activeStock():selling;
     for(int i=0;i<Math.min(12,names.length);i++){
      float x=sx+10+(i%3)*106,y=top+87+(i/3)*65;
-     drawRect(col("#17212a"),x,y,101,60);
-     drawRect(col("#58666b"),x+2,y+2,97,56);
-     drawRect(col("#28343c"),x+4,y+4,93,52);
+     drawRect(col("#151d20"),x,y,101,60);
+     drawRect(col("#9b7c4c"),x+2,y+2,97,56);
+     drawRect(col("#253c3a"),x+4,y+4,93,52);
      itemIcon(names[i],x+4,y+5,1.45f);
      Item item=definitions.get(names[i]);
      paint.setTextSize(10);paint.setColor(item!=null&&item.equipment()?rarityColor(item.rarity):col("#f1eee1"));
@@ -1068,13 +1078,13 @@ public class MainActivity extends Activity {
    drawRect(col("#101820"),0,0,vw,vh);
    float left=vw/2-250,top=vh/2-208;
    panel(left,top,500,416);drawRect(col("#c6a66c"),left+16,top+77,468,2);drawRect(col("#b38d54"),left+16,top+296,468,2);
-   paint.setTypeface(Typeface.DEFAULT_BOLD);paint.setTextAlign(Paint.Align.CENTER);
-   paint.setColor(col("#f2cf8b"));paint.setTextSize(30);canvas.drawText("PIXEL ABENTEUER",vw/2,top+47,paint);
+   paint.setTextAlign(Paint.Align.CENTER);
+   fantasyHeading("Pixel Abenteuer",vw/2,top+47,30);
    paint.setColor(col("#b6c8c2"));paint.setTextSize(13);
    canvas.drawText(startScreen?"Willkommen in deiner Welt":"PAUSE  /  SPIELMENUE",vw/2,top+70,paint);
    String[] buttons={startScreen?"SPIEL STARTEN":"WEITERSPIELEN","SPIEL SPEICHERN","SPIEL LADEN","NEUSTART"};
-   for(int i=0;i<buttons.length;i++){float y=top+89+i*49;drawRect(col("#7b7259"),left+95,y,310,42);
-    drawRect(col("#334a4c"),left+98,y+3,304,36);paint.setColor(col("#f6e7c6"));paint.setTextSize(17);canvas.drawText(buttons[i],vw/2,y+26,paint);}
+   for(int i=0;i<buttons.length;i++){float y=top+89+i*49;drawRect(col("#c49b5d"),left+95,y,310,42);
+    drawRect(col("#294540"),left+98,y+3,304,36);paint.setColor(col("#f6e7c6"));paint.setTypeface(Typeface.create("serif",Typeface.BOLD));paint.setTextSize(18);canvas.drawText(buttons[i],vw/2,y+26,paint);paint.setTypeface(Typeface.DEFAULT);}
    paint.setColor(col("#e5cc9c"));paint.setTextSize(14);
    canvas.drawText("MUSIKLAUTSTAERKE  "+Math.round(masterMusicVolume*100)+"%",vw/2,top+308,paint);
    float sx=left+110,sy=top+329,sw=280;
