@@ -872,6 +872,8 @@ public class MainActivity extends Activity {
    if(x>389&&x<420&&y<389)return true;
    return false;
   }
+  float orcTurnCooldown=0f;
+  int nextOrcTurn=0;
   void update(float dt){
    if(!startScreen&&!pauseMenu&&!inventoryOpen&&!shopOpen){
     int previousDay=(int)(worldTime/240f);
@@ -913,6 +915,25 @@ public class MainActivity extends Activity {
     }
    }
    if(indoors)return;
+   orcTurnCooldown=Math.max(0f,orcTurnCooldown-dt);
+   ArrayList<Mob> engagedOrcs=new ArrayList<>();
+   if(!safeZone(px,py))for(Mob candidate:mobs){
+    if(!candidate.dead&&candidate.kind.startsWith("orc")&&!safeZone(candidate.x,candidate.y)
+       &&Math.hypot(px-candidate.x,py-candidate.y)<285f)engagedOrcs.add(candidate);
+   }
+   Mob attackingOrc=null;
+   if(!engagedOrcs.isEmpty()&&orcTurnCooldown<=0f){
+    for(int offset=0;offset<engagedOrcs.size();offset++){
+     int idx=(nextOrcTurn+offset)%engagedOrcs.size();
+     Mob candidate=engagedOrcs.get(idx);
+     if(Math.hypot(px-candidate.x,py-candidate.y)<=48f&&candidate.hurtTimer<=0f){
+      attackingOrc=candidate;
+      nextOrcTurn=(idx+1)%engagedOrcs.size();
+      orcTurnCooldown=1.5f;
+      break;
+     }
+    }
+   }
    for(Mob m:mobs){
     if(m.dead){m.deathTimer+=dt;continue;}
     m.anim+=dt;m.attackTimer=Math.max(0,m.attackTimer-dt);m.hurtTimer=Math.max(0,m.hurtTimer-dt);m.healthVisible=Math.max(0,m.healthVisible-dt);m.damageNumberTime=Math.max(0,m.damageNumberTime-dt);
@@ -921,8 +942,21 @@ public class MainActivity extends Activity {
     if(m.hurtTimer>0){action="hurt";}
     else if(m.hostile()&&distance<285&&!safeZone(m.x,m.y)&&!safeZone(px,py)){
      m.dir=direction(px-m.x,py-m.y);
-     if(distance>43){vx=(px-m.x)/Math.max(1,distance)*75;vy=(py-m.y)/Math.max(1,distance)*75;action="run";}
-     else {action="attack";if(m.attackTimer<=0){int dealt=Math.max(1,m.damage);hp=Math.max(0,hp-Math.max(1,dealt-armorValue()));lastPlayerDamage=dealt;playerDamageTime=.9f;hurtAnim=.32f;playerHealthVisible=3f;m.attackTimer=1.3f;}}
+     if(m==attackingOrc){
+      action="attack";
+      int dealt=Math.max(1,m.damage);
+      hp=Math.max(0,hp-Math.max(1,dealt-armorValue()));
+      lastPlayerDamage=dealt;playerDamageTime=.9f;hurtAnim=.32f;playerHealthVisible=3f;
+      m.attackTimer=1.5f;
+     }else if(distance>43){
+      vx=(px-m.x)/Math.max(1,distance)*75;vy=(py-m.y)/Math.max(1,distance)*75;action="run";
+     }else{
+      // Wait for the next turn: idle or circle the player instead of attacking together.
+      float orbit=(mobs.indexOf(m)%2==0?1f:-1f);
+      vx=-(py-m.y)/Math.max(1,distance)*orbit*23f;
+      vy=(px-m.x)/Math.max(1,distance)*orbit*23f;
+      action="walk";
+     }
     }else if(!m.hostile()&&distance<110){
      vx=(m.x-px)/Math.max(1,distance)*105;vy=(m.y-py)/Math.max(1,distance)*105;
      action=m.kind.equals("black_grouse")?"flight":"run";
@@ -961,7 +995,7 @@ public class MainActivity extends Activity {
    }
   }
   void restart(){
-   indoors=false;currentHouse=0;playerLevel=1;exp=0;attackPower=3;maxHp=12;hp=maxHp;maxMana=20;mana=20;worldTime=0;stockRefreshTimer=0;refreshMerchantStocks();equipped.clear();copper=silver=gold=0;java.util.Arrays.fill(hotbar,null);selectedHotbar=-1;playerDamageTime=0;px=180;py=180;joyX=joyY=0;deathAnim=0;swordTimer=0;sword=false;attackAnim=0;playerHealthVisible=0;kills=animalKills=0;mobs.clear();drops.clear();inventory.clear();inventoryOpen=false;shopOpen=false;pauseMenu=false;spawnMobs();
+   indoors=false;currentHouse=0;playerLevel=1;exp=0;attackPower=3;maxHp=12;hp=maxHp;maxMana=20;mana=20;worldTime=0;orcTurnCooldown=0;nextOrcTurn=0;stockRefreshTimer=0;refreshMerchantStocks();equipped.clear();copper=silver=gold=0;java.util.Arrays.fill(hotbar,null);selectedHotbar=-1;playerDamageTime=0;px=180;py=180;joyX=joyY=0;deathAnim=0;swordTimer=0;sword=false;attackAnim=0;playerHealthVisible=0;kills=animalKills=0;mobs.clear();drops.clear();inventory.clear();inventoryOpen=false;shopOpen=false;pauseMenu=false;spawnMobs();
   }
   @Override protected void onDraw(Canvas c){
    canvas=c;float dt=Math.min(.05f,(System.nanoTime()-previous)/1000000000f);previous=System.nanoTime();update(dt);
