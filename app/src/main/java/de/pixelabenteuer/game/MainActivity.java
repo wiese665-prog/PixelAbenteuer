@@ -384,7 +384,7 @@ public class MainActivity extends Activity {
    // Reuse the exact exterior crate and cart atlas rectangles without recropping.
    // Both props sit in the smithy area, clear of the forge and the central passage.
    tile("Exterior_house",70,162,32,38,l+24,t+198,50,52); // same crates as outside
-   tile("Exterior_house",116,160,34,34,l+104,t+211,55,55); // same complete cart as outside
+   tile("Exterior_house",116,160,34,34,l+180,t+258,55,55); // same complete cart, tucked into the lower smithy
    // Two complete rear display shelves and one dragon picture.
    tile("Interior_objects",13,128,35,63,l+381,t+83,53,80);
    tile("Interior_objects",163,129,39,62,l+570,t+83,53,80);
@@ -532,18 +532,32 @@ public class MainActivity extends Activity {
    }
    return false;
   }
+  boolean spriteFootCollision(String name,int sx,int sy,int sw,int sh,float x,float y,float left,float top,float w,float h,float radius){
+   Bitmap bitmap=buildingSprites.get(name);
+   if(bitmap==null)return false;
+   // Five probes approximate the player's feet, not the entire sprite body.
+   float[] ox={0f,-radius,radius,0f,0f},oy={0f,0f,0f,-radius,radius};
+   for(int i=0;i<ox.length;i++){
+    float u=(x+ox[i]-left)/w,v=(y+oy[i]-top)/h;
+    if(u<0||u>=1||v<0||v>=1)continue;
+    int bx=sx+Math.min(sw-1,(int)(u*sw)),by=sy+Math.min(sh-1,(int)(v*sh));
+    if(bx>=0&&by>=0&&bx<bitmap.getWidth()&&by<bitmap.getHeight()&&Color.alpha(bitmap.getPixel(bx,by))>48)return true;
+   }
+   return false;
+  }
   boolean blocked(float x,float y){
    // Orc merchant: solid body, but still reachable using E from nearby.
    if(Math.hypot(x-merchantX,y-merchantY)<25f)return true;
    if(x<18||y<18||x>WORLD_W-18||y>WORLD_H-18)return true;
    for(Decoration d:decorations)if(d.solid&&Math.hypot(d.x-forgeX,d.y-forgeY)>185&&collides(d,x,y))return true;
    float dx=x-forgeX,dy=y-forgeY;
-   if(Math.abs(dx)<110&&dy>-63&&dy<65&&!(Math.abs(dx-DOOR_OUT_X)<25&&dy>32))return true;
-   if(dx>-122&&dx<-66&&dy>111&&dy<168)return true;
-   // Keep the whole door approach clear; the old rectangle trapped the player.
-   if(dx>12&&dx<44&&dy>79&&dy<110&&Math.abs(dx-DOOR_OUT_X)>26)return true;
-   if(dx>3&&dx<36&&dy>109&&dy<127&&Math.abs(dx-DOOR_OUT_X)>26)return true;
-   if(dx>91&&dx<139&&dy>48&&dy<93)return true;
+   // Match the rendered house and props against their actual sprite alpha.
+   // Sample a small foot area to avoid walking through visible edges.
+   if(spriteFootCollision("Exterior_house",0,0,145,163,dx,dy,-116,-140,232,261,7f)
+      // Leave the entrance passable for the existing door transition.
+      &&!(Math.abs(dx-DOOR_OUT_X)<24&&dy>78))return true;
+   if(spriteFootCollision("Exterior_house",70,162,32,38,dx,dy,-117,113,50,52,7f))return true;
+   if(spriteFootCollision("Exterior_house",116,160,34,34,dx,dy,97,66,55,55,7f))return true;
    return false;
   }
   int expNeeded(){return 12+playerLevel*8;}
@@ -1249,6 +1263,8 @@ public class MainActivity extends Activity {
    // Coordinates are interior-world coordinates; player center uses a small footprint.
    float[][] solids={
     {135,249,249,336},  // forge
+    {84,372,134,424},   // interior crates (l+24,t+198)
+    {240,432,295,487}, // interior cart (l+180,t+258)
     {441,255,494,337},  // upper-left shop shelf
     {630,255,683,337},  // upper-right shop shelf
     {458,349,718,389},  // counter
