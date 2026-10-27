@@ -381,8 +381,10 @@ public class MainActivity extends Activity {
      tile("Forge",left,top,cw,ch,l+75+(114-dw)/2,t+40+(122-dh),dw,dh);
     }
    }
-   // One complete original ore crate, no clipped fragments at entrance.
-   
+   // Reuse the exact exterior crate and cart atlas rectangles without recropping.
+   // Both props sit in the smithy area, clear of the forge and the central passage.
+   tile("Exterior_house",70,162,32,38,l+24,t+198,50,52); // same crates as outside
+   tile("Exterior_house",116,160,34,34,l+104,t+211,55,55); // same complete cart as outside
    // Two complete rear display shelves and one dragon picture.
    tile("Interior_objects",13,128,35,63,l+381,t+83,53,80);
    tile("Interior_objects",163,129,39,62,l+570,t+83,53,80);
