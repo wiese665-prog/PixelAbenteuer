@@ -37,7 +37,7 @@ public class MainActivity extends Activity {
   boolean inventoryOpen=false,shopOpen=false,startScreen=true,pauseMenu=false;float merchantX=265,merchantY=215;
   int activeMerchant=0; // 0 Orc-Händler, 1 Schmid, 2 Händlerin
   String[] shopStock={"Apple","Ham","Healthpotion","Healpotion med","Iron Sword","Silver Sword","Leather Armor","Iron Armor","Iron Helmet","Golden Sword"};
-  String[] smithStock={"Iron Sword","Silver Sword","Wooden Sword","Golden Sword","Leather Armor","Iron Armor","Iron Helmet","Leather Helmet","Iron Boot","Leather Boot","Wizard Hat","Wooden Armor"};
+  String[] smithStock={"Wooden Sword [Common]","Wooden Sword [Legendär]","Iron Sword [Uncommon]","Iron Sword [Rare]","Silver Sword [Common]","Silver Sword [Legendär]","Golden Sword [Rare]","Golden Sword [Legendär]","Leather Armor [Rare]","Iron Armor [Rare]","Iron Helmet [Legendär]","Leather Boot [Uncommon]"};
   String[] sellerStock={"Apple","Green Apple","Ham","Cheese","Mushroom","Healthpotion","Healthpotion large","Healpotion med"};
   String pickupNotice="";float noticeTime=0;
   HashMap<String,Bitmap> sprites=new HashMap<>();
@@ -220,8 +220,8 @@ public class MainActivity extends Activity {
    tile("Interior_objects",163,129,39,62,l+570,t+83,53,80);
    tile("Interior_objects",114,257,59,49,l+451,t+82,106,59);
    // Two separate COMPLETE purple rugs (source x=6..60, y=397..421).
-   tile("Interior_objects",70,385,55,40,l+405,t+162,170,60);
-   tile("Interior_objects",70,385,55,40,l+405,t+262,170,60);
+   tile("Interior_objects",70,385,55,40,l+417,t+162,170,60);
+   tile("Interior_objects",70,385,55,40,l+417,t+262,170,60);
    // The complete counter with its decorative vases, cropped as one object.
    tile("Interior_objects",16,0,160,27,l+398,t+175,260,40);
    // Separate shelf against the left wall, using the original unmodified sprite.
@@ -241,7 +241,7 @@ public class MainActivity extends Activity {
    tile("Interior_objects",148,70,46,59,l+596,t+266,56,69);
    // The seller is drawn only once, using a single stable pose.
    characterTile("Master_Idle",3,2,(int)(elapsed*2)%3,l+236,t+175,81.4f);
-   sellerPortrait(l+497,t+198);
+   sellerPortrait(l+510,t+198);
    characterTile("Customer",3,2,0,l+507,t+288,52);
    float cx=l+340+(px-400),cy=t+176+(py-350);
    drawSprite(sword?"player_sword":"player_unarmed","idle",playerDir,cx,cy,94,94,elapsed,false);
@@ -366,9 +366,31 @@ public class MainActivity extends Activity {
    define("Healpotion med","Rare","",0,0,0,20);
    define("Healthpotion large","Super Rare","",0,0,0,40);
    setManaBonuses();
+   defineEquipmentVariants();
+  }
+  String baseEquipmentName(String name){
+   int pos=name.lastIndexOf(" [");
+   return pos>=0&&name.endsWith("]")?name.substring(0,pos):name;
+  }
+  void defineEquipmentVariants(){
+   String[] bases={"Wooden Sword","Iron Sword","Silver Sword","Golden Sword","Wooden Armor","Leather Armor","Iron Armor","Leather Helmet","Iron Helmet","Leather Boot","Iron Boot"};
+   String[] rarities={"Common","Uncommon","Rare","Super Rare","Legendär"};
+   for(String base:bases){
+    Item original=definitions.get(base);
+    if(original==null)continue;
+    int tier=base.startsWith("Wooden")?0:base.startsWith("Leather")?1:base.startsWith("Iron")?2:base.startsWith("Silver")?3:4;
+    for(int rank=0;rank<rarities.length;rank++){
+     // Material tier dominates rarity; legendary wood remains weaker than silver.
+     int power=tier*12+rank*2+1;
+     int dmg=original.dmg>0?power:0;
+     int armor=original.armor>0?Math.max(1,power/3):0;
+     int bonusHp=original.hp>0?Math.max(1,power/2):0;
+     define(base+" ["+rarities[rank]+"]",rarities[rank],original.slot,dmg,armor,bonusHp,0);
+    }
+   }
   }
   void itemIcon(String item,float x,float y,float scale){
-   Bitmap b=itemImages.get(item);
+   Bitmap b=itemImages.get(baseEquipmentName(item));
    if(b==null)return;
    paint.setColor(Color.WHITE);paint.setColorFilter(null);paint.setAlpha(255);paint.setStyle(Paint.Style.FILL);paint.setFilterBitmap(false);
    canvas.drawBitmap(b,null,new RectF(x,y,x+24*scale,y+24*scale),paint);
@@ -376,7 +398,12 @@ public class MainActivity extends Activity {
   int price(String name){
    Item i=definitions.get(name);
    if(i==null)return 3;
-   if(i.equipment())return i.rarity.equals("Legendär")?2500:i.rarity.equals("Super Rare")?900:i.rarity.equals("Rare")?320:i.rarity.equals("Uncommon")?95:30;
+   if(i.equipment()){
+    int rank=i.rarity.equals("Legendär")?4:i.rarity.equals("Super Rare")?3:i.rarity.equals("Rare")?2:i.rarity.equals("Uncommon")?1:0;
+    String base=baseEquipmentName(name);
+    int material=base.startsWith("Wooden")?1:base.startsWith("Leather")?2:base.startsWith("Iron")?3:base.startsWith("Silver")?4:base.startsWith("Golden")?5:2;
+    return (20+material*55)*(rank+1)*(rank+1);
+   }
    return i.heal>0?Math.max(6,i.heal*4):5;
   }
   int wealth(){return gold*10000+silver*100+copper;}
