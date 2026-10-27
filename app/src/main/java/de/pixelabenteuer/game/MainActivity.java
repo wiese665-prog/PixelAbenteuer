@@ -248,18 +248,18 @@ public class MainActivity extends Activity {
    paint.setTextAlign(Paint.Align.CENTER);
    paint.setTypeface(Typeface.DEFAULT_BOLD);
    paint.setTextSize(13);paint.setColor(col("#ffe7aa"));
-   canvas.drawText("Schmid",l+236,t+80,paint);
+   canvas.drawText("Schmid",l+236,t+109,paint);
    canvas.drawText("Händlerin",l+510,t+153,paint);
    paint.setTypeface(Typeface.DEFAULT);paint.setTextSize(11);
    paint.setColor(col("#ffffff"));
-   if(Math.hypot(px-296,py-349)<100)canvas.drawText("E - Handeln",l+236,t+96,paint);
-   if(Math.hypot(px-570,py-372)<100)canvas.drawText("E - Handeln",l+510,t+168,paint);
+   if(Math.hypot(px-296,py-349)<50)canvas.drawText("E - Handeln",l+236,t+125,paint);
+   if(Math.hypot(px-570,py-372)<50)canvas.drawText("E - Handeln",l+510,t+168,paint);
    paint.setTextAlign(Paint.Align.LEFT);
    characterTile("Customer",3,2,0,l+507,t+288,52);
    paint.setTextAlign(Paint.Align.CENTER);paint.setTypeface(Typeface.DEFAULT_BOLD);
    paint.setColor(col("#ffe7aa"));paint.setTextSize(13);
    canvas.drawText("Abenteurer",l+507,t+235,paint);
-   if(Math.hypot(px-567,py-462)<75){
+   if(Math.hypot(px-567,py-462)<37.5f){
     paint.setTextSize(11);paint.setColor(Color.WHITE);
     canvas.drawText("E - Sprechen",l+507,t+250,paint);
    }
@@ -473,12 +473,12 @@ public class MainActivity extends Activity {
   }
   boolean openInteriorMerchant(){
    if(!indoors)return false;
-   if(Math.hypot(px-567,py-462)<75){talkAdventurer();return true;}
-   if(Math.hypot(px-296,py-349)<100){showMerchant(1);return true;}
-   if(Math.hypot(px-570,py-372)<100){showMerchant(2);return true;}
+   if(Math.hypot(px-567,py-462)<37.5f){talkAdventurer();return true;}
+   if(Math.hypot(px-296,py-349)<50){showMerchant(1);return true;}
+   if(Math.hypot(px-570,py-372)<50){showMerchant(2);return true;}
    return false;
   }
-  void openShop(){if(Math.hypot(px-merchantX,py-merchantY)<100)showMerchant(0);}
+  void openShop(){if(Math.hypot(px-merchantX,py-merchantY)<50)showMerchant(0);}
   int armorValue(){int total=0;for(String name:equipped.values()){Item i=definitions.get(name);if(i!=null)total+=i.armor;}return total;}
   int bonusHealth(){int total=0;for(String name:equipped.values()){Item i=definitions.get(name);if(i!=null)total+=i.hp;}return total;}
   int maxMana=20,mana=20;
@@ -898,7 +898,7 @@ public class MainActivity extends Activity {
    drawSprite("orc2","idle",0,merchantX,merchantY,79,79,elapsed,false);
    paint.setTextAlign(Paint.Align.CENTER);paint.setColor(col("#ffe7aa"));paint.setTextSize(13);
    canvas.drawText("Orc-Händler",merchantX,merchantY-45,paint);paint.setTextAlign(Paint.Align.LEFT);
-   if(Math.hypot(px-merchantX,py-merchantY)<100&&!shopOpen){paint.setColor(Color.WHITE);paint.setTextSize(12);
+   if(Math.hypot(px-merchantX,py-merchantY)<50&&!shopOpen){paint.setColor(Color.WHITE);paint.setTextSize(12);
     canvas.drawText("E - Handeln",merchantX-37,merchantY-58,paint);}
    for(Drop d:drops){float bob=(float)Math.sin(elapsed*3+d.bob)*2;
     drawRect(col("#28342b"),d.x-11,d.y+7,22,5);itemIcon(d.item,d.x-10,d.y-15+bob,.82f);
@@ -1006,7 +1006,7 @@ public class MainActivity extends Activity {
      else if(indoors){
       if(!openInteriorMerchant()&&py>465&&Math.abs(px-DOOR_IN_X)<45)enterOrLeave();
      }else if(Math.hypot(px-forgeX,py-(forgeY+84))<65)enterOrLeave();
-     else if(Math.hypot(px-merchantX,py-merchantY)<100)openShop();
+     else if(Math.hypot(px-merchantX,py-merchantY)<50)openShop();
      else pickup();
      break;
     case KeyEvent.KEYCODE_I:if(shopOpen)shopOpen=false;else inventoryOpen=!inventoryOpen;hoverSlot=-1;break;
