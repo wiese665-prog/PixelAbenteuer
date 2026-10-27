@@ -1089,7 +1089,7 @@ public class MainActivity extends Activity {
     paint.setTypeface(Typeface.DEFAULT);paint.setTextSize(13);paint.setColor(Color.WHITE);
     canvas.drawText(values[i],left+449,yy+20,paint);
    }
-   boolean beginPressed=pressedCreatorButton;float beginOffset=beginPressed?3f:0f;
+   boolean beginPressed=pressedCreatorButton;float beginOffset=beginPressed?5f:0f;
    drawRect(col(beginPressed?"#776e61":"#d1a75d"),left+246,top+352+beginOffset,296,45-beginOffset);
    drawRect(col(beginPressed?"#403d37":"#76552e"),left+249,top+355+beginOffset,290,39-beginOffset);
    paint.setTypeface(Typeface.create("serif",Typeface.BOLD));
@@ -1101,7 +1101,7 @@ public class MainActivity extends Activity {
    float left=vw/2-285,top=vh/2-205;
    if(pressedCreatorButton)return;
    if(x>=left+246&&x<=left+542&&y>=top+352&&y<=top+397){
-    pressedCreatorButton=true;pressedCreatorTime=.15f;invalidate();return;
+    pressedCreatorButton=true;pressedCreatorTime=.35f;invalidate();return;
    }
    if(x>=left+248&&x<=left+540&&y>=top+71&&y<=top+104){
     final android.widget.EditText edit=new android.widget.EditText(getContext());edit.setSingleLine(true);edit.setText(characterName);
@@ -1181,12 +1181,18 @@ public class MainActivity extends Activity {
    controlKey("ESC","Pause / Zurueck",left+302,top+204,92);
    paint.setColor(col("#d7c7a8"));paint.setTextSize(13);paint.setTextAlign(Paint.Align.CENTER);
    canvas.drawText("Auf dem Handy: Joystick und Bildschirmtasten verwenden.",vw/2,top+281,paint);
-   float backOffset=pressedControlsBack?3f:0f;
+   float backOffset=pressedControlsBack?5f:0f;
    drawRect(col(pressedControlsBack?"#716b60":"#c49b5d"),left+135,top+325+backOffset,310,49-backOffset);
    drawRect(col(pressedControlsBack?"#29332f":"#294540"),left+138,top+328+backOffset,304,43-backOffset);
    paint.setColor(col(pressedControlsBack?"#a6a7a1":"#f6e7c6"));paint.setTypeface(Typeface.create("serif",Typeface.BOLD));paint.setTextSize(19);
    canvas.drawText("ZURUECK ZUM ESC-MENUE",vw/2,top+357+backOffset,paint);
    paint.setTypeface(Typeface.DEFAULT);paint.setTextAlign(Paint.Align.LEFT);
+  }
+  void controlsBackClick(float x,float y,float vw,float vh){
+   float left=vw/2-290,top=vh/2-208;
+   // Only the actual button is clickable; clicks elsewhere keep this screen open.
+   if(pressedControlsBack||x<left+135||x>left+445||y<top+325||y>top+374)return;
+   pressedControlsBack=true;pressedControlsTime=.35f;invalidate();
   }
   void menuClick(float x,float y,float vw,float vh){
    float top=vh/2-208,left=vw/2-250;
@@ -1633,7 +1639,7 @@ public class MainActivity extends Activity {
    }
    if(type==MotionEvent.ACTION_DOWN){
     if(creatorOpen){float sc=Math.min(getWidth()/800f,getHeight()/450f);creatorClick(e.getX()/sc,e.getY()/sc,getWidth()/sc,getHeight()/sc);return true;}
-    if(startScreen||pauseMenu){float sc=Math.min(getWidth()/800f,getHeight()/450f),xx=e.getX()/sc,yy=e.getY()/sc,vw=getWidth()/sc,vh=getHeight()/sc;if(controlsOpen){float left=vw/2-290,top=vh/2-208;if(!pressedControlsBack&&xx>=left+135&&xx<=left+445&&yy>=top+325&&yy<=top+374){pressedControlsBack=true;pressedControlsTime=.15f;invalidate();}}else menuClick(xx,yy,vw,vh);return true;}
+    if(startScreen||pauseMenu){float sc=Math.min(getWidth()/800f,getHeight()/450f),xx=e.getX()/sc,yy=e.getY()/sc,vw=getWidth()/sc,vh=getHeight()/sc;if(controlsOpen){controlsBackClick(xx,yy,vw,vh);}else menuClick(xx,yy,vw,vh);return true;}
     if(shopOpen){
      float sc=Math.min(getWidth()/800f,getHeight()/450f),xx=e.getX()/sc,yy=e.getY()/sc,vw=getWidth()/sc,vh=getHeight()/sc;
      int idx=shopIndex(xx,yy,vw,vh,true);
@@ -1664,7 +1670,7 @@ public class MainActivity extends Activity {
    if(key==KeyEvent.KEYCODE_SHIFT_LEFT||key==KeyEvent.KEYCODE_SHIFT_RIGHT){sprintHeld=true;return true;}
    if(key==KeyEvent.KEYCODE_ESCAPE||key==KeyEvent.KEYCODE_BACK){
     if(creatorOpen)return true;
-    if(controlsOpen){pressedControlsBack=false;controlsOpen=false;return true;}
+    if(controlsOpen){return true;}
     if(startScreen)return true;
     if(shopOpen)shopOpen=false;else if(inventoryOpen){inventoryOpen=false;inspectedGear=null;gearTooltipTime=0f;}else pauseMenu=!pauseMenu;
     joyX=joyY=0;return true;
