@@ -344,11 +344,13 @@ public class MainActivity extends Activity {
    float l=vw/2-340,t=vh/2-176;
    drawRect(col("#18141a"),0,0,vw,vh);
    // Gray square paving from the dedicated right-hand tile strip of Walls_interior.
-   for(int iy=0;iy<19;iy++)for(int ix=0;ix<20;ix++)
-    tile("Walls_interior",240,128,16,16,l+20+ix*16,t+52+iy*16,16,16);
-   // Keep the approved wooden sales floor.
-   for(int iy=0;iy<18;iy++)for(int ix=0;ix<20;ix++)
-    tile("Walls_interior",145,21,12,12,l+340+ix*16,t+52+iy*16,16,16);
+   // One shared 16-pixel grid across both sales areas: no independent offsets at the seam.
+   // Keep the original source rectangles unchanged; only the tile placement is unified.
+   for(int iy=0;iy<19;iy++)for(int ix=0;ix<40;ix++){
+    float gx=l+20+ix*16,gy=t+52+iy*16;
+    if(ix<20)tile("Walls_interior",240,128,16,16,gx,gy,16,16);
+    else if(iy<18)tile("Walls_interior",145,21,12,12,gx,gy,16,16);
+   }
    // Original wall blocks at their native proportions; no stretched long strip.
    for(int ix=0;ix<14;ix++)
     tile("Walls_interior",48+(ix%2)*32,0,32,32,l+16+ix*46,t,46,70);
