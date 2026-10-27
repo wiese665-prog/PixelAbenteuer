@@ -358,8 +358,10 @@ public class MainActivity extends Activity {
    // masonry rhythm. Original atlas cells are kept intact.
    for(int iy=0;iy<6;iy++){
     float wallY=t+67+iy*44;
-    tile("Walls_interior",49,128,23,42,l,wallY,22,44);
-    tile("Walls_interior",193,128,23,42,l+658,wallY,22,44);
+    // Alternate the two matching stone variants on both outer walls.
+    int stoneX=(iy%2==0)?49:193;
+    tile("Walls_interior",stoneX,128,23,42,l,wallY,22,44);
+    tile("Walls_interior",stoneX==49?193:49,128,23,42,l+658,wallY,22,44);
    }
    // Central divider: individual stone segments instead of one vertically
    // stretched wall sprite. This matches the side-wall masonry and avoids
