@@ -255,13 +255,13 @@ public class MainActivity extends Activity {
    if(Math.hypot(px-296,py-349)<50)canvas.drawText("E - Handeln",l+236,t+125,paint);
    if(Math.hypot(px-570,py-372)<50)canvas.drawText("E - Handeln",l+510,t+168,paint);
    paint.setTextAlign(Paint.Align.LEFT);
-   characterTile("Customer",3,2,0,l+507,t+288,52);
+   characterTile("Customer",3,2,0,l+562,t+288,52);
    paint.setTextAlign(Paint.Align.CENTER);paint.setTypeface(Typeface.DEFAULT_BOLD);
    paint.setColor(col("#ffe7aa"));paint.setTextSize(13);
-   canvas.drawText("Abenteurer",l+507,t+235,paint);
-   if(Math.hypot(px-567,py-462)<37.5f){
+   canvas.drawText("Abenteurer",l+562,t+235,paint);
+   if(Math.hypot(px-622,py-462)<37.5f){
     paint.setTextSize(11);paint.setColor(Color.WHITE);
-    canvas.drawText("E - Sprechen",l+507,t+250,paint);
+    canvas.drawText("E - Sprechen",l+562,t+250,paint);
    }
    paint.setTextAlign(Paint.Align.LEFT);paint.setTypeface(Typeface.DEFAULT);
    float cx=l+340+(px-400),cy=t+176+(py-350);
@@ -475,7 +475,7 @@ public class MainActivity extends Activity {
   }
   boolean openInteriorMerchant(){
    if(!indoors)return false;
-   if(Math.hypot(px-567,py-462)<37.5f){talkAdventurer();return true;}
+   if(Math.hypot(px-622,py-462)<37.5f){talkAdventurer();return true;}
    if(Math.hypot(px-296,py-349)<50){showMerchant(1);return true;}
    if(Math.hypot(px-570,py-372)<50){showMerchant(2);return true;}
    return false;
@@ -811,7 +811,7 @@ public class MainActivity extends Activity {
    // NPC footprints: block walking through their feet, not the whole sprite.
    if(Math.hypot(x-296f,y-349f)<24f)return true; // Schmid
    if(Math.hypot(x-570f,y-372f)<24f)return true; // Händlerin
-   if(Math.hypot(x-567f,y-462f)<22f)return true; // Abenteurer
+   if(Math.hypot(x-622f,y-462f)<22f)return true; // Abenteurer
    // Upper stone partition; lower passage remains open.
    if(x>389&&x<420&&y<389)return true;
    return false;
