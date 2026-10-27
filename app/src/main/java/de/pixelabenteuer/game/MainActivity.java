@@ -214,13 +214,13 @@ public class MainActivity extends Activity {
    
    // Two complete rear display shelves and one dragon picture.
    tile("Interior_objects",13,128,34,51,l+381,t+95,53,68);
-   tile("Interior_objects",113,129,34,51,l+570,t+95,53,68);
+   tile("Interior_objects",112,128,39,54,l+570,t+95,53,68);
    tile("Interior_objects",114,257,59,49,l+451,t+82,106,59);
    // Two separate COMPLETE purple rugs (source x=6..60, y=397..421).
-   tile("Interior_objects",0,385,59,40,l+415,t+156,205,72);
-   tile("Interior_objects",70,385,55,40,l+415,t+256,205,72);
+   tile("Interior_objects",70,385,55,40,l+415,t+156,205,72);
+   tile("Interior_objects",0,385,59,40,l+415,t+256,205,72);
    // The complete counter with its decorative vases, cropped as one object.
-   tile("Interior_objects",16,0,160,27,l+345.5f,t+213,309,46);
+   tile("Interior_objects",16,0,160,27,l+345.5f,t+175,309,46);
    // Two complete decorative original sprites at the bottom of the forge.
    tile("Interior_objects",0,328,65,60,l+69,t+265,64,65);
    tile("Interior_objects",70,328,47,55,l+211,t+270,51,58);
@@ -233,7 +233,7 @@ public class MainActivity extends Activity {
    tile("Interior_objects",148,70,46,59,l+596,t+267,61,72);
    // The seller is drawn only once, using a single stable pose.
    characterTile("Master_Idle",3,2,(int)(elapsed*2)%3,l+236,t+175,81.4f);
-   sellerPortrait(l+497,t+236);
+   sellerPortrait(l+497,t+198);
    characterTile("Customer",3,2,0,l+507,t+288,52);
    float cx=l+340+(px-400),cy=t+176+(py-350);
    drawSprite(sword?"player_sword":"player_unarmed","idle",playerDir,cx,cy,94,94,elapsed,false);
