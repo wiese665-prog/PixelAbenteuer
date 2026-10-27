@@ -191,7 +191,7 @@ public class MainActivity extends Activity {
    float l=vw/2-340,t=vh/2-176;
    drawRect(col("#18141a"),0,0,vw,vh);
    // Gray square paving from the dedicated right-hand tile strip of Walls_interior.
-   for(int iy=0;iy<18;iy++)for(int ix=0;ix<20;ix++)
+   for(int iy=0;iy<19;iy++)for(int ix=0;ix<20;ix++)
     tile("Walls_interior",240,128,16,16,l+16+ix*16,t+52+iy*16,16,16);
    // Keep the approved wooden sales floor.
    for(int iy=0;iy<18;iy++)for(int ix=0;ix<20;ix++)
@@ -274,6 +274,19 @@ public class MainActivity extends Activity {
    if(Math.hypot(px-622,py-462)<37.5f){
     paint.setTextSize(11);paint.setColor(Color.WHITE);
     canvas.drawText("E - Sprechen",l+562,t+250,paint);
+   }
+   if(adventurerSpeechTime>0&&!adventurerSpeech.isEmpty()){
+    int alpha=(int)(255*Math.min(1f,adventurerSpeechTime/.85f));
+    paint.setTextAlign(Paint.Align.CENTER);paint.setTypeface(Typeface.DEFAULT_BOLD);
+    paint.setTextSize(12);paint.setColor(Color.argb(alpha,255,246,214));
+    String[] words=adventurerSpeech.split(" ");
+    String line="",second="";
+    for(String word:words){
+     if(second.isEmpty()&&(line+" "+word).trim().length()<=23)line=(line+" "+word).trim();
+     else second=(second+" "+word).trim();
+    }
+    canvas.drawText(line,l+562,t+205,paint);
+    if(!second.isEmpty())canvas.drawText(second,l+562,t+219,paint);
    }
    paint.setTextAlign(Paint.Align.LEFT);paint.setTypeface(Typeface.DEFAULT);
    float cx=l+340+(px-400),cy=t+176+(py-350);
@@ -481,10 +494,11 @@ public class MainActivity extends Activity {
   String[] activeStock(){return activeMerchant==1?smithStock:activeMerchant==2?sellerStock:shopStock;}
   String merchantTitle(){return activeMerchant==1?"SCHMID":activeMerchant==2?"HAENDLERIN":"ORC-HAENDLER";}
   void showMerchant(int merchant){activeMerchant=merchant;shopOpen=true;inventoryOpen=false;hoverSlot=-1;joyX=joyY=0;}
+  String adventurerSpeech="";float adventurerSpeechTime=0f;
   void talkAdventurer(){
    String[] lines={"Bleib wachsam da draussen!","Gute Beute gibt's nicht geschenkt.","Mein Schwert braucht eine Pause.","Hast du schon den Wald erkundet?","Ein Trank kann dein Leben retten."};
-   pickupNotice="Abenteurer: "+lines[random.nextInt(lines.length)];
-   noticeTime=3.5f;
+   adventurerSpeech=lines[random.nextInt(lines.length)];
+   adventurerSpeechTime=3.5f;
   }
   boolean openInteriorMerchant(){
    if(!indoors)return false;
@@ -822,9 +836,9 @@ public class MainActivity extends Activity {
    for(float[] box:solids)
     if(x>box[0]-margin&&x<box[2]+margin&&y>box[1]-margin&&y<box[3]+margin)return true;
    // NPC footprints: block walking through their feet, not the whole sprite.
-   if(Math.hypot(x-296f,y-349f)<24f)return true; // Schmid
-   if(Math.hypot(x-570f,y-372f)<24f)return true; // Händlerin
-   if(Math.hypot(x-622f,y-462f)<22f)return true; // Abenteurer
+   if(Math.hypot(x-296f,y-326f)<24f)return true; // Schmid
+   if(Math.hypot(x-570f,y-350f)<24f)return true; // Händlerin
+   if(Math.hypot(x-622f,y-441f)<22f)return true; // Abenteurer
    // Upper stone partition; lower passage remains open.
    if(x>389&&x<420&&y<389)return true;
    return false;
@@ -843,6 +857,7 @@ public class MainActivity extends Activity {
      refreshMerchantStocks();
     }
    }
+   adventurerSpeechTime=Math.max(0,adventurerSpeechTime-dt);
    elapsed+=dt;noticeTime=Math.max(0,noticeTime-dt);swordTimer=Math.max(0,swordTimer-dt);sword=swordTimer>0;attackCooldown=Math.max(0,attackCooldown-dt);attackAnim=Math.max(0,attackAnim-dt);hurtAnim=Math.max(0,hurtAnim-dt);playerHealthVisible=Math.max(0,playerHealthVisible-dt);playerDamageTime=Math.max(0,playerDamageTime-dt);
    if(hp<=0){deathAnim+=dt;return;}if(inventoryOpen||shopOpen||pauseMenu||startScreen)return;
    float mx=joyX,my=joyY,length=(float)Math.hypot(mx,my);
