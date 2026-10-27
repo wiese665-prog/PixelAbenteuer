@@ -1216,13 +1216,18 @@ public class MainActivity extends Activity {
    boolean moving=action.equals("walk")||action.equals("run");
    int row=fighting?(action.equals("attack")?(attackSequence%2)*4+facing:action.equals("hurt")?facing:4+facing):(moving?4+facing:facing);
    int col=fighting?Math.min(3,Math.max(0,(int)(time*10))):(moving?(action.equals("run")?((int)(elapsed*12)%6):(int)(elapsed*8)%6):0);
+   // In the creator the weapon belongs behind the gripping hand, not over the fingers.
+   if(creatorOpen){
+    String previewWeapon=combatStyle==1?"ax01":combatStyle==2?"mc01":"sw01";
+    characterLayer("pONE2","6tla",previewWeapon,1,facing,0,x-4f,y+8f,w,h);
+   }
    characterLayer(page,"0bas","humn",skinColor,row,col,x,y,w,h);
    characterLayer(page,"1out",armorStyle==2||equipped.containsKey("Brust")?"fstr":armorStyle==1?(characterGender==0?"boxr":"undi"):"pfpn",1,row,col,x,y,w,h);
    characterLayer(page,"4har",hairType==0?"bob1":"dap1",hairColor,row,col,x,y,w,h);
    if(equipped.containsKey("Kopf"))characterLayer(page,"5hat","pfht",1,row,col,x,y,w,h);
    if(creatorOpen||fighting){
     String weapon=combatStyle==1?"ax01":combatStyle==2?"mc01":"sw01";
-    characterLayer(fighting?"pONE3":"pONE2","6tla",weapon,1,fighting?row:facing,fighting?col:0,x+(creatorOpen?-4f:0f),y+(creatorOpen?8f:0f),w,h);
+    if(!creatorOpen)characterLayer("pONE3","6tla",weapon,1,row,col,x,y,w,h);
     if(creatorOpen||equipped.containsKey("Schild"))characterLayer(fighting?"pONE3":"pONE2","7tlb",equipped.getOrDefault("Schild","").contains("Iron")?"sh03":"sh01",1,fighting?row:facing,fighting?col:0,x,y,w,h);
    }
   }
