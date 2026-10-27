@@ -990,42 +990,70 @@ public class MainActivity extends Activity {
    }catch(Exception ex){pickupNotice="Laden fehlgeschlagen";noticeTime=3f;}
   }
   void drawCreator(float vw,float vh){
-   drawRect(col("#101820"),0,0,vw,vh);
+   drawRect(col("#0b1419"),0,0,vw,vh);
    float left=vw/2-285,top=vh/2-205;
    panel(left,top,570,410);
-   paint.setTextAlign(Paint.Align.CENTER);paint.setTypeface(Typeface.DEFAULT_BOLD);
-   paint.setColor(col("#f2cf8b"));paint.setTextSize(25);canvas.drawText("CHARAKTER ERSTELLEN",vw/2,top+37,paint);
-   drawRect(col("#29463e"),left+22,top+62,205,285);
+   // Gilded frame, corner ornaments and a restrained fantasy serif heading.
+   drawRect(col("#8b6a39"),left+9,top+9,552,2);
+   drawRect(col("#8b6a39"),left+9,top+399,552,2);
+   drawRect(col("#8b6a39"),left+9,top+9,2,392);
+   drawRect(col("#8b6a39"),left+559,top+9,2,392);
+   for(int i=0;i<4;i++){
+    float cx=left+(i%2==0?17:553),cy=top+(i<2?17:393);
+    paint.setColor(col("#e6bc70"));canvas.drawCircle(cx,cy,5,paint);
+    paint.setColor(col("#483a28"));canvas.drawCircle(cx,cy,2,paint);
+   }
+   paint.setTextAlign(Paint.Align.CENTER);
+   paint.setTypeface(Typeface.create("serif",Typeface.BOLD_ITALIC));
+   paint.setColor(col("#f5d795"));paint.setTextSize(25);
+   canvas.drawText("Charaktererschaffung",vw/2,top+39,paint);
+   paint.setTypeface(Typeface.DEFAULT);
+   drawRect(col("#b59a68"),left+22,top+55,205,291);
+   drawRect(col("#152d2b"),left+25,top+58,199,285);
+   drawRect(col("#2c4b43"),left+31,top+64,187,271);
    drawCharacter(left+124,top+202,205,205,0,"idle",elapsed);
-   paint.setTextSize(12);paint.setColor(col("#b9d5ca"));canvas.drawText("VORSCHAU",left+124,top+330,paint);
-   paint.setTextSize(13);canvas.drawText("NAME (ANTIPPEN)",left+390,top+68,paint);
-   drawRect(col("#304d50"),left+248,top+73,292,31);paint.setColor(Color.WHITE);canvas.drawText(characterName,left+394,top+94,paint);
+   paint.setColor(col("#f0d6a0"));paint.setTextSize(12);
+   canvas.drawText("CHARAKTERVORSCHAU",left+124,top+332,paint);
+   paint.setColor(col("#c7a977"));canvas.drawText("✦",left+124,top+78,paint);
+   paint.setTextSize(11);paint.setColor(col("#e6c993"));paint.setTypeface(Typeface.DEFAULT_BOLD);
+   canvas.drawText("CHARAKTERNAME",left+394,top+65,paint);
+   drawRect(col("#a88a57"),left+247,top+71,294,33);
+   drawRect(col("#1a3033"),left+249,top+73,290,29);
+   paint.setColor(Color.WHITE);paint.setTextSize(15);
+   canvas.drawText(characterName,left+394,top+94,paint);
    String[] names={"GESCHLECHT","FRISUR","HAUTFARBE","HAARFARBE","KAMPFSTIL","KLEIDUNG"};
    String[] values={characterGender==0?"Maennlich":"Weiblich",hairType==0?"Bob":"Kurzhaar","Variante "+skinColor,"Farbe "+hairColor,new String[]{"Schwert + Schild","Axt + Schild","Streitkolben + Schild"}[combatStyle],new String[]{"Reisekleidung","Nackt","Kampfkleidung"}[armorStyle]};
    for(int i=0;i<6;i++){
     float yy=top+116+i*39;
-    paint.setTextSize(11);paint.setColor(col("#b9d5ca"));canvas.drawText(names[i],left+394,yy-5,paint);
-    drawRect(col("#304d50"),left+248,yy+1,292,26);
-    paint.setTextSize(17);paint.setColor(Color.WHITE);
-    canvas.drawText("<",left+268,yy+21,paint);canvas.drawText(">",left+522,yy+21,paint);
-    paint.setTextSize(13);canvas.drawText(values[i],left+394,yy+20,paint);
+    paint.setTextSize(11);paint.setTypeface(Typeface.DEFAULT_BOLD);
+    paint.setColor(col("#e6c993"));canvas.drawText(names[i],left+394,yy-5,paint);
+    drawRect(col("#96794c"),left+247,yy,294,29);
+    drawRect(col("#20383a"),left+249,yy+2,290,25);
+    drawRect(col("#35524c"),left+251,yy+3,286,2);
+    paint.setTextSize(17);paint.setColor(col("#f3d48c"));
+    canvas.drawText("‹",left+268,yy+21,paint);canvas.drawText("›",left+522,yy+21,paint);
+    paint.setTypeface(Typeface.DEFAULT);paint.setTextSize(13);paint.setColor(Color.WHITE);
+    canvas.drawText(values[i],left+394,yy+20,paint);
    }
-   drawRect(col("#a0783c"),left+246,top+353,296,43);
-   paint.setColor(Color.WHITE);paint.setTextSize(18);canvas.drawText("ABENTEUER BEGINNEN",left+394,top+381,paint);
+   drawRect(col("#d1a75d"),left+246,top+352,296,45);
+   drawRect(col("#76552e"),left+249,top+355,290,39);
+   paint.setTypeface(Typeface.create("serif",Typeface.BOLD));
+   paint.setColor(col("#fff0c9"));paint.setTextSize(19);
+   canvas.drawText("Abenteuer beginnen",left+394,top+381,paint);
    paint.setTextAlign(Paint.Align.LEFT);paint.setTypeface(Typeface.DEFAULT);
   }
   void creatorClick(float x,float y,float vw,float vh){
    float left=vw/2-285,top=vh/2-205;
-   if(x>=left+246&&x<=left+542&&y>=top+353&&y<=top+396){
+   if(x>=left+246&&x<=left+542&&y>=top+352&&y<=top+397){
     creatorOpen=false;startScreen=false;pauseMenu=false;previous=System.nanoTime();return;
    }
-   if(x>=left+248&&x<=left+540&&y>=top+73&&y<=top+104){
+   if(x>=left+248&&x<=left+540&&y>=top+71&&y<=top+104){
     final android.widget.EditText edit=new android.widget.EditText(getContext());edit.setSingleLine(true);edit.setText(characterName);
     new android.app.AlertDialog.Builder(getContext()).setTitle("Charaktername").setView(edit).setPositiveButton("Uebernehmen",(d,w)->{String n=edit.getText().toString().trim();if(!n.isEmpty())characterName=n.length()>18?n.substring(0,18):n;}).setNegativeButton("Abbrechen",null).show();return;
    }
    if(x<left+248||x>left+540)return;
-   int index=(int)((y-(top+117))/39);
-   if(index<0||index>5||y>top+117+index*39+26)return;
+   int index=(int)((y-(top+116))/39);
+   if(index<0||index>5||y>top+116+index*39+29)return;
    int delta=x<left+390?-1:1;
    switch(index){
     case 0:characterGender=Math.floorMod(characterGender+delta,2);break;
@@ -1175,7 +1203,7 @@ public class MainActivity extends Activity {
    if(equipped.containsKey("Kopf"))characterLayer(page,"5hat","pfht",1,row,col,x,y,w,h);
    if(creatorOpen||fighting){
     String weapon=combatStyle==1?"ax01":combatStyle==2?"mc01":"sw01";
-    characterLayer(fighting?"pONE3":"pONE2","6tla",weapon,1,fighting?row:facing,fighting?col:0,x,y,w,h);
+    characterLayer(fighting?"pONE3":"pONE2","6tla",weapon,1,fighting?row:facing,fighting?col:0,x+(creatorOpen?3f:0f),y+(creatorOpen?4f:0f),w,h);
     if(creatorOpen||equipped.containsKey("Schild"))characterLayer(fighting?"pONE3":"pONE2","7tlb",equipped.getOrDefault("Schild","").contains("Iron")?"sh03":"sh01",1,fighting?row:facing,fighting?col:0,x,y,w,h);
    }
   }
