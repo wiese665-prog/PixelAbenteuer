@@ -1152,14 +1152,14 @@ public class MainActivity extends Activity {
   void drawCharacter(float x,float y,float w,float h,int dir,String action,float time){
    boolean fighting=action.equals("attack")||action.equals("hurt")||action.equals("death");
    String page=fighting?"pONE3":"p1";
-   // Mana Seed p1: rows 0-3 = stand/push/pull/jump; rows 4-7 = walk/run.
+   // Mana Seed p1: rows 0-3 = stand/push/pull/jump; rows 4-7 = walk.\n   // Sprint uses walk frames 3 and 6 (zero-based columns 2 and 5), not columns 6/7.
    // Each group contains the four facing directions; never use push frames for walking.
    // Sprite-sheet direction order differs from the game's front/back/left/right order.
    // Mana Seed: row 0 front, row 1 back, row 2 right, row 3 left.
    int facing=dir==0?0:dir==1?1:dir==2?3:2;
    boolean moving=action.equals("walk")||action.equals("run");
    int row=fighting?(action.equals("attack")?(attackSequence%2)*4+facing:action.equals("hurt")?facing:4+facing):(moving?4+facing:facing);
-   int col=fighting?Math.min(3,Math.max(0,(int)(time*10))):(moving?(action.equals("run")?6+((int)(elapsed*10)%2):(int)(elapsed*8)%6):0);
+   int col=fighting?Math.min(3,Math.max(0,(int)(time*10))):(moving?(action.equals("run")?(((int)(elapsed*9)%2)==0?2:5):(int)(elapsed*8)%6):0);
    characterLayer(page,"0bas","humn",skinColor,row,col,x,y,w,h);
    characterLayer(page,"1out",equipped.containsKey("Brust")?"fstr":"pfpn",1,row,col,x,y,w,h);
    characterLayer(page,"4har",hairType==0?"bob1":"dap1",hairColor,row,col,x,y,w,h);
@@ -1380,7 +1380,7 @@ public class MainActivity extends Activity {
    }
    String playerKind=sword?"player_sword":"player_unarmed";
    String playerAction=hp<=0?"death":hurtAnim>0?"hurt":attackAnim>0&&sword?"attack":Math.abs(joyX)+Math.abs(joyY)>.08f?(sprintHeld?"run":"walk"):"idle";
-   drawSprite(playerKind,playerAction,playerDir,px,py,112,112,hp<=0?deathAnim:attackAnim>0?.4f-attackAnim:elapsed,hp<=0&&deathAnim>.8f);
+   drawSprite(playerKind,playerAction,playerDir,px,py,96,96,hp<=0?deathAnim:attackAnim>0?.4f-attackAnim:elapsed,hp<=0&&deathAnim>.8f);
    if(playerHealthVisible>0)healthBar(px,py-56,52,hp,maxHp);
    damageText(px,py-66,lastPlayerDamage,playerDamageTime);
    Drop nearby=nearestDrop();
