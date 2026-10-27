@@ -346,10 +346,12 @@ public class MainActivity extends Activity {
    // Gray square paving from the dedicated right-hand tile strip of Walls_interior.
    // One shared 16-pixel grid across both sales areas: no independent offsets at the seam.
    // Keep the original source rectangles unchanged; only the tile placement is unified.
-   for(int iy=0;iy<19;iy++)for(int ix=0;ix<40;ix++){
+   // Both floors end on the same bottom edge and share the same tile grid.
+   // Reuse the existing atlas crops unchanged; only repeat counts are adjusted.
+   for(int iy=0;iy<18;iy++)for(int ix=0;ix<40;ix++){
     float gx=l+20+ix*16,gy=t+52+iy*16;
     if(ix<20)tile("Walls_interior",240,128,16,16,gx,gy,16,16);
-    else if(iy<18)tile("Walls_interior",145,21,12,12,gx,gy,16,16);
+    else tile("Walls_interior",145,21,12,12,gx,gy,16,16);
    }
    // Original wall blocks at their native proportions; no stretched long strip.
    for(int ix=0;ix<14;ix++)
