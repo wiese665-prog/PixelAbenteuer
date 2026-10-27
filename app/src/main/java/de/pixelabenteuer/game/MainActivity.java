@@ -700,7 +700,7 @@ public class MainActivity extends Activity {
   void setWealth(int value){value=Math.max(0,value);gold=value/10000;silver=(value/100)%100;copper=value%100;}
   void trade(String name,boolean buy){
    int cost=price(name);
-   if(buy){if(wealth()<cost){pickupNotice="Nicht genug Muenzen";noticeTime=2;return;}
+   if(buy){if(!inventory.containsKey(name)&&inventory.size()>=24){pickupNotice="Inventar voll (24 Plaetze)";noticeTime=2;return;}if(wealth()<cost){pickupNotice="Nicht genug Muenzen";noticeTime=2;return;}
     setWealth(wealth()-cost);inventory.put(name,inventory.getOrDefault(name,0)+1);
     pickupNotice=name+" gekauft";
    }else{if(inventory.getOrDefault(name,0)<1)return;
@@ -887,6 +887,7 @@ public class MainActivity extends Activity {
   void pickup(){
    if(inventoryOpen||shopOpen||pauseMenu||startScreen)return;
    Drop d=nearestDrop();if(d==null)return;
+   if(!inventory.containsKey(d.item)&&inventory.size()>=24){pickupNotice="Inventar voll (24 Plaetze)";noticeTime=2;return;}
    inventory.put(d.item,inventory.containsKey(d.item)?inventory.get(d.item)+1:1);
    pickupNotice="+1 "+d.item;noticeTime=1.8f;drops.remove(d);
   }
@@ -1499,7 +1500,7 @@ public class MainActivity extends Activity {
      }
      vx=m.vx;vy=m.vy;action=Math.abs(vx)+Math.abs(vy)<1?"idle":"walk";
     }
-    if(Math.abs(vx)+Math.abs(vy)>1){m.pathTimer-=dt;float tx=m.hostile()&&distance<285?px:m.x+vx*1.8f,ty=m.hostile()&&distance<285?py:m.y+vy*1.8f;if(m.pathTimer<=0)planMobPath(m,tx,ty);while(m.pathIndex<m.path.size()&&Math.hypot(m.x-m.path.get(m.pathIndex)[0],m.y-m.path.get(m.pathIndex)[1])<10)m.pathIndex++;if(m.pathIndex<m.path.size()){float[] wp=m.path.get(m.pathIndex);float dx=wp[0]-m.x,dy=wp[1]-m.y,len=(float)Math.hypot(dx,dy);if(len>0){float speed=m.hostile()?75f:Math.max(35f,(float)Math.hypot(vx,vy));vx=dx/len*speed;vy=dy/len*speed;}}}
+    if(Math.abs(vx)+Math.abs(vy)>1){m.pathTimer-=dt;float tx=m.hostile()&&distance<285?px:m.x+vx*1.8f,ty=m.hostile()&&distance<285?py:m.y+vy*1.8f;if(m.pathTimer<=0){if(distance<430f)planMobPath(m,tx,ty);else{m.path.clear();m.pathIndex=0;m.pathTimer=1.5f+random.nextFloat();}}while(m.pathIndex<m.path.size()&&Math.hypot(m.x-m.path.get(m.pathIndex)[0],m.y-m.path.get(m.pathIndex)[1])<10)m.pathIndex++;if(m.pathIndex<m.path.size()){float[] wp=m.path.get(m.pathIndex);float dx=wp[0]-m.x,dy=wp[1]-m.y,len=(float)Math.hypot(dx,dy);if(len>0){float speed=m.hostile()?75f:Math.max(35f,(float)Math.hypot(vx,vy));vx=dx/len*speed;vy=dy/len*speed;}}}
      if(safeZone(m.x,m.y)||safeZone(m.x+vx*dt,m.y+vy*dt)){vx=0;vy=0;m.vx=0;m.vy=0;}
     if(Math.abs(vx)+Math.abs(vy)>1){
      float step=dt/3f;
