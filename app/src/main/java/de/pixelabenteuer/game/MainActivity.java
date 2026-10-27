@@ -186,7 +186,7 @@ public class MainActivity extends Activity {
     tile("Walls_interior",193,128,23,42,l+658,t+67+iy*44,22,44);
    }
    // Divider: two original stone piers with a broad passable gap.
-   tile("Walls_interior",49,128,23,42,l+316,t+52,22,161);
+   tile("Walls_interior",49,128,23,42,l+329,t+52,22,161);
    // No lower partition: leave the forge/shop walkway open.
    // Floors meet directly beneath the stone divider; no overlaid floor strip.
    // Forge: show one complete furnace cell, not half an animation sheet.
@@ -214,7 +214,7 @@ public class MainActivity extends Activity {
    
    // Two complete rear display shelves and one dragon picture.
    tile("Interior_objects",13,128,35,63,l+381,t+83,53,80);
-   tile("Interior_objects",113,128,36,63,l+570,t+83,53,80);
+   tile("Interior_objects",113,128,35,63,l+570,t+83,53,80);
    tile("Interior_objects",114,257,59,49,l+451,t+82,106,59);
    // Two separate COMPLETE purple rugs (source x=6..60, y=397..421).
    tile("Interior_objects",70,385,55,40,l+415,t+156,205,72);
@@ -225,11 +225,11 @@ public class MainActivity extends Activity {
    // Mirrored stepped shelf, facing away from its neighboring stepped display.
    canvas.save();
    canvas.scale(-1f,1f,l+101,t+300);
-   tile("Interior_objects",98,70,46,59,l+73,t+266,56,69);
+   tile("Interior_objects",98,70,46,59,l+137,t+266,56,69);
    canvas.restore();
    tile("Interior_objects",70,328,47,55,l+211,t+270,51,58);
    // Additional forge details from distinct atlas cells, not duplicated crates.
-   tile("Interior_objects",8,328,45,56,l+135,t+270,47,58);
+   tile("Interior_objects",8,328,45,56,l+73,t+270,47,58);
    tile("Interior_objects",70,328,47,55,l+271,t+270,47,58);
    // Complete stair-display shelves on the bottom wall, flanking the entry.
    // Door is at interior x=555 (screen x=l+495); keep a clear central aisle.
@@ -707,7 +707,7 @@ public class MainActivity extends Activity {
     float ny=Math.max(205,Math.min(492,py+my*140*dt));
     // Partition occupies x=375..402 in interior player coordinates.
     // The middle opening (y=354..444) is deliberately passable.
-    if(!((nx>=378&&nx<=401)&&(ny<389)))px=nx;
+    if(!((nx>=391&&nx<=414)&&(ny<389)))px=nx;
     py=ny;
     if(py>482&&Math.abs(px-DOOR_IN_X)<38&&my>0)enterOrLeave();
     return;
