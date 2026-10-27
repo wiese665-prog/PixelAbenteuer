@@ -1169,6 +1169,18 @@ public class MainActivity extends Activity {
    int row=fighting?(action.equals("attack")?(attackSequence%2)*4+facing:action.equals("hurt")?facing:4+facing):(moving?4+facing:facing);
    int col=fighting?Math.min(3,Math.max(0,(int)(time*10))):(moving?(action.equals("run")?((int)(elapsed*12)%6):(int)(elapsed*8)%6):0);
    characterLayer(page,"0bas","humn",skinColor,row,col,x,y,w,h);
+   // Eyes are drawn separately because the base sheets have no eye-color variants.
+   // Only the front-facing view shows both eyes; keep them underneath hair and helmets.
+   if(facing==0&&!action.equals("death")){
+    int[] colors={Color.rgb(72,43,29),Color.rgb(54,134,207),Color.rgb(54,145,76)};
+    paint.setColor(colors[Math.floorMod(eyeColor,colors.length)]);
+    paint.setStyle(Paint.Style.FILL);
+    float pixel=w/64f;
+    // Face of the 64px Mana Seed cell, anchored to the same sprite rectangle.
+    float fx=x-w/2f,fy=y-h/2f;
+    canvas.drawRect(fx+30*pixel,fy+25*pixel,fx+31*pixel,fy+26*pixel,paint);
+    canvas.drawRect(fx+34*pixel,fy+25*pixel,fx+35*pixel,fy+26*pixel,paint);
+   }
    characterLayer(page,"1out",armorStyle==2||equipped.containsKey("Brust")?"fstr":armorStyle==1?"boxr":"pfpn",1,row,col,x,y,w,h);
    characterLayer(page,"4har",hairType==0?"bob1":"dap1",hairColor,row,col,x,y,w,h);
    if(equipped.containsKey("Kopf"))characterLayer(page,"5hat","pfht",1,row,col,x,y,w,h);
