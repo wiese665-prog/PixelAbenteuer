@@ -791,6 +791,25 @@ public class MainActivity extends Activity {
    paint.setColor(Color.WHITE);paint.setColorFilter(null);paint.setAlpha(255);paint.setStyle(Paint.Style.FILL);paint.setFilterBitmap(false);
    canvas.drawBitmap(b,new Rect(frame*frameWidth,0,(frame+1)*frameWidth,b.getHeight()),new RectF(x-w/2,y-h/2,x+w/2,y+h/2),paint);
   }
+  boolean interiorObstacle(float x,float y){
+   // Coordinates are interior-world coordinates; player center uses a small footprint.
+   float[][] solids={
+    {135,249,249,336},  // forge
+    {441,255,494,337},  // upper-left shop shelf
+    {630,255,683,337},  // upper-right shop shelf
+    {458,349,718,389},  // counter
+    {78,438,134,509},   // left wall stair shelf
+    {344,438,400,509},  // center left stair shelf
+    {400,438,456,509},  // center right stair shelf
+    {656,438,712,509}   // right wall stair shelf
+   };
+   final float margin=9f;
+   for(float[] box:solids)
+    if(x>box[0]-margin&&x<box[2]+margin&&y>box[1]-margin&&y<box[3]+margin)return true;
+   // Upper stone partition; lower passage remains open.
+   if(x>389&&x<420&&y<389)return true;
+   return false;
+  }
   void update(float dt){
    if(!startScreen&&!pauseMenu&&!inventoryOpen&&!shopOpen){
     worldTime+=dt;
@@ -810,8 +829,8 @@ public class MainActivity extends Activity {
     float ny=Math.max(205,Math.min(492,py+my*140*dt));
     // Partition occupies x=375..402 in interior player coordinates.
     // The middle opening (y=354..444) is deliberately passable.
-    if(!((nx>=391&&nx<=414)&&(ny<389)))px=nx;
-    py=ny;
+    if(!interiorObstacle(nx,py))px=nx;
+    if(!interiorObstacle(px,ny))py=ny;
     if(py>482&&Math.abs(px-DOOR_IN_X)<38&&my>0)enterOrLeave();
     return;
    }
