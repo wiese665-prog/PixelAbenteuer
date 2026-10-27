@@ -1152,7 +1152,8 @@ public class MainActivity extends Activity {
   void drawCharacter(float x,float y,float w,float h,int dir,String action,float time){
    boolean fighting=action.equals("attack")||action.equals("hurt")||action.equals("death");
    String page=fighting?"pONE3":"p1";
-   // Mana Seed p1: rows 0-3 = stand/push/pull/jump; rows 4-7 = walk.\n   // Sprint uses walk frames 3 and 6 (zero-based columns 2 and 5), not columns 6/7.
+   // Mana Seed p1: rows 0-3 = stand/push/pull/jump; rows 4-7 = walk.
+   // Sprint uses walk frames 3 and 6 (zero-based columns 2 and 5), not columns 6/7.
    // Each group contains the four facing directions; never use push frames for walking.
    // Sprite-sheet direction order differs from the game's front/back/left/right order.
    // Mana Seed: row 0 front, row 1 back, row 2 right, row 3 left.
@@ -1164,10 +1165,10 @@ public class MainActivity extends Activity {
    characterLayer(page,"1out",equipped.containsKey("Brust")?"fstr":"pfpn",1,row,col,x,y,w,h);
    characterLayer(page,"4har",hairType==0?"bob1":"dap1",hairColor,row,col,x,y,w,h);
    if(equipped.containsKey("Kopf"))characterLayer(page,"5hat","pfht",1,row,col,x,y,w,h);
-   if(creatorOpen||fighting||sword||equipped.containsKey("Waffe")){
+   if(creatorOpen||fighting){
     String weapon=combatStyle==1?"ax01":combatStyle==2?"mc01":"sw01";
-    characterLayer("pONE"+(fighting?"3":"2"),"6tla",weapon,1,row,col,x,y,w,h);
-    if(creatorOpen||equipped.containsKey("Schild"))characterLayer("pONE"+(fighting?"3":"2"),"7tlb",equipped.getOrDefault("Schild","").contains("Iron")?"sh03":"sh01",1,row,col,x,y,w,h);
+    characterLayer(fighting?"pONE3":"pONE2","6tla",weapon,1,row,col,x,y,w,h);
+    if(creatorOpen||equipped.containsKey("Schild"))characterLayer(fighting?"pONE3":"pONE2","7tlb",equipped.getOrDefault("Schild","").contains("Iron")?"sh03":"sh01",1,row,col,x,y,w,h);
    }
   }
   void drawSprite(String kind,String action,int dir,float x,float y,float w,float h,float time,boolean freeze){
@@ -1223,7 +1224,7 @@ public class MainActivity extends Activity {
    updateMusic(dt);
    adventurerSpeechTime=Math.max(0,adventurerSpeechTime-dt);
    elapsed+=dt;noticeTime=Math.max(0,noticeTime-dt);swordTimer=Math.max(0,swordTimer-dt);sword=swordTimer>0;attackCooldown=Math.max(0,attackCooldown-dt);attackAnim=Math.max(0,attackAnim-dt);hurtAnim=Math.max(0,hurtAnim-dt);playerHealthVisible=Math.max(0,playerHealthVisible-dt);playerDamageTime=Math.max(0,playerDamageTime-dt);
-   if(hp<=0){deathAnim+=dt;return;}if(inventoryOpen||shopOpen||pauseMenu||startScreen)return;
+   if(hp<=0){deathAnim+=dt;return;}if(inventoryOpen||shopOpen||pauseMenu||startScreen||creatorOpen)return;
    float mx=joyX,my=joyY,length=(float)Math.hypot(mx,my);
    if(length>1){mx/=length;my/=length;}
    if(indoors){
