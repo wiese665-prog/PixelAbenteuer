@@ -22,7 +22,7 @@ public class MainActivity extends Activity {
  @Override protected void onDestroy(){if(gameView!=null)gameView.releaseMusic();super.onDestroy();}
  Game gameView;
  class Mob {
-  String kind,action="idle";float x,y,vx,vy,anim=0,decision=0,attackTimer=0,hurtTimer=0,deathTimer=0,healthVisible=0;int hp,maxHp,level,damage,dir=0;boolean dead=false;float damageNumberTime=0;int lastDamage=0;
+  String kind,action="idle";float x,y,vx,vy,anim=0,decision=0,attackTimer=0,hurtTimer=0,deathTimer=0,healthVisible=0;int hp,maxHp,level,damage,dir=0;boolean dead=false;float pathTimer=0;int pathIndex=0;java.util.ArrayList<float[]> path=new java.util.ArrayList<>();float damageNumberTime=0;int lastDamage=0;
   Mob(String k,float xx,float yy) {kind=k;x=xx;y=yy;level=1+(int)(Math.random()*(k.startsWith("orc")?6:4));int baseHp=k.equals("orc3")?12:k.equals("orc2")?9:k.equals("orc1")?7:k.equals("boar")?8:k.equals("deer")?5:k.equals("fox")?4:2;maxHp=baseHp+(level-1)*(k.equals("boar")||k.startsWith("orc")?3:2);hp=maxHp;damage=(k.equals("orc3")?3:k.equals("orc2")?2:k.equals("orc1")?1:0)+(level-1)/3;}
   boolean hostile(){return kind.startsWith("orc");}
  }
@@ -1236,7 +1236,7 @@ public class MainActivity extends Activity {
    for(int i=0;i<hotbar.length;i++){
     float x=start+i*step,y=vh-43;
     drawRect(inventoryOpen&&selectedHotbar==i?col("#f0ca78"):col("#141c23"),x-2,y-2,slotSize+4,slotSize+4);
-    drawRect(col("#4d5b62"),x,y,slotSize,slotSize);
+    drawRect(col("#a88751"),x,y,slotSize,slotSize);drawRect(col("#203638"),x+3,y+3,slotSize-6,slotSize-6);drawRect(col("#36534d"),x+4,y+4,slotSize-8,3);
     if(hotbar[i]!=null)itemIcon(hotbar[i],x+4,y+1,.95f);
     paint.setColor(Color.WHITE);paint.setTextSize(10);canvas.drawText(""+(i+1),x+2,y+32,paint);
     if(hotbar[i]!=null){paint.setTextSize(9);canvas.drawText(""+inventory.getOrDefault(hotbar[i],0),x+23,y+32,paint);}
@@ -1497,20 +1497,49 @@ public class MainActivity extends Activity {
      }
      vx=m.vx;vy=m.vy;action=Math.abs(vx)+Math.abs(vy)<1?"idle":"walk";
     }
-    if(safeZone(m.x,m.y)||safeZone(m.x+vx*dt,m.y+vy*dt)){vx=0;vy=0;m.vx=0;m.vy=0;}
+    if(Math.abs(vx)+Math.abs(vy)>1){m.pathTimer-=dt;float tx=m.hostile()&&distance<285?px:m.x+vx*1.8f,ty=m.hostile()&&distance<285?py:m.y+vy*1.8f;if(m.pathTimer<=0)planMobPath(m,tx,ty);while(m.pathIndex<m.path.size()&&Math.hypot(m.x-m.path.get(m.pathIndex)[0],m.y-m.path.get(m.pathIndex)[1])<10)m.pathIndex++;if(m.pathIndex<m.path.size()){float[] wp=m.path.get(m.pathIndex);float dx=wp[0]-m.x,dy=wp[1]-m.y,len=(float)Math.hypot(dx,dy);if(len>0){float speed=m.hostile()?75f:Math.max(35f,(float)Math.hypot(vx,vy));vx=dx/len*speed;vy=dy/len*speed;}}}
+     if(safeZone(m.x,m.y)||safeZone(m.x+vx*dt,m.y+vy*dt)){vx=0;vy=0;m.vx=0;m.vy=0;}
     if(Math.abs(vx)+Math.abs(vy)>1){
      float step=dt/3f;
      for(int sub=0;sub<3;sub++){
       float nx=m.x+vx*step,ny=m.y+vy*step;
-      if(!blocked(nx,m.y)&&(!m.hostile()||!safeZone(nx,m.y)))m.x=nx;else m.decision=0;
-      if(!blocked(m.x,ny)&&(!m.hostile()||!safeZone(m.x,ny)))m.y=ny;else m.decision=0;
+      if(!blocked(nx,m.y)&&(!m.hostile()||!safeZone(nx,m.y)))m.x=nx;else {m.decision=0;m.pathTimer=0;}
+      if(!blocked(m.x,ny)&&(!m.hostile()||!safeZone(m.x,ny)))m.y=ny;else {m.decision=0;m.pathTimer=0;}
      }
      m.dir=direction(vx,vy);
     }
     if(!m.action.equals(action)){m.action=action;m.anim=0;}
    }
   }
-  int direction(float vx,float vy){return Math.abs(vx)>Math.abs(vy)?(vx<0?2:3):(vy<0?1:0);}
+  void planMobPath(Mob m,float tx,float ty){
+    final int cell=24,cols=(WORLD_W+cell-1)/cell,rows=(WORLD_H+cell-1)/cell,total=cols*rows;
+    int sx=Math.max(0,Math.min(cols-1,(int)(m.x/cell))),sy=Math.max(0,Math.min(rows-1,(int)(m.y/cell)));
+    int gx=Math.max(0,Math.min(cols-1,(int)(tx/cell))),gy=Math.max(0,Math.min(rows-1,(int)(ty/cell)));
+    int start=sy*cols+sx,goal=gy*cols+gx;
+    float[] cost=new float[total];java.util.Arrays.fill(cost,Float.POSITIVE_INFINITY);
+    int[] parent=new int[total];java.util.Arrays.fill(parent,-1);
+    boolean[] closed=new boolean[total];java.util.PriorityQueue<int[]> open=new java.util.PriorityQueue<>((a,b)->Integer.compare(a[1],b[1]));
+    cost[start]=0;open.add(new int[]{start,0});int reached=start,best=Math.abs(sx-gx)+Math.abs(sy-gy),expanded=0;
+    int[] ox={1,-1,0,0,1,1,-1,-1},oy={0,0,1,-1,1,-1,1,-1};
+    while(!open.isEmpty()&&expanded++<1400){
+     int node=open.poll()[0];if(closed[node])continue;closed[node]=true;
+     int cx=node%cols,cy=node/cols,dist=Math.abs(cx-gx)+Math.abs(cy-gy);
+     if(dist<best){best=dist;reached=node;}if(node==goal){reached=node;break;}
+     for(int d=0;d<8;d++){
+      int nx=cx+ox[d],ny=cy+oy[d];if(nx<0||ny<0||nx>=cols||ny>=rows)continue;
+      float wx=nx*cell+cell/2f,wy=ny*cell+cell/2f;
+      if(blocked(wx,wy)||(m.hostile()&&safeZone(wx,wy)))continue;
+      if(d>=4&&(blocked((cx+ox[d])*cell+cell/2f,cy*cell+cell/2f)||blocked(cx*cell+cell/2f,(cy+oy[d])*cell+cell/2f)))continue;
+      int next=ny*cols+nx;float ng=cost[node]+(d>=4?1.4142f:1f);
+      if(ng>=cost[next])continue;cost[next]=ng;parent[next]=node;
+      open.add(new int[]{next,(int)(ng*10+10*Math.hypot(nx-gx,ny-gy))});
+     }
+    }
+    java.util.ArrayList<float[]> route=new java.util.ArrayList<>();int n=reached;
+    while(n!=start&&n>=0&&route.size()<100){route.add(0,new float[]{(n%cols)*cell+cell/2f,(n/cols)*cell+cell/2f});n=parent[n];}
+    m.path=route;m.pathIndex=0;m.pathTimer=.7f+random.nextFloat()*.4f;
+   }
+   int direction(float vx,float vy){return Math.abs(vx)>Math.abs(vy)?(vx<0?2:3):(vy<0?1:0);}
   void attack(){
    if(hp<=0||attackCooldown>0||inventoryOpen||shopOpen||pauseMenu||startScreen||creatorOpen||indoors)return;
    attackCooldown=.42f;attackAnim=.4f;attackSequence++;swordTimer=3f;sword=true;
@@ -1645,6 +1674,7 @@ public class MainActivity extends Activity {
     float sc=Math.min(getWidth()/800f,getHeight()/450f);showGearTooltip(e.getX()/sc,e.getY()/sc,getWidth()/sc,getHeight()/sc);invalidate();return true;
    }
    if(shopOpen&&(e.getActionMasked()==MotionEvent.ACTION_BUTTON_PRESS||e.getActionMasked()==MotionEvent.ACTION_DOWN)&&(e.getActionButton()==MotionEvent.BUTTON_SECONDARY||(e.getButtonState()&MotionEvent.BUTTON_SECONDARY)!=0)){float sc=Math.min(getWidth()/800f,getHeight()/450f);showShopTooltip(e.getX()/sc,e.getY()/sc,getWidth()/sc,getHeight()/sc);return true;}
+   if((inventoryOpen||shopOpen)&&e.getActionMasked()==MotionEvent.ACTION_BUTTON_PRESS&&e.getActionButton()==MotionEvent.BUTTON_TERTIARY){float sc=Math.min(getWidth()/800f,getHeight()/450f);if(shopOpen)showShopTooltip(e.getX()/sc,e.getY()/sc,getWidth()/sc,getHeight()/sc);else showGearTooltip(e.getX()/sc,e.getY()/sc,getWidth()/sc,getHeight()/sc);return true;}
    if(inventoryOpen){updateInventoryHover(e);return true;}
    if((e.getSource()&InputDevice.SOURCE_MOUSE)==InputDevice.SOURCE_MOUSE&&e.getActionMasked()==MotionEvent.ACTION_BUTTON_PRESS
       &&e.getActionButton()==MotionEvent.BUTTON_PRIMARY){attack();return true;}
@@ -1663,6 +1693,7 @@ public class MainActivity extends Activity {
     float sc=Math.min(getWidth()/800f,getHeight()/450f);showGearTooltip(e.getX()/sc,e.getY()/sc,getWidth()/sc,getHeight()/sc);return true;
    }
    if(shopOpen&&(type==MotionEvent.ACTION_DOWN||type==MotionEvent.ACTION_BUTTON_PRESS)&&((e.getButtonState()&MotionEvent.BUTTON_SECONDARY)!=0||e.getActionButton()==MotionEvent.BUTTON_SECONDARY)){float sc=Math.min(getWidth()/800f,getHeight()/450f);showShopTooltip(e.getX()/sc,e.getY()/sc,getWidth()/sc,getHeight()/sc);return true;}
+   if(type==MotionEvent.ACTION_DOWN&&(inventoryOpen||shopOpen)&&(e.isShiftPressed()||e.isCtrlPressed())){float sc=Math.min(getWidth()/800f,getHeight()/450f);float xx=e.getX()/sc,yy=e.getY()/sc,vw=getWidth()/sc,vh=getHeight()/sc;if(shopOpen)showShopTooltip(xx,yy,vw,vh);else showGearTooltip(xx,yy,vw,vh);return true;}
    if(type==MotionEvent.ACTION_DOWN){
     if(creatorOpen){float sc=Math.min(getWidth()/800f,getHeight()/450f);creatorClick(e.getX()/sc,e.getY()/sc,getWidth()/sc,getHeight()/sc);return true;}
     if(startScreen||pauseMenu){float sc=Math.min(getWidth()/800f,getHeight()/450f),xx=e.getX()/sc,yy=e.getY()/sc,vw=getWidth()/sc,vh=getHeight()/sc;if(controlsOpen){controlsBackClick(xx,yy,vw,vh);}else menuClick(xx,yy,vw,vh);return true;}
