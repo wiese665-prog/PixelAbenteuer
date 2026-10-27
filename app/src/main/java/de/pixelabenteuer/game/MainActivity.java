@@ -957,8 +957,8 @@ public class MainActivity extends Activity {
    for(int i=0;i<Math.min(24,names.length);i++){
     float x=left+329+(i%6)*67,y=top+104+(i/6)*64;
     slotFrame(x,y,56,names[i]);
-    Item item=definitions.get(names[i]);paint.setColor(item!=null&&item.equipment()?rarityColor(item.rarity):col("#d5dad9"));
-    paint.setTextSize(9);String label=names[i].replaceAll(" \\{[0-9]+\\}$","");if(label.length()>10)label=label.substring(0,9)+".";
+    Item item=definitions.get(names[itemIndex]);paint.setColor(item!=null&&item.equipment()?rarityColor(item.rarity):col("#d5dad9"));
+    paint.setTextSize(9);String label=names[itemIndex].replaceAll(" \\{[0-9]+\\}$","");if(label.length()>10)label=label.substring(0,9)+".";
     canvas.drawText(label,x+2,y+49,paint);
     paint.setColor(col("#ffe4a5"));paint.setTextSize(10);canvas.drawText(""+inventory.get(names[i]),x+42,y+12,paint);
    }
@@ -991,7 +991,8 @@ public class MainActivity extends Activity {
    if(item.hp>0){canvas.drawText("Max. HP +"+item.hp,tx+10,statY,paint);statY+=19;}
    if(item.mana>0)canvas.drawText("Mana +"+item.mana,tx+10,statY,paint);
   }
-  void showShopTooltip(float x,float y,float vw,float vh){int idx=shopIndex(x,y,vw,vh,true);String[] names=activeStock();if(idx<0){idx=shopIndex(x,y,vw,vh,false);names=inventoryNames();}if(idx>=0&&idx<names.length){Item item=definitions.get(names[idx]);if(item!=null&&item.equipment()){inspectedGear=item;gearTooltipTime=8f;hoverX=x;hoverY=y;invalidate();}}}
+  void showShopTooltip(float x,float y,float vw,float vh){int idx=shopIndex(x,y,vw,vh,true);String[] names=activeStock();if(idx<0){idx=shopIndex(x,y,vw,vh,false);names=inventoryNames();if(idx>=0)idx+=sellPage*12;}if(idx>=0&&idx<names.length){Item item=definitions.get(names[idx]);if(item!=null&&item.equipment()){inspectedGear=item;gearTooltipTime=8f;hoverX=x;hoverY=y;invalidate();}}}
+  int sellPage=0;
   void drawShop(float vw,float vh){
    float left=vw/2-365,top=vh/2-185;
    panel(left,top,730,370);drawRect(col("#c5a36a"),left+365,top+48,2,302);
@@ -1003,24 +1004,28 @@ public class MainActivity extends Activity {
    }
    paint.setTextSize(12);canvas.drawText("E / I schliessen   |   Klick: Kaufen / Verkaufen",left+302,top+28,paint);
    String[] selling=inventoryNames();
+   int sellPages=Math.max(1,(selling.length+11)/12);sellPage=Math.min(sellPage,sellPages-1);
+   paint.setTextSize(12);paint.setColor(col("#f6dbab"));
+   canvas.drawText("<",left+596,top+72,paint);canvas.drawText((sellPage+1)+"/"+sellPages,left+615,top+72,paint);canvas.drawText(">",left+681,top+72,paint);
    for(int side=0;side<2;side++){
     float sx=left+(side==0?14:374);
     panel(sx,top+49,340,306);
     fantasyHeading(side==0?"Angebot":"Dein Verkauf",sx+13,top+72,16);
     String[] names=side==0?activeStock():selling;
-    for(int i=0;i<Math.min(12,names.length);i++){
+    for(int i=0;i<Math.min(12,side==0?names.length:names.length-sellPage*12);i++){
+     int itemIndex=side==0?i:sellPage*12+i;
      float x=sx+10+(i%3)*106,y=top+87+(i/3)*65;
      drawRect(col("#151d20"),x,y,101,60);
      drawRect(col("#9b7c4c"),x+2,y+2,97,56);
      drawRect(col("#253c3a"),x+4,y+4,93,52);
-     itemIcon(names[i],x+4,y+5,1.45f);
+     itemIcon(names[itemIndex],x+4,y+5,1.45f);
      Item item=definitions.get(names[i]);
      paint.setTextSize(10);paint.setColor(item!=null&&item.equipment()?rarityColor(item.rarity):col("#f1eee1"));
      String label=names[i].replaceAll(" \\{[0-9]+\\}$","");if(label.length()>13)label=label.substring(0,12)+".";
      canvas.drawText(label,x+38,y+20,paint);
-     if(side==1){paint.setColor(col("#ffffff"));paint.setTextSize(11);canvas.drawText("x"+inventory.getOrDefault(names[i],0),x+7,y+17,paint);}
+     if(side==1){paint.setColor(col("#ffffff"));paint.setTextSize(11);canvas.drawText("x"+inventory.getOrDefault(names[itemIndex],0),x+7,y+17,paint);}
      paint.setColor(col("#eac582"));paint.setTextSize(11);
-     canvas.drawText((side==0?price(names[i]):Math.max(1,price(names[i])/2))+" Kupfer",x+38,y+40,paint);
+     canvas.drawText((side==0?price(names[itemIndex]:Math.max(1,price(names[i])/2))+" Kupfer",x+38,y+40,paint);
     }
    }
    if(inspectedGear!=null&&gearTooltipTime>0f)drawGearTooltip(inspectedGear,hoverX,hoverY,vw,vh);
@@ -1726,9 +1731,11 @@ public class MainActivity extends Activity {
     if(startScreen||pauseMenu){float sc=Math.min(getWidth()/800f,getHeight()/450f),xx=e.getX()/sc,yy=e.getY()/sc,vw=getWidth()/sc,vh=getHeight()/sc;if(controlsOpen){controlsBackClick(xx,yy,vw,vh);}else menuClick(xx,yy,vw,vh);return true;}
     if(shopOpen){
      float sc=Math.min(getWidth()/800f,getHeight()/450f),xx=e.getX()/sc,yy=e.getY()/sc,vw=getWidth()/sc,vh=getHeight()/sc;
+     float shopLeft=vw/2-365,shopTop=vh/2-185;
+     if(yy>=shopTop+51&&yy<=shopTop+82){int pages=Math.max(1,(inventory.size()+11)/12);if(xx>=shopLeft+585&&xx<=shopLeft+613){sellPage=Math.max(0,sellPage-1);return true;}if(xx>=shopLeft+670&&xx<=shopLeft+709){sellPage=Math.min(pages-1,sellPage+1);return true;}}
      int idx=shopIndex(xx,yy,vw,vh,true);
      if(idx>=0&&idx<Math.min(12,activeStock().length))trade(activeStock()[idx],true);
-     else{idx=shopIndex(xx,yy,vw,vh,false);String[] names=inventoryNames();if(idx>=0&&idx<Math.min(12,names.length))trade(names[idx],false);}
+     else{idx=shopIndex(xx,yy,vw,vh,false);String[] names=inventoryNames();if(idx>=0&&idx<12&&sellPage*12+idx<names.length)trade(names[sellPage*12+idx],false);}
      return true;
     }
     if(inventoryOpen){updateInventoryHover(e);float sc=Math.min(getWidth()/800f,getHeight()/450f),xx=e.getX()/sc,yy=e.getY()/sc,vw=getWidth()/sc,vh=getHeight()/sc;
