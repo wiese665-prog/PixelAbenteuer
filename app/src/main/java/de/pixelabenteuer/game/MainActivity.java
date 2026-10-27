@@ -7,6 +7,7 @@ import android.view.*;
 import android.media.AudioTrack;
 import android.media.AudioManager;
 import android.media.AudioFormat;
+import android.media.SoundPool;
 import java.io.*;
 import java.util.*;
 
@@ -55,6 +56,8 @@ public class MainActivity extends Activity {
   int hp=12,maxHp=12,kills=0,animalKills=0,playerDir=0,playerLevel=1,exp=0,attackPower=3,lastPlayerDamage=0;float playerDamageTime=0;float swordTimer=0;boolean sword=false;
   long previous=System.nanoTime();
   AudioTrack[] musicTracks=new AudioTrack[3];
+  SoundPool hitSounds;
+  int enemyHitSound=0,playerHitSound=0;
   float[] musicVolumes=new float[3];
   float masterMusicVolume=0.7f;
   void setMusicVolume(float value){masterMusicVolume=Math.max(0f,Math.min(1f,value));getContext().getSharedPreferences("pixel_settings",MODE_PRIVATE).edit().putFloat("music_volume",masterMusicVolume).apply();}
@@ -105,6 +108,43 @@ public class MainActivity extends Activity {
   // are not reliably supported at this length on all Android devices.
   volatile boolean musicRunning=false;
   Thread[] musicWriters=new Thread[3];
+  byte[] hitWav(boolean player){
+   int rate=22050,count=player?4200:2800;
+   byte[] out=new byte[44+count*2];
+   java.nio.ByteBuffer buf=java.nio.ByteBuffer.wrap(out).order(java.nio.ByteOrder.LITTLE_ENDIAN);
+   buf.put(new byte[]{'R','I','F','F'});buf.putInt(36+count*2);
+   buf.put(new byte[]{'W','A','V','E','f','m','t',' '});buf.putInt(16);
+   buf.putShort((short)1);buf.putShort((short)1);buf.putInt(rate);
+   buf.putInt(rate*2);buf.putShort((short)2);buf.putShort((short)16);
+   buf.put(new byte[]{'d','a','t','a'});buf.putInt(count*2);
+   for(int i=0;i<count;i++){
+    double t=i/(double)rate,env=Math.exp(-t*(player?19:29));
+    double hz=player?165-95*t:440-310*t;
+    double noise=Math.sin(i*2.39)*Math.sin(i*.83);
+    double sound=player?(Math.sin(2*Math.PI*hz*t)*.6+noise*.35):(Math.sin(2*Math.PI*hz*t)*.65+noise*.28);
+    buf.putShort((short)(Math.max(-1,Math.min(1,sound*env))*24000));
+   }
+   return out;
+  }
+  void initHitSounds(){
+   try{
+    hitSounds=new SoundPool.Builder().setMaxStreams(5)
+      .setAudioAttributes(new android.media.AudioAttributes.Builder()
+       .setUsage(android.media.AudioAttributes.USAGE_GAME)
+       .setContentType(android.media.AudioAttributes.CONTENT_TYPE_SONIFICATION).build()).build();
+    for(int i=0;i<2;i++){
+     byte[] wav=hitWav(i==1);
+     File file=new File(getContext().getCacheDir(),"pixel_hit_"+i+".wav");
+     try(FileOutputStream stream=new FileOutputStream(file)){stream.write(wav);}
+     android.os.ParcelFileDescriptor fd=android.os.ParcelFileDescriptor.open(file,android.os.ParcelFileDescriptor.MODE_READ_ONLY);
+     int id=hitSounds.load(fd.getFileDescriptor(),0,wav.length,1);fd.close();
+     if(i==0)enemyHitSound=id;else playerHitSound=id;
+    }
+   }catch(Exception e){android.util.Log.e("PixelSound","Hit sounds unavailable",e);}
+  }
+  void playHit(boolean player){
+   if(hitSounds!=null&&!musicPaused)hitSounds.play(player?playerHitSound:enemyHitSound,.9f,.9f,1,0,1f);
+  }
   void startMusic(){
    if(musicRunning)return;
    musicRunning=true;
@@ -139,6 +179,7 @@ public class MainActivity extends Activity {
   void pauseMusic(){musicPaused=true;for(AudioTrack track:musicTracks)if(track!=null)try{track.pause();}catch(Exception ignored){}}
   void resumeMusic(){musicPaused=false;for(AudioTrack track:musicTracks)if(track!=null)try{track.play();}catch(Exception ignored){}}
   void releaseMusic(){
+   if(hitSounds!=null){hitSounds.release();hitSounds=null;}
    musicRunning=false;
    for(int i=0;i<musicTracks.length;i++)if(musicTracks[i]!=null){
     try{musicTracks[i].pause();musicTracks[i].flush();musicTracks[i].release();}catch(Exception ignored){}
@@ -159,7 +200,7 @@ public class MainActivity extends Activity {
     }catch(Exception ignored){}
    }
   }
-  Game(){super(MainActivity.this);setFocusable(true);setFocusableInTouchMode(true);paint.setFilterBitmap(false);loadSprites();loadBuildings();loadClouds();loadItems();loadDecorations();spawnMobs();masterMusicVolume=getContext().getSharedPreferences("pixel_settings",MODE_PRIVATE).getFloat("music_volume",0.7f);startMusic();}
+  Game(){super(MainActivity.this);setFocusable(true);setFocusableInTouchMode(true);paint.setFilterBitmap(false);loadSprites();loadBuildings();loadClouds();loadItems();loadDecorations();spawnMobs();masterMusicVolume=getContext().getSharedPreferences("pixel_settings",MODE_PRIVATE).getFloat("music_volume",0.7f);startMusic();initHitSounds();}
   void spawnMobs(){
    String[] animals={"boar","fox","deer","black_grouse"};
    int animalCount=0,orcCount=0;
@@ -1151,7 +1192,7 @@ public class MainActivity extends Activity {
      if(attackingOrcs.contains(m)){
       action="attack";
       int dealt=Math.max(1,m.damage);
-      hp=Math.max(0,hp-Math.max(1,dealt-armorValue()));
+      hp=Math.max(0,hp-Math.max(1,dealt-armorValue()));playHit(true);
       lastPlayerDamage=dealt;playerDamageTime=.9f;hurtAnim=.32f;playerHealthVisible=3f;
       m.attackTimer=1.5f;
      }else if(distance>43){
@@ -1196,7 +1237,7 @@ public class MainActivity extends Activity {
     float dx=m.x-px,dy=m.y-py,d=(float)Math.hypot(dx,dy);
     if(d>64||d<.01f)continue;
     if((dx*fx+dy*fy)/d<-.1f)continue;
-    m.hp-=attackPower;m.lastDamage=attackPower;m.damageNumberTime=.9f;m.hurtTimer=.28f;m.healthVisible=3f;m.anim=0;
+    m.hp-=attackPower;playHit(false);m.lastDamage=attackPower;m.damageNumberTime=.9f;m.hurtTimer=.28f;m.healthVisible=3f;m.anim=0;
     if(m.hp<=0){m.dead=true;m.deathTimer=0;if(m.hostile()){kills++;if(questActive&&questProgress<questGoal())questProgress++;}else animalKills++;earnExp((m.hostile()?8:3)+m.level*2);loot(m);}
    }
   }
