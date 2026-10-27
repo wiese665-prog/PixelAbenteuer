@@ -256,6 +256,14 @@ public class MainActivity extends Activity {
    if(Math.hypot(px-570,py-372)<100)canvas.drawText("E - Handeln",l+510,t+168,paint);
    paint.setTextAlign(Paint.Align.LEFT);
    characterTile("Customer",3,2,0,l+507,t+288,52);
+   paint.setTextAlign(Paint.Align.CENTER);paint.setTypeface(Typeface.DEFAULT_BOLD);
+   paint.setColor(col("#ffe7aa"));paint.setTextSize(13);
+   canvas.drawText("Abenteurer",l+507,t+235,paint);
+   if(Math.hypot(px-567,py-462)<75){
+    paint.setTextSize(11);paint.setColor(Color.WHITE);
+    canvas.drawText("E - Sprechen",l+507,t+250,paint);
+   }
+   paint.setTextAlign(Paint.Align.LEFT);paint.setTypeface(Typeface.DEFAULT);
    float cx=l+340+(px-400),cy=t+176+(py-350);
    drawSprite(sword?"player_sword":"player_unarmed","idle",playerDir,cx,cy,94,94,elapsed,false);
    paint.setColor(col("#fff2d5"));paint.setTextSize(13);
@@ -458,8 +466,14 @@ public class MainActivity extends Activity {
   String[] activeStock(){return activeMerchant==1?smithStock:activeMerchant==2?sellerStock:shopStock;}
   String merchantTitle(){return activeMerchant==1?"SCHMID":activeMerchant==2?"HAENDLERIN":"ORC-HAENDLER";}
   void showMerchant(int merchant){activeMerchant=merchant;shopOpen=true;inventoryOpen=false;hoverSlot=-1;joyX=joyY=0;}
+  void talkAdventurer(){
+   String[] lines={"Bleib wachsam da draussen!","Gute Beute gibt's nicht geschenkt.","Mein Schwert braucht eine Pause.","Hast du schon den Wald erkundet?","Ein Trank kann dein Leben retten."};
+   pickupNotice="Abenteurer: "+lines[random.nextInt(lines.length)];
+   noticeTime=3.5f;
+  }
   boolean openInteriorMerchant(){
    if(!indoors)return false;
+   if(Math.hypot(px-567,py-462)<75){talkAdventurer();return true;}
    if(Math.hypot(px-296,py-349)<100){showMerchant(1);return true;}
    if(Math.hypot(px-570,py-372)<100){showMerchant(2);return true;}
    return false;
