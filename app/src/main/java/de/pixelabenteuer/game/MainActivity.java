@@ -452,7 +452,7 @@ public class MainActivity extends Activity {
    }
    if(Math.hypot(px-622,py-462)<37.5f){
     paint.setTextSize(11);paint.setColor(Color.WHITE);
-    canvas.drawText("E - Sprechen",l+562,t+250,paint);
+    drawInteractionKey(l+562,t+250);
    }
    if(adventurerSpeechTime>0&&!adventurerSpeech.isEmpty()){
     int alpha=(int)(255*Math.min(1f,adventurerSpeechTime/.85f));
@@ -1089,17 +1089,19 @@ public class MainActivity extends Activity {
     paint.setTypeface(Typeface.DEFAULT);paint.setTextSize(13);paint.setColor(Color.WHITE);
     canvas.drawText(values[i],left+449,yy+20,paint);
    }
-   drawRect(col("#d1a75d"),left+246,top+352,296,45);
-   drawRect(col("#76552e"),left+249,top+355,290,39);
+   boolean beginPressed=pressedCreatorButton;float beginOffset=beginPressed?3f:0f;
+   drawRect(col(beginPressed?"#776e61":"#d1a75d"),left+246,top+352+beginOffset,296,45-beginOffset);
+   drawRect(col(beginPressed?"#403d37":"#76552e"),left+249,top+355+beginOffset,290,39-beginOffset);
    paint.setTypeface(Typeface.create("serif",Typeface.BOLD));
-   paint.setColor(col("#fff0c9"));paint.setTextSize(19);
-   canvas.drawText("Abenteuer beginnen",left+394,top+381,paint);
+   paint.setColor(col(beginPressed?"#aca8a0":"#fff0c9"));paint.setTextSize(19);
+   canvas.drawText("Abenteuer beginnen",left+394,top+381+beginOffset,paint);
    paint.setTextAlign(Paint.Align.LEFT);paint.setTypeface(Typeface.DEFAULT);
   }
   void creatorClick(float x,float y,float vw,float vh){
    float left=vw/2-285,top=vh/2-205;
+   if(pressedCreatorButton)return;
    if(x>=left+246&&x<=left+542&&y>=top+352&&y<=top+397){
-    creatorOpen=false;startScreen=false;pauseMenu=false;previous=System.nanoTime();return;
+    pressedCreatorButton=true;pressedCreatorTime=.15f;invalidate();return;
    }
    if(x>=left+248&&x<=left+540&&y>=top+71&&y<=top+104){
     final android.widget.EditText edit=new android.widget.EditText(getContext());edit.setSingleLine(true);edit.setText(characterName);
@@ -1119,6 +1121,8 @@ public class MainActivity extends Activity {
    }
   }
   int pressedMenuButton=-1;float pressedMenuTime=0f;
+  boolean pressedControlsBack=false,pressedCreatorButton=false;
+  float pressedControlsTime=0f,pressedCreatorTime=0f;
   void runMenuButton(int i){
    if(i==4){controlsOpen=true;return;}
    if(i==0){if(startScreen){creatorOpen=true;pauseMenu=false;}else{startScreen=false;pauseMenu=false;previous=System.nanoTime();}}
@@ -1177,10 +1181,11 @@ public class MainActivity extends Activity {
    controlKey("ESC","Pause / Zurueck",left+302,top+204,92);
    paint.setColor(col("#d7c7a8"));paint.setTextSize(13);paint.setTextAlign(Paint.Align.CENTER);
    canvas.drawText("Auf dem Handy: Joystick und Bildschirmtasten verwenden.",vw/2,top+281,paint);
-   drawRect(col("#c49b5d"),left+135,top+325,310,49);
-   drawRect(col("#294540"),left+138,top+328,304,43);
-   paint.setColor(col("#f6e7c6"));paint.setTypeface(Typeface.create("serif",Typeface.BOLD));paint.setTextSize(19);
-   canvas.drawText("ZURUECK ZUM ESC-MENUE",vw/2,top+357,paint);
+   float backOffset=pressedControlsBack?3f:0f;
+   drawRect(col(pressedControlsBack?"#716b60":"#c49b5d"),left+135,top+325+backOffset,310,49-backOffset);
+   drawRect(col(pressedControlsBack?"#29332f":"#294540"),left+138,top+328+backOffset,304,43-backOffset);
+   paint.setColor(col(pressedControlsBack?"#a6a7a1":"#f6e7c6"));paint.setTypeface(Typeface.create("serif",Typeface.BOLD));paint.setTextSize(19);
+   canvas.drawText("ZURUECK ZUM ESC-MENUE",vw/2,top+357+backOffset,paint);
    paint.setTypeface(Typeface.DEFAULT);paint.setTextAlign(Paint.Align.LEFT);
   }
   void menuClick(float x,float y,float vw,float vh){
@@ -1365,6 +1370,8 @@ public class MainActivity extends Activity {
   }
   // Attack animation window; the next group can act immediately afterward.
   void update(float dt){
+   if(pressedControlsBack){pressedControlsTime-=dt;if(pressedControlsTime<=0f){pressedControlsBack=false;controlsOpen=false;}}
+   if(pressedCreatorButton){pressedCreatorTime-=dt;if(pressedCreatorTime<=0f){pressedCreatorButton=false;creatorOpen=false;startScreen=false;pauseMenu=false;previous=System.nanoTime();}}
    gearTooltipTime=Math.max(0f,gearTooltipTime-dt);
    if(!inventoryOpen){inspectedGear=null;gearTooltipTime=0f;}
    if(pressedMenuButton>=0){pressedMenuTime-=dt;if(pressedMenuTime<=0f){int button=pressedMenuButton;pressedMenuButton=-1;runMenuButton(button);}}
@@ -1626,7 +1633,7 @@ public class MainActivity extends Activity {
    }
    if(type==MotionEvent.ACTION_DOWN){
     if(creatorOpen){float sc=Math.min(getWidth()/800f,getHeight()/450f);creatorClick(e.getX()/sc,e.getY()/sc,getWidth()/sc,getHeight()/sc);return true;}
-    if(startScreen||pauseMenu){float sc=Math.min(getWidth()/800f,getHeight()/450f),xx=e.getX()/sc,yy=e.getY()/sc,vw=getWidth()/sc,vh=getHeight()/sc;if(controlsOpen)controlsOpen=false;else menuClick(xx,yy,vw,vh);return true;}
+    if(startScreen||pauseMenu){float sc=Math.min(getWidth()/800f,getHeight()/450f),xx=e.getX()/sc,yy=e.getY()/sc,vw=getWidth()/sc,vh=getHeight()/sc;if(controlsOpen){float left=vw/2-290,top=vh/2-208;if(!pressedControlsBack&&xx>=left+135&&xx<=left+445&&yy>=top+325&&yy<=top+374){pressedControlsBack=true;pressedControlsTime=.15f;invalidate();}}else menuClick(xx,yy,vw,vh);return true;}
     if(shopOpen){
      float sc=Math.min(getWidth()/800f,getHeight()/450f),xx=e.getX()/sc,yy=e.getY()/sc,vw=getWidth()/sc,vh=getHeight()/sc;
      int idx=shopIndex(xx,yy,vw,vh,true);
@@ -1657,7 +1664,7 @@ public class MainActivity extends Activity {
    if(key==KeyEvent.KEYCODE_SHIFT_LEFT||key==KeyEvent.KEYCODE_SHIFT_RIGHT){sprintHeld=true;return true;}
    if(key==KeyEvent.KEYCODE_ESCAPE||key==KeyEvent.KEYCODE_BACK){
     if(creatorOpen)return true;
-    if(controlsOpen){controlsOpen=false;return true;}
+    if(controlsOpen){pressedControlsBack=false;controlsOpen=false;return true;}
     if(startScreen)return true;
     if(shopOpen)shopOpen=false;else if(inventoryOpen){inventoryOpen=false;inspectedGear=null;gearTooltipTime=0f;}else pauseMenu=!pauseMenu;
     joyX=joyY=0;return true;
