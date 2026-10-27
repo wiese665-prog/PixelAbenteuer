@@ -988,7 +988,7 @@ public class MainActivity extends Activity {
    for(Mob m:mobs){
     if(m.dead)continue;
     float dx=m.x-px,dy=m.y-py,d=(float)Math.hypot(dx,dy);
-    if(d>76||d<.01f)continue;
+    if(d>70||d<.01f)continue;
     if((dx*fx+dy*fy)/d<-.1f)continue;
     m.hp-=attackPower;m.lastDamage=attackPower;m.damageNumberTime=.9f;m.hurtTimer=.28f;m.healthVisible=3f;m.anim=0;
     if(m.hp<=0){m.dead=true;m.deathTimer=0;if(m.hostile())kills++;else animalKills++;earnExp((m.hostile()?8:3)+m.level*2);loot(m);}
