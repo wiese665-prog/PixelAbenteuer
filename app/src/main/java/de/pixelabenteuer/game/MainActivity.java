@@ -413,8 +413,8 @@ public class MainActivity extends Activity {
    paint.setTextAlign(Paint.Align.CENTER);
    paint.setTypeface(Typeface.DEFAULT_BOLD);
    paint.setTextSize(13);paint.setColor(col("#ffe7aa"));
-   fantasyName("Schmid",l+236,t+109);
-   fantasyName("Händlerin",l+510,t+153);
+   fantasyName("Schmid",l+246,t+109);
+   fantasyName("Händlerin",l+510,t+159);
    paint.setTypeface(Typeface.DEFAULT);paint.setTextSize(11);
    paint.setColor(col("#ffffff"));
    if(Math.hypot(px-296,py-349)<50)canvas.drawText("E - Handeln",l+236,t+125,paint);
@@ -423,7 +423,7 @@ public class MainActivity extends Activity {
    characterTile("Customer",3,2,0,l+562,t+288,52);
    paint.setTextAlign(Paint.Align.CENTER);paint.setTypeface(Typeface.DEFAULT_BOLD);
    paint.setColor(col("#ffe7aa"));paint.setTextSize(13);
-   fantasyName("Abenteurer",l+562,t+235);
+   fantasyName("Abenteurer",l+562,t+241);
    if(questAvailable()){
     paint.setColor(col("#50ef78"));paint.setTextSize(25);
     outlinedText("?",l+562,t+240);
@@ -1412,7 +1412,7 @@ public class MainActivity extends Activity {
    drawHouse(forgeX,forgeY,true);
    drawSprite("orc2","idle",0,merchantX,merchantY,79,79,elapsed,false);
    paint.setTextAlign(Paint.Align.CENTER);paint.setColor(col("#ffe7aa"));paint.setTextSize(13);
-   fantasyName("Orc-Händler",merchantX,merchantY-45);paint.setTextAlign(Paint.Align.LEFT);
+   fantasyName("Orc-Händler",merchantX,merchantY-39);paint.setTextAlign(Paint.Align.LEFT);
    if(Math.hypot(px-merchantX,py-merchantY)<50&&!shopOpen){paint.setColor(Color.WHITE);paint.setTextSize(12);
     canvas.drawText("E - Handeln",merchantX-37,merchantY-58,paint);}
    for(Drop d:drops){float bob=(float)Math.sin(elapsed*3+d.bob)*2;
