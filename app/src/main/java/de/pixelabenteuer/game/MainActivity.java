@@ -1583,7 +1583,9 @@ public class MainActivity extends Activity {
    fantasyName("Orc-Händler",merchantX,merchantY-39);paint.setTextAlign(Paint.Align.LEFT);
    if(Math.hypot(px-merchantX,py-merchantY)<50&&!shopOpen){paint.setColor(Color.WHITE);paint.setTextSize(12);
     drawInteractionKey(merchantX,merchantY-58);}
-   for(Drop d:drops){float bob=(float)Math.sin(elapsed*3+d.bob)*2;
+   for(Drop d:drops){
+    if(d.x<px-vw/2-35||d.x>px+vw/2+35||d.y<py-vh/2-35||d.y>py+vh/2+35)continue;
+    float bob=(float)Math.sin(elapsed*3+d.bob)*2;
     drawRect(col("#28342b"),d.x-11,d.y+7,22,5);itemIcon(d.item,d.x-10,d.y-15+bob,.82f);
    }
    // Day-night tint on terrain and decorations, behind creatures and UI.
@@ -1593,6 +1595,7 @@ public class MainActivity extends Activity {
    c.drawRect(px-vw/2-8,py-vh/2-8,px+vw/2+8,py+vh/2+8,paint);
    for(Mob m:mobs){
     if(m.dead&&m.deathTimer>2.5f)continue;
+    if(m.x<px-vw/2-90||m.x>px+vw/2+90||m.y<py-vh/2-90||m.y>py+vh/2+90)continue;
     String action=m.dead?"death":m.hurtTimer>0?"hurt":m.action;
     float size=m.hostile()?79:m.kind.equals("boar")?45:m.kind.equals("deer")?43:36;
     drawSprite(m.kind,action,m.dir,m.x,m.y,size,size,m.dead?m.deathTimer:m.anim,m.dead&&m.deathTimer>.7f);
