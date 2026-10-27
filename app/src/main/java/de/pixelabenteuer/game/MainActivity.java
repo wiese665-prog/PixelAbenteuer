@@ -50,8 +50,20 @@ public class MainActivity extends Activity {
   Game(){super(MainActivity.this);setFocusable(true);setFocusableInTouchMode(true);paint.setFilterBitmap(false);loadSprites();loadBuildings();loadClouds();loadItems();loadDecorations();spawnMobs();}
   void spawnMobs(){
    String[] animals={"boar","fox","deer","black_grouse"};
-   for(int i=0;i<28;i++){float x=80+random.nextInt(1440),y=80+random.nextInt(840);if(!blocked(x,y)&&!safeZone(x,y)&&Math.hypot(x-merchantX,y-merchantY)>110)mobs.add(new Mob(animals[i%4],x,y));}
-   for(int i=0;i<18;i++){float x=380+random.nextInt(1100),y=80+random.nextInt(840);if(!blocked(x,y)&&!safeZone(x,y)&&Math.hypot(x-merchantX,y-merchantY)>110)mobs.add(new Mob("orc"+(1+i%3),x,y));}
+   int animalCount=0,orcCount=0;
+   for(Mob mob:mobs)if(!mob.dead){if(mob.kind.startsWith("orc"))orcCount++;else animalCount++;}
+   for(int i=0,attempts=0;i<28-animalCount&&attempts<400;attempts++){
+    float x=80+random.nextInt(1440),y=80+random.nextInt(840);
+    if(!blocked(x,y)&&!safeZone(x,y)&&Math.hypot(x-merchantX,y-merchantY)>110){
+     mobs.add(new Mob(animals[(animalCount+i)%animals.length],x,y));i++;
+    }
+   }
+   for(int i=0,attempts=0;i<18-orcCount&&attempts<300;attempts++){
+    float x=380+random.nextInt(1100),y=80+random.nextInt(840);
+    if(!blocked(x,y)&&!safeZone(x,y)&&Math.hypot(x-merchantX,y-merchantY)>110){
+     mobs.add(new Mob("orc"+(1+(orcCount+i)%3),x,y));i++;
+    }
+   }
   }
   final ArrayList<Bitmap[]>[] cloudAnimations=new ArrayList[]{new ArrayList<Bitmap[]>(),new ArrayList<Bitmap[]>(),new ArrayList<Bitmap[]>()};
   void loadClouds(){
@@ -295,8 +307,9 @@ public class MainActivity extends Activity {
      }
     }
    }catch(Exception ignored){}
-   for(int i=0;i<19;i++){float x=300+(i*251)%1200,y=90+(i*197)%810;Bitmap b=ruins.isEmpty()?null:ruins.get(i%ruins.size());if(Math.hypot(x-forgeX,y-forgeY)<220)continue;decorations.add(new Decoration(b,b,x,y,94,90,true));}
-   for(int i=0;i<85;i++){float x=60+(i*167)%1480,y=65+(i*283)%870;if(Math.hypot(x-180,y-180)<140||Math.hypot(x-forgeX,y-forgeY)<185)continue;Bitmap b=rocks.isEmpty()?null:rocks.get(i%rocks.size());decorations.add(new Decoration(b,rockMasks.isEmpty()?b:rockMasks.get(i%rockMasks.size()),x,y,20+(i%3)*4,19+(i%4)*4,true));}
+   java.util.Random terrainRandom=new java.util.Random(91827L);
+   for(int i=0;i<8;i++){float x=100+terrainRandom.nextInt(1400),y=80+terrainRandom.nextInt(820);Bitmap b=ruins.isEmpty()?null:ruins.get(i%ruins.size());if(Math.hypot(x-forgeX,y-forgeY)<220)continue;decorations.add(new Decoration(b,b,x,y,94,90,true));}
+   for(int i=0;i<85;i++){float x=60+terrainRandom.nextInt(1480),y=65+terrainRandom.nextInt(870);if(Math.hypot(x-180,y-180)<140||Math.hypot(x-forgeX,y-forgeY)<185)continue;Bitmap b=rocks.isEmpty()?null:rocks.get(i%rocks.size());decorations.add(new Decoration(b,rockMasks.isEmpty()?b:rockMasks.get(i%rockMasks.size()),x,y,20+(i%3)*4,19+(i%4)*4,true));}
    for(int i=0;i<70&&!plants.isEmpty();i++){float x=30+(i*131)%1540,y=40+(i*223)%920;if(Math.hypot(x-forgeX,y-forgeY)<185)continue;decorations.add(new Decoration(plants.get(i%plants.size()),plants.get(i%plants.size()),x,y,34+(i%3)*12,40+(i%3)*10,true));}
   }
   // Per-pixel collisions use the very same destination rectangle as rendering.
@@ -818,7 +831,12 @@ public class MainActivity extends Activity {
   }
   void update(float dt){
    if(!startScreen&&!pauseMenu&&!inventoryOpen&&!shopOpen){
+    int previousDay=(int)(worldTime/240f);
     worldTime+=dt;
+    if((int)(worldTime/240f)>previousDay){
+     mobs.removeIf(mob->mob.dead);
+     spawnMobs();
+    }
     stockRefreshTimer+=dt;
     if(stockRefreshTimer>=STOCK_REFRESH_SECONDS){
      stockRefreshTimer-=STOCK_REFRESH_SECONDS;
