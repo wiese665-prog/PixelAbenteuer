@@ -1000,14 +1000,15 @@ public class MainActivity extends Activity {
    paint.setTextSize(12);paint.setColor(col("#b9d5ca"));canvas.drawText("VORSCHAU",left+124,top+330,paint);
    paint.setTextSize(13);canvas.drawText("NAME (ANTIPPEN)",left+390,top+68,paint);
    drawRect(col("#304d50"),left+248,top+73,292,31);paint.setColor(Color.WHITE);canvas.drawText(characterName,left+394,top+94,paint);
-   String[] names={"FRISUR","HAUTFARBE","HAARFARBE","AUGENFARBE","KAMPFSTIL","RUESTUNG"};
-   String[] values={hairType==0?"Bob":"Kurzhaar","Variante "+skinColor,"Farbe "+hairColor, new String[]{"Braun","Blau","Gruen"}[eyeColor],new String[]{"Schwert + Schild","Axt + Schild","Streitkolben + Schild"}[combatStyle],new String[]{"Reisekleidung","Leichte Ruestung","Kampfkleidung"}[armorStyle]};
-   for(int i=0;i<6;i++){
-    float yy=top+107+i*39;paint.setTextSize(12);paint.setColor(col("#b9d5ca"));canvas.drawText(names[i],left+380,yy,paint);
-    drawRect(col("#304d50"),left+248,yy+9,292,32);
-    paint.setTextSize(19);paint.setColor(Color.WHITE);
-    canvas.drawText("<",left+268,yy+31,paint);canvas.drawText(">",left+522,yy+31,paint);
-    paint.setTextSize(14);canvas.drawText(values[i],left+394,yy+30,paint);
+   String[] names={"FRISUR","HAUTFARBE","HAARFARBE","KAMPFSTIL","KLEIDUNG"};
+   String[] values={hairType==0?"Bob":"Kurzhaar","Variante "+skinColor,"Farbe "+hairColor,new String[]{"Schwert + Schild","Axt + Schild","Streitkolben + Schild"}[combatStyle],new String[]{"Reisekleidung","Nackt","Kampfkleidung"}[armorStyle]};
+   for(int i=0;i<5;i++){
+    float yy=top+119+i*45;
+    paint.setTextSize(12);paint.setColor(col("#b9d5ca"));canvas.drawText(names[i],left+394,yy-4,paint);
+    drawRect(col("#304d50"),left+248,yy+1,292,30);
+    paint.setTextSize(18);paint.setColor(Color.WHITE);
+    canvas.drawText("<",left+268,yy+23,paint);canvas.drawText(">",left+522,yy+23,paint);
+    paint.setTextSize(13);canvas.drawText(values[i],left+394,yy+22,paint);
    }
    drawRect(col("#a0783c"),left+246,top+353,296,43);
    paint.setColor(Color.WHITE);paint.setTextSize(18);canvas.drawText("ABENTEUER BEGINNEN",left+394,top+381,paint);
@@ -1023,16 +1024,15 @@ public class MainActivity extends Activity {
     new android.app.AlertDialog.Builder(getContext()).setTitle("Charaktername").setView(edit).setPositiveButton("Uebernehmen",(d,w)->{String n=edit.getText().toString().trim();if(!n.isEmpty())characterName=n.length()>18?n.substring(0,18):n;}).setNegativeButton("Abbrechen",null).show();return;
    }
    if(x<left+248||x>left+540)return;
-   int index=(int)((y-(top+116))/39);
-   if(index<0||index>5||y>top+116+index*39+35)return;
+   int index=(int)((y-(top+120))/45);
+   if(index<0||index>4||y>top+120+index*45+30)return;
    int delta=x<left+390?-1:1;
    switch(index){
     case 0:hairType=Math.floorMod(hairType+delta,2);break;
     case 1:skinColor=Math.floorMod(skinColor+delta,11);break;
     case 2:hairColor=Math.floorMod(hairColor+delta,14);break;
-    case 3:eyeColor=Math.floorMod(eyeColor+delta,3);break;
-    case 4:combatStyle=Math.floorMod(combatStyle+delta,3);break;
-    case 5:armorStyle=Math.floorMod(armorStyle+delta,3);break;
+    case 3:combatStyle=Math.floorMod(combatStyle+delta,3);break;
+    case 4:armorStyle=Math.floorMod(armorStyle+delta,3);break;
    }
   }
   void drawMenu(float vw,float vh){
@@ -1169,19 +1169,7 @@ public class MainActivity extends Activity {
    int row=fighting?(action.equals("attack")?(attackSequence%2)*4+facing:action.equals("hurt")?facing:4+facing):(moving?4+facing:facing);
    int col=fighting?Math.min(3,Math.max(0,(int)(time*10))):(moving?(action.equals("run")?((int)(elapsed*12)%6):(int)(elapsed*8)%6):0);
    characterLayer(page,"0bas","humn",skinColor,row,col,x,y,w,h);
-   // Eyes are drawn separately because the base sheets have no eye-color variants.
-   // Only the front-facing view shows both eyes; keep them underneath hair and helmets.
-   if(facing==0&&!action.equals("death")){
-    int[] colors={Color.rgb(72,43,29),Color.rgb(54,134,207),Color.rgb(54,145,76)};
-    paint.setColor(colors[Math.floorMod(eyeColor,colors.length)]);
-    paint.setStyle(Paint.Style.FILL);
-    float pixel=w/64f;
-    // Face of the 64px Mana Seed cell, anchored to the same sprite rectangle.
-    float fx=x-w/2f,fy=y-h/2f;
-    canvas.drawRect(fx+30*pixel,fy+25*pixel,fx+31*pixel,fy+26*pixel,paint);
-    canvas.drawRect(fx+34*pixel,fy+25*pixel,fx+35*pixel,fy+26*pixel,paint);
-   }
-   characterLayer(page,"1out",armorStyle==2||equipped.containsKey("Brust")?"fstr":armorStyle==1?"boxr":"pfpn",1,row,col,x,y,w,h);
+   characterLayer(page,"1out",armorStyle==2||equipped.containsKey("Brust")?"fstr":armorStyle==1?"undi":"pfpn",1,row,col,x,y,w,h);
    characterLayer(page,"4har",hairType==0?"bob1":"dap1",hairColor,row,col,x,y,w,h);
    if(equipped.containsKey("Kopf"))characterLayer(page,"5hat","pfht",1,row,col,x,y,w,h);
    if(creatorOpen||fighting){
@@ -1400,7 +1388,7 @@ public class MainActivity extends Activity {
    }
    String playerKind=sword?"player_sword":"player_unarmed";
    String playerAction=hp<=0?"death":hurtAnim>0?"hurt":attackAnim>0&&sword?"attack":Math.abs(joyX)+Math.abs(joyY)>.08f?(sprintHeld?"run":"walk"):"idle";
-   drawSprite(playerKind,playerAction,playerDir,px,py,96,96,hp<=0?deathAnim:attackAnim>0?.4f-attackAnim:elapsed,hp<=0&&deathAnim>.8f);
+   drawSprite(playerKind,playerAction,playerDir,px,py,112,112,hp<=0?deathAnim:attackAnim>0?.4f-attackAnim:elapsed,hp<=0&&deathAnim>.8f);
    if(playerHealthVisible>0)healthBar(px,py-56,52,hp,maxHp);
    damageText(px,py-66,lastPlayerDamage,playerDamageTime);
    Drop nearby=nearestDrop();
