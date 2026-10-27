@@ -1035,15 +1035,16 @@ public class MainActivity extends Activity {
    String[] values={characterGender==0?"Maennlich":"Weiblich",hairType==0?"Bob":"Kurzhaar","Variante "+skinColor,"Farbe "+hairColor,new String[]{"Schwert + Schild","Axt + Schild","Streitkolben + Schild"}[combatStyle],new String[]{"Reisekleidung","Nackt","Kampfkleidung"}[armorStyle]};
    for(int i=0;i<6;i++){
     float yy=top+121+i*38;
-    paint.setTextSize(13);paint.setTypeface(Typeface.DEFAULT_BOLD);
-    paint.setColor(col("#fff0c7"));canvas.drawText(names[i],left+394,yy-5,paint);
-    drawRect(col("#96794c"),left+247,yy,294,29);
-    drawRect(col("#20383a"),left+249,yy+2,290,25);
-    drawRect(col("#35524c"),left+251,yy+3,286,2);
+    paint.setTextSize(12);paint.setTypeface(Typeface.DEFAULT_BOLD);
+    paint.setTextAlign(Paint.Align.LEFT);paint.setColor(col("#fff0c7"));canvas.drawText(names[i],left+249,yy+19,paint);
+    paint.setTextAlign(Paint.Align.CENTER);
+    drawRect(col("#96794c"),left+357,yy,184,29);
+    drawRect(col("#20383a"),left+359,yy+2,180,25);
+    drawRect(col("#35524c"),left+361,yy+3,176,2);
     paint.setTextSize(17);paint.setColor(col("#f3d48c"));
-    canvas.drawText("‹",left+268,yy+21,paint);canvas.drawText("›",left+522,yy+21,paint);
+    canvas.drawText("‹",left+374,yy+21,paint);canvas.drawText("›",left+525,yy+21,paint);
     paint.setTypeface(Typeface.DEFAULT);paint.setTextSize(13);paint.setColor(Color.WHITE);
-    canvas.drawText(values[i],left+394,yy+20,paint);
+    canvas.drawText(values[i],left+449,yy+20,paint);
    }
    drawRect(col("#d1a75d"),left+246,top+352,296,45);
    drawRect(col("#76552e"),left+249,top+355,290,39);
@@ -1061,10 +1062,10 @@ public class MainActivity extends Activity {
     final android.widget.EditText edit=new android.widget.EditText(getContext());edit.setSingleLine(true);edit.setText(characterName);
     new android.app.AlertDialog.Builder(getContext()).setTitle("Charaktername").setView(edit).setPositiveButton("Uebernehmen",(d,w)->{String n=edit.getText().toString().trim();if(!n.isEmpty())characterName=n.length()>18?n.substring(0,18):n;}).setNegativeButton("Abbrechen",null).show();return;
    }
-   if(x<left+248||x>left+540)return;
+   if(x<left+357||x>left+541)return;
    int index=(int)((y-(top+121))/38);
    if(index<0||index>5||y>top+121+index*38+29)return;
-   int delta=x<left+390?-1:1;
+   int delta=x<left+449?-1:1;
    switch(index){
     case 0:characterGender=Math.floorMod(characterGender+delta,2);break;
     case 1:hairType=Math.floorMod(hairType+delta,2);break;
@@ -1086,8 +1087,8 @@ public class MainActivity extends Activity {
    for(int i=0;i<buttons.length;i++){float y=top+89+i*49;drawRect(col("#c49b5d"),left+95,y,310,42);
     drawRect(col("#294540"),left+98,y+3,304,36);paint.setColor(col("#f6e7c6"));paint.setTypeface(Typeface.create("serif",Typeface.BOLD));paint.setTextSize(18);canvas.drawText(buttons[i],vw/2,y+26,paint);paint.setTypeface(Typeface.DEFAULT);}
    paint.setColor(col("#e5cc9c"));paint.setTextSize(14);
-   canvas.drawText("MUSIKLAUTSTAERKE  "+Math.round(masterMusicVolume*100)+"%",vw/2,top+308,paint);
-   float sx=left+110,sy=top+329,sw=280;
+   canvas.drawText("MUSIKLAUTSTAERKE  "+Math.round(masterMusicVolume*100)+"%",vw/2,top+319,paint);
+   float sx=left+110,sy=top+337,sw=280;
    drawRect(col("#111c23"),sx,sy,sw,12);
    drawRect(col("#8c754d"),sx+2,sy+2,(sw-4)*masterMusicVolume,8);
    drawRect(col("#f6e7c6"),sx+masterMusicVolume*sw-5,sy-4,10,20);
@@ -1100,7 +1101,7 @@ public class MainActivity extends Activity {
   }
   void menuClick(float x,float y,float vw,float vh){
    float top=vh/2-208,left=vw/2-250;
-   if(x>=left+95&&x<=left+405&&y>=top+316&&y<=top+353){
+   if(x>=left+95&&x<=left+405&&y>=top+328&&y<=top+357){
     setMusicVolume((x-(left+110))/280f);return;
    }
    if(x<left+95||x>left+405)return;
@@ -1168,10 +1169,11 @@ public class MainActivity extends Activity {
    canvas.drawText("N",x+size/2,y+11,paint);paint.setTextAlign(Paint.Align.LEFT);
   }
   void fantasyName(String value,float x,float y){
-   Typeface old=paint.getTypeface();
+   Typeface old=paint.getTypeface();float oldSize=paint.getTextSize();
    paint.setTypeface(Typeface.create("serif",Typeface.BOLD_ITALIC));
+   paint.setTextSize(oldSize*.5f);
    outlinedText(value,x,y);
-   paint.setTypeface(old);
+   paint.setTextSize(oldSize);paint.setTypeface(old);
   }
   void outlinedText(String value,float x,float y){
    int color=paint.getColor();Paint.Style style=paint.getStyle();float width=paint.getStrokeWidth();
@@ -1420,7 +1422,7 @@ public class MainActivity extends Activity {
     String action=m.dead?"death":m.hurtTimer>0?"hurt":m.action;
     float size=m.hostile()?79:m.kind.equals("boar")?45:m.kind.equals("deer")?43:36;
     drawSprite(m.kind,action,m.dir,m.x,m.y,size,size,m.dead?m.deathTimer:m.anim,m.dead&&m.deathTimer>.7f);
-    if(!m.dead){paint.setColor(Color.WHITE);paint.setTextSize(12);paint.setTextAlign(Paint.Align.CENTER);paint.setTypeface(Typeface.create("serif",Typeface.BOLD_ITALIC));outlinedText("Lv. "+m.level,m.x,m.y-size*(m.hostile()?.53f:.64f));paint.setTypeface(Typeface.DEFAULT);paint.setTextAlign(Paint.Align.LEFT);}
+    if(!m.dead){paint.setColor(Color.WHITE);paint.setTextSize(12);paint.setTextAlign(Paint.Align.CENTER);paint.setTypeface(Typeface.create("serif",Typeface.BOLD_ITALIC));paint.setTextSize(6);outlinedText("Lv. "+m.level,m.x,m.y-size*(m.hostile()?.53f:.64f));paint.setTypeface(Typeface.DEFAULT);paint.setTextAlign(Paint.Align.LEFT);}
     if(!m.dead&&m.hostile()&&!indoors&&!safeZone(px,py)&&!safeZone(m.x,m.y)
        &&Math.hypot(px-m.x,py-m.y)<285f){
      paint.setTextAlign(Paint.Align.CENTER);paint.setTypeface(Typeface.DEFAULT_BOLD);
