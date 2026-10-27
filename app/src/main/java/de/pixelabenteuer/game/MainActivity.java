@@ -61,21 +61,43 @@ public class MainActivity extends Activity {
   boolean musicPaused=false;
   // Three original looping 8-bit melodies, generated locally without external audio assets.
   short[] makeMelody(int theme){
-   int rate=22050,steps=32,samplesPerStep=rate/4;
-   short[] pcm=new short[steps*samplesPerStep];
-   int[][] notes={
-    {52,55,59,64,59,55,52,47,50,55,59,62,59,55,50,47,52,55,59,64,67,64,59,55,50,55,59,62,59,55,52,47},
-    {40,40,43,47,40,43,47,50,42,42,45,49,42,45,49,52,40,43,47,52,47,43,40,38,42,45,49,54,49,45,42,38},
-    {60,64,67,64,62,65,69,65,60,64,67,72,67,64,60,57,59,62,65,62,60,64,67,64,57,60,64,69,65,62,60,55}
+   final int rate=22050,beat=rate/4,bars=64;
+   short[] pcm=new short[beat*bars];
+   // Exploration: bright pentatonic flute and arpeggiated harp.
+   // Combat: fast minor riff, distorted bass and percussion.
+   // Shop: relaxed waltz with bell-like chords.
+   int[][] tunes={
+    {60,64,67,72,67,64,62,67,60,64,69,72,74,72,69,64,65,69,72,76,72,69,67,64,62,65,69,74,72,69,67,64,
+     60,67,64,72,69,64,62,67,65,69,72,74,76,72,69,67,64,67,72,76,74,72,69,65,62,65,69,72,67,64,62,60},
+    {40,40,43,46,40,40,48,46,38,38,41,45,38,45,48,41,40,43,46,48,46,43,40,38,36,36,43,46,48,46,43,41,
+     40,40,52,51,40,43,46,48,38,38,50,48,38,41,45,48,36,43,46,48,50,48,46,43,40,40,43,46,48,46,43,40},
+    {64,67,71,67,62,66,69,66,60,64,67,64,62,65,69,65,64,67,72,67,62,66,69,66,60,64,67,72,71,67,64,60,
+     64,67,71,76,74,71,67,64,62,66,69,74,72,69,66,62,60,64,67,72,71,67,64,60,62,65,69,74,72,69,65,64}
    };
    for(int i=0;i<pcm.length;i++){
-    int step=i/samplesPerStep;double phase=(i%samplesPerStep)/(double)rate;
-    double hz=440*Math.pow(2,(notes[theme][step]-69)/12.0);
-    double wave=Math.sin(phase*hz*2*Math.PI);
-    double bass=Math.sin(phase*(hz/2)*2*Math.PI);
-    double env=Math.min(1.0,(i%samplesPerStep)/450.0)*Math.min(1.0,(samplesPerStep-i%samplesPerStep)/1500.0);
-    double rhythm=theme==1?Math.sin(phase*110*2*Math.PI)*.15:0;
-    pcm[i]=(short)(Math.max(-1,Math.min(1,(wave*.65+bass*.25+rhythm)*env))*24000);
+    int step=i/beat,within=i%beat;
+    double t=i/(double)rate,local=within/(double)rate;
+    double note=tunes[theme][step],hz=440*Math.pow(2,(note-69)/12.0);
+    double fade=Math.min(1,within/320.0)*Math.min(1,(beat-within)/1200.0);
+    double signal;
+    if(theme==0){
+     double flute=Math.sin(2*Math.PI*hz*local)+.18*Math.sin(4*Math.PI*hz*local);
+     double harp=Math.sin(2*Math.PI*(hz*2)*local)*Math.exp(-local*12);
+     double low=Math.sin(2*Math.PI*(hz/2)*t)*.18;
+     signal=(flute*.42+harp*.25+low)*fade;
+    }else if(theme==1){
+     double lead=Math.tanh(3*Math.sin(2*Math.PI*hz*local));
+     double bass=Math.tanh(2*Math.sin(2*Math.PI*(hz/2)*t));
+     double kick=Math.sin(2*Math.PI*70*local)*Math.exp(-local*32);
+     double snare=((Math.sin(i*2.17)+Math.sin(i*1.31))*.5)*Math.exp(-local*28);
+     signal=(lead*.38*fade+bass*.30+kick*.26+snare*(step%2==1?.16:.06));
+    }else{
+     double bell=(Math.sin(2*Math.PI*hz*local)+.5*Math.sin(2*Math.PI*hz*2*local)+.2*Math.sin(2*Math.PI*hz*3*local))*Math.exp(-local*7);
+     double chordHz=440*Math.pow(2,((step/4%3==0?48:step/4%3==1?53:55)-69)/12.0);
+     double chord=Math.sin(2*Math.PI*chordHz*t)*.23+Math.sin(2*Math.PI*chordHz*1.5*t)*.12;
+     signal=bell*.53+chord*.6;
+    }
+    pcm[i]=(short)(Math.max(-1,Math.min(1,signal))*23500);
    }
    return pcm;
   }
@@ -351,7 +373,7 @@ public class MainActivity extends Activity {
    paint.setTypeface(Typeface.DEFAULT_BOLD);
    paint.setTextSize(13);paint.setColor(col("#ffe7aa"));
    outlinedText("Schmid",l+236,t+109);
-   canvas.drawText("Händlerin",l+510,t+153,paint);
+   outlinedText("Händlerin",l+510,t+153);
    paint.setTypeface(Typeface.DEFAULT);paint.setTextSize(11);
    paint.setColor(col("#ffffff"));
    if(Math.hypot(px-296,py-349)<50)canvas.drawText("E - Handeln",l+236,t+125,paint);
