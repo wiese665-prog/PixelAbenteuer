@@ -214,19 +214,20 @@ public class MainActivity extends Activity {
    
    // Two complete rear display shelves and one dragon picture.
    tile("Interior_objects",13,128,35,63,l+381,t+83,53,80);
-   tile("Interior_objects",163,125,43,66,l+570,t+79,53,84);
+   tile("Interior_objects",163,129,36,62,l+570,t+83,53,80);
    tile("Interior_objects",114,257,59,49,l+451,t+82,106,59);
    // Two separate COMPLETE purple rugs (source x=6..60, y=397..421).
    tile("Interior_objects",70,385,55,40,l+415,t+156,205,72);
    tile("Interior_objects",70,385,55,40,l+415,t+256,205,72);
    // The complete counter with its decorative vases, cropped as one object.
    tile("Interior_objects",16,0,160,27,l+345.5f,t+175,309,46);
-   // Two intact angled shelves, back to back on the black floor mark.
-   // Their inner edges meet at l+250; no crates or props between them.
-   tile("Interior_objects",98,70,46,59,l+194,t+266,56,69);
+   // Separate shelf against the left wall, using the original unmodified sprite.
+   tile("Interior_objects",98,70,46,59,l+18,t+266,56,69);
+   // Two center shelves meet exactly at the dark seam between floor types (l+340).
+   tile("Interior_objects",98,70,46,59,l+284,t+266,56,69);
    canvas.save();
-   canvas.scale(-1f,1f,l+278,t+300);
-   tile("Interior_objects",98,70,46,59,l+250,t+266,56,69);
+   canvas.scale(-1f,1f,l+368,t+300);
+   tile("Interior_objects",98,70,46,59,l+340,t+266,56,69);
    canvas.restore();
    // Complete stair-display shelves on the bottom wall, flanking the entry.
    // Door is at interior x=555 (screen x=l+495); keep a clear central aisle.
