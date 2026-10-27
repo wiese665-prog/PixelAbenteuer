@@ -256,7 +256,7 @@ public class MainActivity extends Activity {
     // Screen center is the player position; soften clouds when covering the character.
     float playerLeft=vw/2-28,playerTop=vh/2-44;
     boolean overPlayer=x<playerLeft+56&&x+width>playerLeft&&y<playerTop+88&&y+height>playerTop;
-    float overlapOpacity=overPlayer?.20f:1f; // 80% more transparent on contact.
+    float overlapOpacity=overPlayer?.06f:1f; // 80% more transparent on contact.
     paint.setColor(Color.WHITE);paint.setAlpha((int)(alpha*familyOpacity*overlapOpacity));paint.setColorFilter(null);
     if(!indoors&&Math.hypot(px-forgeX,py-(forgeY+85))<160)paint.setAlpha(Math.round(paint.getAlpha()*.30f));
     canvas.drawBitmap(cloud,null,new RectF(x,y,x+width,y+height),paint);
@@ -581,6 +581,8 @@ public class MainActivity extends Activity {
    define("Iron Sword","Uncommon","Waffe",3,0,0,0);
    define("Silver Sword","Rare","Waffe",6,0,0,0);
    define("Golden Sword","Legendär","Waffe",12,0,0,0);
+   define("Wooden Shield","Common","Schild",0,1,0,0);
+   define("Iron Shield","Rare","Schild",0,4,0,0);
    define("Wooden Armor","Common","Brust",0,1,1,0);
    define("Leather Armor","Uncommon","Brust",0,2,3,0);
    define("Iron Armor","Rare","Brust",0,6,8,0);
@@ -1159,10 +1161,10 @@ public class MainActivity extends Activity {
    characterLayer(page,"1out",equipped.containsKey("Brust")?"fstr":"pfpn",1,row,col,x,y,w,h);
    characterLayer(page,"4har",hairType==0?"bob1":"dap1",hairColor,row,col,x,y,w,h);
    if(equipped.containsKey("Kopf"))characterLayer(page,"5hat","pfht",1,row,col,x,y,w,h);
-   if(fighting||sword||equipped.containsKey("Waffe")){
+   if(creatorOpen||fighting||sword||equipped.containsKey("Waffe")){
     String weapon=combatStyle==1?"ax01":combatStyle==2?"mc01":"sw01";
     characterLayer("pONE"+(fighting?"3":"2"),"6tla",weapon,1,row,col,x,y,w,h);
-    if(equipped.containsKey("Schild")||combatStyle>=0)characterLayer("pONE"+(fighting?"3":"2"),"7tlb","sh01",1,row,col,x,y,w,h);
+    if(creatorOpen||equipped.containsKey("Schild"))characterLayer("pONE"+(fighting?"3":"2"),"7tlb",equipped.getOrDefault("Schild","").contains("Iron")?"sh03":"sh01",1,row,col,x,y,w,h);
    }
   }
   void drawSprite(String kind,String action,int dir,float x,float y,float w,float h,float time,boolean freeze){
