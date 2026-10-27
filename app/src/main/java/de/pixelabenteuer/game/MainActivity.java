@@ -35,7 +35,10 @@ public class MainActivity extends Activity {
   HashMap<String,Item> definitions=new HashMap<>();HashMap<String,String> equipped=new HashMap<>();
   String[] hotbar=new String[5];int selectedHotbar=-1;int copper=0,silver=0,gold=0,hoverSlot=-1;float hoverX=0,hoverY=0;
   boolean inventoryOpen=false,shopOpen=false,startScreen=true,pauseMenu=false;float merchantX=265,merchantY=215;
+  int activeMerchant=0; // 0 Orc-Händler, 1 Schmid, 2 Händlerin
   String[] shopStock={"Apple","Ham","Healthpotion","Healpotion med","Iron Sword","Silver Sword","Leather Armor","Iron Armor","Iron Helmet","Golden Sword"};
+  String[] smithStock={"Iron Sword","Silver Sword","Wooden Sword","Golden Sword","Leather Armor","Iron Armor","Iron Helmet","Leather Helmet","Iron Boot","Leather Boot","Wizard Hat","Wooden Armor"};
+  String[] sellerStock={"Apple","Green Apple","Ham","Cheese","Mushroom","Healthpotion","Healthpotion large","Healpotion med"};
   String pickupNotice="";float noticeTime=0;
   HashMap<String,Bitmap> sprites=new HashMap<>();
   float px=180,py=180,joyX=0,joyY=0,elapsed=0,worldTime=0,attackAnim=0,hurtAnim=0,deathAnim=0,attackCooldown=0,playerHealthVisible=0;
@@ -389,7 +392,16 @@ public class MainActivity extends Activity {
    }
    noticeTime=2;
   }
-  void openShop(){if(Math.hypot(px-merchantX,py-merchantY)<100){shopOpen=true;inventoryOpen=false;hoverSlot=-1;}}
+  String[] activeStock(){return activeMerchant==1?smithStock:activeMerchant==2?sellerStock:shopStock;}
+  String merchantTitle(){return activeMerchant==1?"SCHMID":activeMerchant==2?"HAENDLERIN":"ORC-HAENDLER";}
+  void showMerchant(int merchant){activeMerchant=merchant;shopOpen=true;inventoryOpen=false;hoverSlot=-1;joyX=joyY=0;}
+  boolean openInteriorMerchant(){
+   if(!indoors)return false;
+   if(Math.hypot(px-296,py-349)<100){showMerchant(1);return true;}
+   if(Math.hypot(px-557,py-372)<100){showMerchant(2);return true;}
+   return false;
+  }
+  void openShop(){if(Math.hypot(px-merchantX,py-merchantY)<100)showMerchant(0);}
   int armorValue(){int total=0;for(String name:equipped.values()){Item i=definitions.get(name);if(i!=null)total+=i.armor;}return total;}
   int bonusHealth(){int total=0;for(String name:equipped.values()){Item i=definitions.get(name);if(i!=null)total+=i.hp;}return total;}
   int maxMana=20,mana=20;
@@ -573,7 +585,7 @@ public class MainActivity extends Activity {
    float left=vw/2-365,top=vh/2-185;
    panel(left,top,730,370);drawRect(col("#c5a36a"),left+365,top+48,2,302);
    paint.setColor(col("#f6dbab"));paint.setTypeface(Typeface.DEFAULT_BOLD);paint.setTextSize(21);
-   canvas.drawText("ORK-HAENDLER",left+17,top+30,paint);
+   canvas.drawText(merchantTitle(),left+17,top+30,paint);
    paint.setTextSize(12);canvas.drawText("E / I schliessen   |   Klick: Kaufen / Verkaufen",left+302,top+28,paint);
    String[] selling=inventoryNames();
    for(int side=0;side<2;side++){
@@ -581,7 +593,7 @@ public class MainActivity extends Activity {
     panel(sx,top+49,340,306);
     paint.setTextSize(15);paint.setColor(col("#f1d7a4"));
     canvas.drawText(side==0?"ANGEBOT":"DEIN VERKAUF",sx+13,top+72,paint);
-    String[] names=side==0?shopStock:selling;
+    String[] names=side==0?activeStock():selling;
     for(int i=0;i<Math.min(12,names.length);i++){
      float x=sx+10+(i%3)*106,y=top+87+(i/3)*65;
      drawRect(col("#17212a"),x,y,101,60);
@@ -795,7 +807,7 @@ public class MainActivity extends Activity {
    drawHouse(forgeX,forgeY,true);
    drawSprite("orc2","idle",0,merchantX,merchantY,79,79,elapsed,false);
    paint.setTextAlign(Paint.Align.CENTER);paint.setColor(col("#ffe7aa"));paint.setTextSize(13);
-   canvas.drawText("HAENDLER",merchantX,merchantY-45,paint);paint.setTextAlign(Paint.Align.LEFT);
+   canvas.drawText("Orc-Händler",merchantX,merchantY-45,paint);paint.setTextAlign(Paint.Align.LEFT);
    if(Math.hypot(px-merchantX,py-merchantY)<100&&!shopOpen){paint.setColor(Color.WHITE);paint.setTextSize(12);
     canvas.drawText("E - Handeln",merchantX-37,merchantY-58,paint);}
    for(Drop d:drops){float bob=(float)Math.sin(elapsed*3+d.bob)*2;
@@ -870,7 +882,7 @@ public class MainActivity extends Activity {
     if(shopOpen){
      float sc=Math.min(getWidth()/800f,getHeight()/450f),xx=e.getX()/sc,yy=e.getY()/sc,vw=getWidth()/sc,vh=getHeight()/sc;
      int idx=shopIndex(xx,yy,vw,vh,true);
-     if(idx>=0&&idx<Math.min(12,shopStock.length))trade(shopStock[idx],true);
+     if(idx>=0&&idx<Math.min(12,activeStock().length))trade(activeStock()[idx],true);
      else{idx=shopIndex(xx,yy,vw,vh,false);String[] names=inventoryNames();if(idx>=0&&idx<Math.min(12,names.length))trade(names[idx],false);}
      return true;
     }
@@ -899,7 +911,14 @@ public class MainActivity extends Activity {
     case KeyEvent.KEYCODE_W:case KeyEvent.KEYCODE_DPAD_UP:joyY=-1;break;
     case KeyEvent.KEYCODE_S:case KeyEvent.KEYCODE_DPAD_DOWN:joyY=1;break;
     case KeyEvent.KEYCODE_SPACE:attack();break;
-    case KeyEvent.KEYCODE_E:if(shopOpen)shopOpen=false;else if(indoors||Math.hypot(px-forgeX,py-(forgeY+84))<65)enterOrLeave();else if(Math.hypot(px-merchantX,py-merchantY)<100)openShop();else pickup();break;
+    case KeyEvent.KEYCODE_E:
+     if(shopOpen)shopOpen=false;
+     else if(indoors){
+      if(!openInteriorMerchant()&&py>465&&Math.abs(px-DOOR_IN_X)<45)enterOrLeave();
+     }else if(Math.hypot(px-forgeX,py-(forgeY+84))<65)enterOrLeave();
+     else if(Math.hypot(px-merchantX,py-merchantY)<100)openShop();
+     else pickup();
+     break;
     case KeyEvent.KEYCODE_I:if(shopOpen)shopOpen=false;else inventoryOpen=!inventoryOpen;hoverSlot=-1;break;
     case KeyEvent.KEYCODE_1:useHotbar(0);break;
     case KeyEvent.KEYCODE_2:useHotbar(1);break;
