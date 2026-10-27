@@ -42,7 +42,7 @@ public class MainActivity extends Activity {
   ArrayList<Mob> mobs=new ArrayList<>();ArrayList<Decoration> decorations=new ArrayList<>();ArrayList<Drop> drops=new ArrayList<>();LinkedHashMap<String,Integer> inventory=new LinkedHashMap<>();HashMap<String,Bitmap> itemImages=new HashMap<>();
   HashMap<String,Item> definitions=new HashMap<>();HashMap<String,String> equipped=new HashMap<>();
   String[] hotbar=new String[5];int selectedHotbar=-1;int copper=0,silver=0,gold=0,hoverSlot=-1;float hoverX=0,hoverY=0;
-  Item inspectedGear=null;boolean sprintHeld=false;int attackSequence=0;boolean creatorOpen=false;int hairType=0,hairColor=1,skinColor=1,eyeColor=0,combatStyle=0;boolean inventoryOpen=false,shopOpen=false,startScreen=true,pauseMenu=false;float merchantX=265,merchantY=215;
+  Item inspectedGear=null;String characterName="Abenteurer";int armorStyle=0;boolean sprintHeld=false;int attackSequence=0;boolean creatorOpen=false;int hairType=0,hairColor=1,skinColor=1,eyeColor=0,combatStyle=0;boolean inventoryOpen=false,shopOpen=false,startScreen=true,pauseMenu=false;float merchantX=265,merchantY=215;
   int activeMerchant=0; // 0 Orc-Händler, 1 Schmid, 2 Händlerin
   String[] shopStock={"Apple","Ham","Healthpotion","Healpotion med","Iron Sword","Silver Sword","Leather Armor","Iron Armor","Iron Helmet","Golden Sword"};
   String[] smithStock={"Wooden Sword [Common]","Wooden Sword [Legendär]","Iron Sword [Uncommon]","Iron Sword [Rare]","Silver Sword [Common]","Silver Sword [Legendär]","Golden Sword [Rare]","Golden Sword [Legendär]","Leather Armor [Rare]","Iron Armor [Rare]","Iron Helmet [Legendär]","Leather Boot [Uncommon]"};
@@ -957,7 +957,7 @@ public class MainActivity extends Activity {
   void saveGame(){
    try{
     org.json.JSONObject root=new org.json.JSONObject();
-    root.put("hairType",hairType);root.put("hairColor",hairColor);root.put("skinColor",skinColor);root.put("eyeColor",eyeColor);root.put("combatStyle",combatStyle);
+    root.put("characterName",characterName);root.put("armorStyle",armorStyle);root.put("hairType",hairType);root.put("hairColor",hairColor);root.put("skinColor",skinColor);root.put("eyeColor",eyeColor);root.put("combatStyle",combatStyle);
     root.put("px",px);root.put("py",py);root.put("indoors",indoors);root.put("currentHouse",currentHouse);root.put("worldTime",worldTime);root.put("mana",mana);root.put("hp",hp);root.put("level",playerLevel);root.put("exp",exp);
     root.put("gold",gold);root.put("silver",silver);root.put("copper",copper);root.put("kills",kills);root.put("animalKills",animalKills);root.put("nextQuestDay",nextQuestDay);root.put("questTier",questTier);root.put("questProgress",questProgress);root.put("questActive",questActive);
     org.json.JSONObject bag=new org.json.JSONObject();for(String name:inventory.keySet())bag.put(name,inventory.get(name));root.put("inventory",bag);
@@ -975,7 +975,7 @@ public class MainActivity extends Activity {
     String json=getContext().getSharedPreferences("pixel_save",MODE_PRIVATE).getString("save",null);
     if(json==null){pickupNotice="Kein Spielstand";noticeTime=3f;return;}
     org.json.JSONObject root=new org.json.JSONObject(json);
-    hairType=root.optInt("hairType",0);hairColor=root.optInt("hairColor",1);skinColor=root.optInt("skinColor",1);eyeColor=root.optInt("eyeColor",0);combatStyle=root.optInt("combatStyle",0);creatorOpen=false;
+    characterName=root.optString("characterName","Abenteurer");armorStyle=root.optInt("armorStyle",0);hairType=root.optInt("hairType",0);hairColor=root.optInt("hairColor",1);skinColor=root.optInt("skinColor",1);eyeColor=root.optInt("eyeColor",0);combatStyle=root.optInt("combatStyle",0);creatorOpen=false;
     px=(float)root.getDouble("px");py=(float)root.getDouble("py");indoors=root.optBoolean("indoors",false);currentHouse=root.optInt("currentHouse",0);worldTime=(float)root.optDouble("worldTime",0);playerLevel=root.getInt("level");exp=root.getInt("exp");
     gold=root.getInt("gold");silver=root.getInt("silver");copper=root.getInt("copper");kills=root.optInt("kills");animalKills=root.optInt("animalKills");nextQuestDay=root.has("nextQuestDay")?root.optInt("nextQuestDay"):root.optInt("questsCompletedToday")>0?currentQuestDay()+2:0;questTier=root.optInt("questTier");questProgress=root.optInt("questProgress");questActive=root.optBoolean("questActive");
     inventory.clear();org.json.JSONObject bag=root.getJSONObject("inventory");java.util.Iterator<String> keys=bag.keys();while(keys.hasNext()){String k=keys.next();inventory.put(k,bag.getInt(k));}
@@ -998,10 +998,12 @@ public class MainActivity extends Activity {
    drawRect(col("#29463e"),left+22,top+62,205,285);
    drawCharacter(left+124,top+202,205,205,0,"idle",elapsed);
    paint.setTextSize(12);paint.setColor(col("#b9d5ca"));canvas.drawText("VORSCHAU",left+124,top+330,paint);
-   String[] names={"FRISUR","HAUTFARBE","HAARFARBE","AUGENFARBE","KAMPFSTIL"};
-   String[] values={hairType==0?"Bob":"Kurzhaar","Variante "+skinColor,"Farbe "+hairColor, new String[]{"Braun","Blau","Gruen"}[eyeColor],new String[]{"Schwert + Schild","Axt + Schild","Streitkolben + Schild"}[combatStyle]};
-   for(int i=0;i<5;i++){
-    float yy=top+76+i*52;paint.setTextSize(12);paint.setColor(col("#b9d5ca"));canvas.drawText(names[i],left+380,yy,paint);
+   paint.setTextSize(13);canvas.drawText("NAME (ANTIPPEN)",left+390,top+68,paint);
+   drawRect(col("#304d50"),left+248,top+73,292,31);paint.setColor(Color.WHITE);canvas.drawText(characterName,left+394,top+94,paint);
+   String[] names={"FRISUR","HAUTFARBE","HAARFARBE","AUGENFARBE","KAMPFSTIL","RUESTUNG"};
+   String[] values={hairType==0?"Bob":"Kurzhaar","Variante "+skinColor,"Farbe "+hairColor, new String[]{"Braun","Blau","Gruen"}[eyeColor],new String[]{"Schwert + Schild","Axt + Schild","Streitkolben + Schild"}[combatStyle],new String[]{"Reisekleidung","Leichte Ruestung","Kampfkleidung"}[armorStyle]};
+   for(int i=0;i<6;i++){
+    float yy=top+107+i*39;paint.setTextSize(12);paint.setColor(col("#b9d5ca"));canvas.drawText(names[i],left+380,yy,paint);
     drawRect(col("#304d50"),left+248,yy+9,292,32);
     paint.setTextSize(19);paint.setColor(Color.WHITE);
     canvas.drawText("<",left+268,yy+31,paint);canvas.drawText(">",left+522,yy+31,paint);
@@ -1016,9 +1018,13 @@ public class MainActivity extends Activity {
    if(x>=left+246&&x<=left+542&&y>=top+353&&y<=top+396){
     creatorOpen=false;startScreen=false;pauseMenu=false;previous=System.nanoTime();return;
    }
+   if(x>=left+248&&x<=left+540&&y>=top+73&&y<=top+104){
+    final android.widget.EditText edit=new android.widget.EditText(getContext());edit.setSingleLine(true);edit.setText(characterName);
+    new android.app.AlertDialog.Builder(getContext()).setTitle("Charaktername").setView(edit).setPositiveButton("Uebernehmen",(d,w)->{String n=edit.getText().toString().trim();if(!n.isEmpty())characterName=n.length()>18?n.substring(0,18):n;}).setNegativeButton("Abbrechen",null).show();return;
+   }
    if(x<left+248||x>left+540)return;
-   int index=(int)((y-(top+85))/52);
-   if(index<0||index>4||y>top+85+index*52+35)return;
+   int index=(int)((y-(top+116))/39);
+   if(index<0||index>5||y>top+116+index*39+35)return;
    int delta=x<left+390?-1:1;
    switch(index){
     case 0:hairType=Math.floorMod(hairType+delta,2);break;
@@ -1026,6 +1032,7 @@ public class MainActivity extends Activity {
     case 2:hairColor=Math.floorMod(hairColor+delta,14);break;
     case 3:eyeColor=Math.floorMod(eyeColor+delta,3);break;
     case 4:combatStyle=Math.floorMod(combatStyle+delta,3);break;
+    case 5:armorStyle=Math.floorMod(armorStyle+delta,3);break;
    }
   }
   void drawMenu(float vw,float vh){
@@ -1160,15 +1167,15 @@ public class MainActivity extends Activity {
    int facing=dir==0?0:dir==1?1:dir==2?3:2;
    boolean moving=action.equals("walk")||action.equals("run");
    int row=fighting?(action.equals("attack")?(attackSequence%2)*4+facing:action.equals("hurt")?facing:4+facing):(moving?4+facing:facing);
-   int col=fighting?Math.min(3,Math.max(0,(int)(time*10))):(moving?(action.equals("run")?(((int)(elapsed*9)%2)==0?2:5):(int)(elapsed*8)%6):0);
+   int col=fighting?Math.min(3,Math.max(0,(int)(time*10))):(moving?(action.equals("run")?((int)(elapsed*12)%6):(int)(elapsed*8)%6):0);
    characterLayer(page,"0bas","humn",skinColor,row,col,x,y,w,h);
-   characterLayer(page,"1out",equipped.containsKey("Brust")?"fstr":"pfpn",1,row,col,x,y,w,h);
+   characterLayer(page,"1out",armorStyle==2||equipped.containsKey("Brust")?"fstr":armorStyle==1?"boxr":"pfpn",1,row,col,x,y,w,h);
    characterLayer(page,"4har",hairType==0?"bob1":"dap1",hairColor,row,col,x,y,w,h);
    if(equipped.containsKey("Kopf"))characterLayer(page,"5hat","pfht",1,row,col,x,y,w,h);
    if(creatorOpen||fighting){
     String weapon=combatStyle==1?"ax01":combatStyle==2?"mc01":"sw01";
-    characterLayer(fighting?"pONE3":"pONE2","6tla",weapon,1,row,col,x,y,w,h);
-    if(creatorOpen||equipped.containsKey("Schild"))characterLayer(fighting?"pONE3":"pONE2","7tlb",equipped.getOrDefault("Schild","").contains("Iron")?"sh03":"sh01",1,row,col,x,y,w,h);
+    characterLayer(fighting?"pONE3":"pONE2","6tla",weapon,1,fighting?row:facing,fighting?col:0,x,y,w,h);
+    if(creatorOpen||equipped.containsKey("Schild"))characterLayer(fighting?"pONE3":"pONE2","7tlb",equipped.getOrDefault("Schild","").contains("Iron")?"sh03":"sh01",1,fighting?row:facing,fighting?col:0,x,y,w,h);
    }
   }
   void drawSprite(String kind,String action,int dir,float x,float y,float w,float h,float time,boolean freeze){
@@ -1328,7 +1335,7 @@ public class MainActivity extends Activity {
    }
   }
   void restart(){
-   hairType=0;hairColor=1;skinColor=1;eyeColor=0;combatStyle=0;creatorOpen=false;sprintHeld=false;attackSequence=0;
+   hairType=0;hairColor=1;skinColor=1;eyeColor=0;combatStyle=0;armorStyle=0;characterName="Abenteurer";creatorOpen=false;sprintHeld=false;attackSequence=0;
    indoors=false;currentHouse=0;playerLevel=1;exp=0;attackPower=3;maxHp=12;hp=maxHp;maxMana=20;mana=20;worldTime=0;stockRefreshTimer=0;refreshMerchantStocks();equipped.clear();copper=silver=gold=0;java.util.Arrays.fill(hotbar,null);selectedHotbar=-1;playerDamageTime=0;px=180;py=180;joyX=joyY=0;deathAnim=0;swordTimer=0;sword=false;attackAnim=0;playerHealthVisible=0;kills=animalKills=0;questTier=questProgress=nextQuestDay=0;questActive=false;mobs.clear();drops.clear();inventory.clear();inventoryOpen=false;shopOpen=false;pauseMenu=false;spawnMobs();
   }
   @Override protected void onDraw(Canvas c){
