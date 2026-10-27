@@ -41,7 +41,7 @@ public class MainActivity extends Activity {
   Canvas canvas;Paint paint=new Paint();Random random=new Random(42);
   ArrayList<Mob> mobs=new ArrayList<>();ArrayList<Decoration> decorations=new ArrayList<>();ArrayList<Drop> drops=new ArrayList<>();LinkedHashMap<String,Integer> inventory=new LinkedHashMap<>();HashMap<String,Bitmap> itemImages=new HashMap<>();
   HashMap<String,Item> definitions=new HashMap<>();HashMap<String,String> equipped=new HashMap<>();
-  String[] hotbar=new String[5];int selectedHotbar=-1;int copper=0,silver=0,gold=0,hoverSlot=-1;float hoverX=0,hoverY=0;
+  String[] hotbar=new String[9];int selectedHotbar=-1;int copper=0,silver=0,gold=0,hoverSlot=-1;float hoverX=0,hoverY=0;
   Item inspectedGear=null;String characterName="Abenteurer";int armorStyle=0,characterGender=0;boolean sprintHeld=false;int attackSequence=0;boolean creatorOpen=false;int hairType=0,hairColor=1,skinColor=1,eyeColor=0,combatStyle=0;boolean inventoryOpen=false,shopOpen=false,startScreen=true,pauseMenu=false;float merchantX=265,merchantY=215;
   int activeMerchant=0; // 0 Orc-Händler, 1 Schmid, 2 Händlerin
   String[] shopStock={"Apple","Ham","Healthpotion","Healpotion med","Iron Sword","Silver Sword","Leather Armor","Iron Armor","Iron Helmet","Golden Sword"};
@@ -789,9 +789,11 @@ public class MainActivity extends Activity {
    hotbar[slot]=name;selectedHotbar=-1;pickupNotice=name+" auf Hotbar "+(slot+1);noticeTime=2f;
   }
   int hotbarIndexAt(float x,float y,float vw,float vh){
-   float dx=x-(vw/2-130),dy=y-(vh-55);
-   if(dx<0||dy<0||dy>50||dx>=265)return -1;
-   int slot=(int)(dx/53);return dx%53<50?slot:-1;
+   final float step=39f,start=vw/2-hotbar.length*step/2f;
+   float dx=x-start,dy=y-(vh-43);
+   if(dx< -2||dy< -2||dy>37||dx>=hotbar.length*step)return -1;
+   int slot=Math.max(0,(int)(Math.max(0,dx)/step));
+   return slot<hotbar.length&&dx-slot*step<37?slot:-1;
   }
   void equip(String name){
    Item item=definitions.get(name);if(item==null||!item.equipment()||inventory.getOrDefault(name,0)<=0)return;
@@ -1019,7 +1021,7 @@ public class MainActivity extends Activity {
     gold=root.getInt("gold");silver=root.getInt("silver");copper=root.getInt("copper");kills=root.optInt("kills");animalKills=root.optInt("animalKills");nextQuestDay=root.has("nextQuestDay")?root.optInt("nextQuestDay"):root.optInt("questsCompletedToday")>0?currentQuestDay()+2:0;questTier=root.optInt("questTier");questProgress=root.optInt("questProgress");questActive=root.optBoolean("questActive");
     inventory.clear();org.json.JSONObject bag=root.getJSONObject("inventory");java.util.Iterator<String> keys=bag.keys();while(keys.hasNext()){String k=keys.next();inventory.put(k,bag.getInt(k));}
     equipped.clear();org.json.JSONObject gear=root.getJSONObject("equipped");keys=gear.keys();while(keys.hasNext()){String k=keys.next();equipped.put(k,gear.getString(k));}
-    java.util.Arrays.fill(hotbar,null);selectedHotbar=-1;org.json.JSONArray bar=root.getJSONArray("hotbar");for(int i=0;i<Math.min(5,bar.length());i++)if(!bar.isNull(i))hotbar[i]=bar.getString(i);
+    java.util.Arrays.fill(hotbar,null);selectedHotbar=-1;org.json.JSONArray bar=root.getJSONArray("hotbar");for(int i=0;i<Math.min(hotbar.length,bar.length());i++)if(!bar.isNull(i))hotbar[i]=bar.getString(i);
     recalcStats();hp=Math.min(maxHp,root.getInt("hp"));mana=Math.min(maxMana,root.optInt("mana",maxMana));cleanupHotbar();
     mobs.clear();org.json.JSONArray enemies=root.getJSONArray("mobs");for(int i=0;i<enemies.length();i++){org.json.JSONObject o=enemies.getJSONObject(i);
      Mob m=new Mob(o.getString("kind"),(float)o.getDouble("x"),(float)o.getDouble("y"));m.hp=o.getInt("hp");m.maxHp=o.getInt("maxHp");m.level=o.getInt("level");m.damage=o.getInt("damage");m.dead=o.getBoolean("dead");mobs.add(m);}
@@ -1143,13 +1145,15 @@ public class MainActivity extends Activity {
    }}
   }
   void drawHotbar(float vw,float vh){
-   if(inventoryOpen)canvas.saveLayerAlpha(vw/2-135,vh-58,vw/2+145,vh,155);
-   for(int i=0;i<5;i++){
-    float x=vw/2-128+i*53,y=vh-53;
-    drawRect(inventoryOpen&&selectedHotbar==i?col("#f0ca78"):col("#141c23"),x-2,y-2,50,48);drawRect(col("#4d5b62"),x,y,46,44);
-    if(hotbar[i]!=null)itemIcon(hotbar[i],x+7,y+2,1.3f);
-    paint.setColor(Color.WHITE);paint.setTextSize(12);canvas.drawText(""+(i+1),x+3,y+41,paint);
-    if(hotbar[i]!=null){paint.setTextSize(11);canvas.drawText(""+inventory.getOrDefault(hotbar[i],0),x+32,y+41,paint);}
+   final float step=39f,slotSize=35f,start=vw/2-hotbar.length*step/2f;
+   if(inventoryOpen)canvas.saveLayerAlpha(start-4,vh-51,start+hotbar.length*step+4,vh,155);
+   for(int i=0;i<hotbar.length;i++){
+    float x=start+i*step,y=vh-43;
+    drawRect(inventoryOpen&&selectedHotbar==i?col("#f0ca78"):col("#141c23"),x-2,y-2,slotSize+4,slotSize+4);
+    drawRect(col("#4d5b62"),x,y,slotSize,slotSize);
+    if(hotbar[i]!=null)itemIcon(hotbar[i],x+4,y+1,.95f);
+    paint.setColor(Color.WHITE);paint.setTextSize(10);canvas.drawText(""+(i+1),x+2,y+32,paint);
+    if(hotbar[i]!=null){paint.setTextSize(9);canvas.drawText(""+inventory.getOrDefault(hotbar[i],0),x+23,y+32,paint);}
    }
    if(inventoryOpen)canvas.restore();
   }
@@ -1594,6 +1598,10 @@ public class MainActivity extends Activity {
     case KeyEvent.KEYCODE_3:useHotbar(2);break;
     case KeyEvent.KEYCODE_4:useHotbar(3);break;
     case KeyEvent.KEYCODE_5:useHotbar(4);break;
+    case KeyEvent.KEYCODE_6:useHotbar(5);break;
+    case KeyEvent.KEYCODE_7:useHotbar(6);break;
+    case KeyEvent.KEYCODE_8:useHotbar(7);break;
+    case KeyEvent.KEYCODE_9:useHotbar(8);break;
     case KeyEvent.KEYCODE_ENTER:if(hp<=0)restart();break;
    }return true;
   }
