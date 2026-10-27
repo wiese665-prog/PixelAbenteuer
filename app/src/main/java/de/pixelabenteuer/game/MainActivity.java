@@ -323,8 +323,8 @@ public class MainActivity extends Activity {
    // The loose props are separate cells on the bottom of the same atlas.
    tile("Exterior_house",70,162,32,38,x-117,y+113,50,52); // crates
    tile("Exterior_house",116,160,34,34,x+97,y+66,55,55); // complete cart
-   paint.setColor(col("#fff0ce"));paint.setTextAlign(Paint.Align.CENTER);paint.setTextSize(13);
-   canvas.drawText("SCHMIEDE",x,y-150,paint);paint.setTextAlign(Paint.Align.LEFT);
+   paint.setColor(col("#f5d795"));paint.setTextAlign(Paint.Align.CENTER);paint.setTextSize(10);
+   fantasyName("Schmiede",x,y-150);paint.setTextAlign(Paint.Align.LEFT);
   }
   // Door anchors are shared by the automatic movement triggers and teleportation.
   final float DOOR_OUT_X=0f,DOOR_OUT_Y=102f;
