@@ -42,7 +42,7 @@ public class MainActivity extends Activity {
   ArrayList<Mob> mobs=new ArrayList<>();ArrayList<Decoration> decorations=new ArrayList<>();ArrayList<Drop> drops=new ArrayList<>();LinkedHashMap<String,Integer> inventory=new LinkedHashMap<>();HashMap<String,Bitmap> itemImages=new HashMap<>();
   HashMap<String,Item> definitions=new HashMap<>();HashMap<String,String> equipped=new HashMap<>();
   String[] hotbar=new String[5];int selectedHotbar=-1;int copper=0,silver=0,gold=0,hoverSlot=-1;float hoverX=0,hoverY=0;
-  Item inspectedGear=null;boolean creatorOpen=false;int hairType=0,hairColor=1,skinColor=1,eyeColor=0,combatStyle=0;boolean inventoryOpen=false,shopOpen=false,startScreen=true,pauseMenu=false;float merchantX=265,merchantY=215;
+  Item inspectedGear=null;boolean sprintHeld=false;int attackSequence=0;boolean creatorOpen=false;int hairType=0,hairColor=1,skinColor=1,eyeColor=0,combatStyle=0;boolean inventoryOpen=false,shopOpen=false,startScreen=true,pauseMenu=false;float merchantX=265,merchantY=215;
   int activeMerchant=0; // 0 Orc-Händler, 1 Schmid, 2 Händlerin
   String[] shopStock={"Apple","Ham","Healthpotion","Healpotion med","Iron Sword","Silver Sword","Leather Armor","Iron Armor","Iron Helmet","Golden Sword"};
   String[] smithStock={"Wooden Sword [Common]","Wooden Sword [Legendär]","Iron Sword [Uncommon]","Iron Sword [Rare]","Silver Sword [Common]","Silver Sword [Legendär]","Golden Sword [Rare]","Golden Sword [Legendär]","Leather Armor [Rare]","Iron Armor [Rare]","Iron Helmet [Legendär]","Leather Boot [Uncommon]"};
@@ -1156,8 +1156,8 @@ public class MainActivity extends Activity {
    // Each group contains the four facing directions; never use push frames for walking.
    int facing=dir==0?1:dir==1?0:dir==2?2:3;
    boolean moving=action.equals("walk")||action.equals("run");
-   int row=fighting?facing:(moving?4+facing:facing);
-   int col=fighting?Math.min(3,Math.max(0,(int)(time*10))):(moving?(int)(elapsed*8)%6:0);
+   int row=fighting?(action.equals("attack")?(attackSequence%2)*4+facing:action.equals("hurt")?facing:4+facing):(moving?4+facing:facing);
+   int col=fighting?Math.min(3,Math.max(0,(int)(time*10))):(moving?(action.equals("run")?6+((int)(elapsed*10)%2):(int)(elapsed*8)%6):0);
    characterLayer(page,"0bas","humn",skinColor,row,col,x,y,w,h);
    characterLayer(page,"1out",equipped.containsKey("Brust")?"fstr":"pfpn",1,row,col,x,y,w,h);
    characterLayer(page,"4har",hairType==0?"bob1":"dap1",hairColor,row,col,x,y,w,h);
@@ -1226,8 +1226,8 @@ public class MainActivity extends Activity {
    if(length>1){mx/=length;my/=length;}
    if(indoors){
     if(Math.abs(mx)+Math.abs(my)>.08f)playerDir=direction(mx,my);
-    float nx=Math.max(105,Math.min(695,px+mx*140*dt));
-    float ny=Math.max(205,Math.min(492,py+my*140*dt));
+    float nx=Math.max(105,Math.min(695,px+mx*(sprintHeld?205:140)*dt));
+    float ny=Math.max(205,Math.min(492,py+my*(sprintHeld?205:140)*dt));
     // Partition occupies x=375..402 in interior player coordinates.
     // The middle opening (y=354..444) is deliberately passable.
     if(!interiorObstacle(nx,py))px=nx;
@@ -1237,7 +1237,7 @@ public class MainActivity extends Activity {
    }
    if(Math.abs(mx)+Math.abs(my)>.08f){
     playerDir=Math.abs(mx)>Math.abs(my)?(mx<0?2:3):(my<0?1:0);
-    float step=140*dt/3f;
+    float step=(sprintHeld?205:140)*dt/3f;
     for(int sub=0;sub<3;sub++){
      float nx=px+mx*step,ny=py+my*step;
      if(!blocked(nx,py))px=nx;
@@ -1313,7 +1313,7 @@ public class MainActivity extends Activity {
   int direction(float vx,float vy){return Math.abs(vx)>Math.abs(vy)?(vx<0?2:3):(vy<0?1:0);}
   void attack(){
    if(hp<=0||attackCooldown>0||inventoryOpen||shopOpen||pauseMenu||startScreen||creatorOpen)return;
-   attackCooldown=.42f;attackAnim=.4f;swordTimer=3f;sword=true;
+   attackCooldown=.42f;attackAnim=.4f;attackSequence++;swordTimer=3f;sword=true;
    float fx=playerDir==2?-1:playerDir==3?1:0,fy=playerDir==1?-1:playerDir==0?1:0;
    for(Mob m:mobs){
     if(m.dead)continue;
@@ -1325,7 +1325,7 @@ public class MainActivity extends Activity {
    }
   }
   void restart(){
-   hairType=0;hairColor=1;skinColor=1;eyeColor=0;combatStyle=0;creatorOpen=false;
+   hairType=0;hairColor=1;skinColor=1;eyeColor=0;combatStyle=0;creatorOpen=false;sprintHeld=false;attackSequence=0;
    indoors=false;currentHouse=0;playerLevel=1;exp=0;attackPower=3;maxHp=12;hp=maxHp;maxMana=20;mana=20;worldTime=0;stockRefreshTimer=0;refreshMerchantStocks();equipped.clear();copper=silver=gold=0;java.util.Arrays.fill(hotbar,null);selectedHotbar=-1;playerDamageTime=0;px=180;py=180;joyX=joyY=0;deathAnim=0;swordTimer=0;sword=false;attackAnim=0;playerHealthVisible=0;kills=animalKills=0;questTier=questProgress=nextQuestDay=0;questActive=false;mobs.clear();drops.clear();inventory.clear();inventoryOpen=false;shopOpen=false;pauseMenu=false;spawnMobs();
   }
   @Override protected void onDraw(Canvas c){
@@ -1377,7 +1377,7 @@ public class MainActivity extends Activity {
     damageText(m.x,m.y-size*.65f-22,m.lastDamage,m.damageNumberTime);
    }
    String playerKind=sword?"player_sword":"player_unarmed";
-   String playerAction=hp<=0?"death":hurtAnim>0?"hurt":attackAnim>0&&sword?"attack":Math.abs(joyX)+Math.abs(joyY)>.08f?"run":"idle";
+   String playerAction=hp<=0?"death":hurtAnim>0?"hurt":attackAnim>0&&sword?"attack":Math.abs(joyX)+Math.abs(joyY)>.08f?(sprintHeld?"run":"walk"):"idle";
    drawSprite(playerKind,playerAction,playerDir,px,py,112,112,hp<=0?deathAnim:attackAnim>0?.4f-attackAnim:elapsed,hp<=0&&deathAnim>.8f);
    if(playerHealthVisible>0)healthBar(px,py-56,52,hp,maxHp);
    damageText(px,py-66,lastPlayerDamage,playerDamageTime);
@@ -1474,6 +1474,7 @@ public class MainActivity extends Activity {
    return true;
   }
   @Override public boolean onKeyDown(int key,KeyEvent e){
+   if(key==KeyEvent.KEYCODE_SHIFT_LEFT||key==KeyEvent.KEYCODE_SHIFT_RIGHT){sprintHeld=true;return true;}
    if(key==KeyEvent.KEYCODE_ESCAPE||key==KeyEvent.KEYCODE_BACK){
     if(creatorOpen)return true;
     if(startScreen)return true;
@@ -1505,6 +1506,7 @@ public class MainActivity extends Activity {
    }return true;
   }
   @Override public boolean onKeyUp(int key,KeyEvent e){
+   if(key==KeyEvent.KEYCODE_SHIFT_LEFT||key==KeyEvent.KEYCODE_SHIFT_RIGHT){sprintHeld=false;return true;}
    if(key==KeyEvent.KEYCODE_A||key==KeyEvent.KEYCODE_D||key==KeyEvent.KEYCODE_DPAD_LEFT||key==KeyEvent.KEYCODE_DPAD_RIGHT)joyX=0;
    if(key==KeyEvent.KEYCODE_W||key==KeyEvent.KEYCODE_S||key==KeyEvent.KEYCODE_DPAD_UP||key==KeyEvent.KEYCODE_DPAD_DOWN)joyY=0;
    return true;
