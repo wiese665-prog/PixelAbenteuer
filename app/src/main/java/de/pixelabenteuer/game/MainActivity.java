@@ -214,7 +214,7 @@ public class MainActivity extends Activity {
    
    // Two complete rear display shelves and one dragon picture.
    tile("Interior_objects",13,128,35,63,l+381,t+83,53,80);
-   tile("Interior_objects",113,128,35,63,l+570,t+83,53,80);
+   tile("Interior_objects",163,129,35,62,l+570,t+84,53,79);
    tile("Interior_objects",114,257,59,49,l+451,t+82,106,59);
    // Two separate COMPLETE purple rugs (source x=6..60, y=397..421).
    tile("Interior_objects",70,385,55,40,l+415,t+156,205,72);
@@ -224,7 +224,7 @@ public class MainActivity extends Activity {
    // Two complete decorative original sprites at the bottom of the forge.
    // Mirrored stepped shelf, facing away from its neighboring stepped display.
    canvas.save();
-   canvas.scale(-1f,1f,l+101,t+300);
+   canvas.scale(-1f,1f,l+174,t+300);
    tile("Interior_objects",98,70,46,59,l+137,t+266,56,69);
    canvas.restore();
    tile("Interior_objects",70,328,47,55,l+211,t+270,51,58);
