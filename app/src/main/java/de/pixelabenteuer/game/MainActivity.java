@@ -1598,8 +1598,9 @@ public class MainActivity extends Activity {
   }
   boolean mobFootBlocked(float x,float y,Mob ignore,float radius){
    for(Mob other:mobs)if(other!=ignore&&!other.dead){
-    float r=radius+mobFootRadius(other);
-    if(Math.abs(x-other.x)<r&&Math.abs(y-(other.y+mobFootRadius(other)*.3f))<r*.65f)return true;
+    if(Math.abs(x-other.x)>75f||Math.abs(y-other.y)>75f)continue;
+    float otherRadius=mobFootRadius(other),r=radius+otherRadius;
+    if(Math.abs(x-other.x)<r&&Math.abs(y-(other.y+otherRadius*.3f))<r*.65f)return true;
    }
    return false;
   }
@@ -1618,7 +1619,7 @@ public class MainActivity extends Activity {
    paint.reset();paint.setAntiAlias(false);paint.setFilterBitmap(false);paint.setColor(Color.WHITE);
    paint.setColorFilter(null);paint.setAlpha(255);paint.setStyle(Paint.Style.FILL);
    // Clear the entire frame, including any emulator-provided dirty region.
-   c.drawColor(col("#47884a"),android.graphics.PorterDuff.Mode.SRC);c.save();c.scale(scale,scale);c.save();c.translate(vw/2-px,vh*.62f-py);c.scale(1f,CAMERA_GROUND_Y,px,py);
+   c.drawColor(col("#47884a"),android.graphics.PorterDuff.Mode.SRC);c.save();c.scale(scale,scale);c.scale(1.10f,1.10f,vw*.5f,vh*.62f);c.save();c.translate(vw/2-px,vh*.62f-py);c.scale(1f,CAMERA_GROUND_Y,px,py);
    int startX=(int)Math.floor((px-vw/2)/32f)*32-32,endX=(int)Math.ceil((px+vw/2)/32f)*32+32;
    int startY=(int)Math.floor((py-vh/2)/32f)*32-32,endY=(int)Math.ceil((py+vh/2)/32f)*32+32;
    for(int x=startX;x<endX;x+=32)for(int y=startY;y<endY;y+=32){
@@ -1632,7 +1633,7 @@ public class MainActivity extends Activity {
     else drawRect(col("#82776b"),d.x-d.w/2,d.y-d.h/2,d.w,d.h);
    }
    drawHouse(forgeX,forgeY,true);
-   groundShadow(merchantX,merchantY+39,22,7);billboard("orc2","idle",0,merchantX,merchantY,79,79,elapsed,false);
+   groundShadow(merchantX,merchantY+48,22,8);billboard("orc2","idle",0,merchantX,merchantY,79,79,elapsed,false);
    paint.setTextAlign(Paint.Align.CENTER);paint.setColor(col("#ffe7aa"));paint.setTextSize(13);
    fantasyName("Orc-Händler",merchantX,merchantY-39);paint.setTextAlign(Paint.Align.LEFT);
    if(Math.hypot(px-merchantX,py-merchantY)<50&&!shopOpen){paint.setColor(Color.WHITE);paint.setTextSize(12);
@@ -1652,7 +1653,7 @@ public class MainActivity extends Activity {
     if(m.x<px-vw/2-90||m.x>px+vw/2+90||m.y<py-vh/2-90||m.y>py+vh/2+90)continue;
     String action=m.dead?"death":m.hurtTimer>0?"hurt":m.action;
     float size=(m.kind.startsWith("orc")?79:m.kind.equals("boar")?45:m.kind.equals("deer")?43:36)*(m.alpha?1.28f:1f);
-    if(!m.dead)groundShadow(m.x,m.y+size*.49f,size*.27f,6);billboard(m.kind,action,m.dir,m.x,m.y,size,size,m.dead?m.deathTimer:m.anim,m.dead&&m.deathTimer>.7f);
+    if(!m.dead)groundShadow(m.x,m.y+size*.61f,size*.27f,7);billboard(m.kind,action,m.dir,m.x,m.y,size,size,m.dead?m.deathTimer:m.anim,m.dead&&m.deathTimer>.7f);
     if(!m.dead){paint.setColor(Color.WHITE);paint.setTextSize(12);paint.setTextAlign(Paint.Align.CENTER);paint.setTypeface(Typeface.create("serif",Typeface.BOLD_ITALIC));paint.setTextSize(7);outlinedText((m.alpha?"Alpha ":"")+"Lv. "+m.level,m.x,m.y-size*(m.hostile()?.53f:.64f));paint.setTypeface(Typeface.DEFAULT);paint.setTextAlign(Paint.Align.LEFT);}
     if(!m.dead&&m.hostile()&&!indoors&&!safeZone(px,py)&&!safeZone(m.x,m.y)
        &&Math.hypot(px-m.x,py-m.y)<285f){
@@ -1666,7 +1667,7 @@ public class MainActivity extends Activity {
    }
    String playerKind=sword?"player_sword":"player_unarmed";
    String playerAction=hp<=0?"death":hurtAnim>0?"hurt":attackAnim>0&&sword?"attack":Math.abs(joyX)+Math.abs(joyY)>.08f?(sprintHeld?"run":"walk"):"idle";
-   groundShadow(px,py+39,22,7);billboard(playerKind,playerAction,playerDir,px,py,80.64f,80.64f,hp<=0?deathAnim:attackAnim>0?.4f-attackAnim:elapsed,hp<=0&&deathAnim>.8f);
+   groundShadow(px,py+49,22,8);billboard(playerKind,playerAction,playerDir,px,py,80.64f,80.64f,hp<=0?deathAnim:attackAnim>0?.4f-attackAnim:elapsed,hp<=0&&deathAnim>.8f);
    if(playerHealthVisible>0)healthBar(px,py-56,52,hp,maxHp);
    damageText(px,py-66,lastPlayerDamage,playerDamageTime);
    Drop nearby=nearestDrop();
