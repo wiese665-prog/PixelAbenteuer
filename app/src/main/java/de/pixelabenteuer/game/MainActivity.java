@@ -1405,7 +1405,7 @@ public class MainActivity extends Activity {
    String[] atlas={"Decorative_cracks","Walls_interior","Forge","Interior_objects"};
    int[] first={1,286,558,654},cols={19,16,8,13},counts={285,272,96,507};
    // 0 Boden, 1 boden2, 2 mehr teppich: always passable.
-   // 3 Theke und teppiche: only counter at rows 9-10, not the carpets.
+   // 3 Theke und teppiche: GIDs 654..703 are the counter; GIDs 966+ are carpets.
    // 5 Wände: masonry tiles only; object GIDs on this layer are furniture.
    for(int layerIndex=3;layerIndex<smithyLayers.length;layerIndex++){
     long[] layer=smithyLayers[layerIndex];
@@ -1413,7 +1413,7 @@ public class MainActivity extends Activity {
      int tileX=i%42,tileY=i/42;
      long encoded=layer[i],gid=encoded&0x1fffffffL;
      if(gid==0)continue;
-     if(layerIndex==3&&(tileY<9||tileY>10||tileX<21))continue;
+     if(layerIndex==3&&!(gid>=654&&gid<=703&&tileY>=9&&tileY<=10&&tileX>=21))continue;
      // The bottom doorway is two tiles wide, regardless of wall art.
      if(layerIndex==5&&tileY>=19&&(tileX==30||tileX==31))continue;
      // Stone masonry must be solid, but do not treat shop decorations
