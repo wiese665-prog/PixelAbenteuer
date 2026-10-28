@@ -1023,11 +1023,21 @@ public class MainActivity extends Activity {
      itemIcon(names[itemIndex],x+4,y+5,1.45f);
      Item item=definitions.get(names[itemIndex]);
      paint.setTextSize(10);paint.setColor(item!=null&&item.equipment()?rarityColor(item.rarity):col("#f1eee1"));
-     String label=names[itemIndex].replaceAll(" \\{[0-9]+\\}$","");if(label.length()>13)label=label.substring(0,12)+".";
-     canvas.drawText(label,x+38,y+20,paint);
+     String label=names[itemIndex].replaceAll(" \\{[0-9]+\\}$","");
+     paint.setTextSize(9);
+     String line1=label,line2="";
+     if(paint.measureText(line1)>58f){
+      int cut=line1.length();while(cut>1&&paint.measureText(line1.substring(0,cut))>58f)cut--;
+      int space=line1.lastIndexOf(' ',cut);
+      if(space>2){line1=line1.substring(0,space);line2=label.substring(space+1);}else{line1=label.substring(0,cut);line2=label.substring(cut).trim();}
+      while(line2.length()>1&&paint.measureText(line2)>58f)line2=line2.substring(0,line2.length()-1);
+      if(!line2.isEmpty()&&!label.endsWith(line2))line2=line2.substring(0,Math.max(1,line2.length()-1))+"…";
+     }
+     canvas.drawText(line1,x+38,y+16,paint);
+     if(!line2.isEmpty())canvas.drawText(line2,x+38,y+27,paint);
      if(side==1){paint.setColor(col("#ffffff"));paint.setTextSize(11);canvas.drawText("x"+inventory.getOrDefault(names[itemIndex],0),x+7,y+17,paint);}
      paint.setColor(col("#eac582"));paint.setTextSize(11);
-     canvas.drawText((side==0?price(names[itemIndex]):Math.max(1,price(names[itemIndex])/2))+" Kupfer",x+38,y+40,paint);
+     canvas.drawText((side==0?price(names[itemIndex]):Math.max(1,price(names[itemIndex])/2))+" Kupfer",x+38,y+45,paint);
     }
    }
    if(inspectedGear!=null&&gearTooltipTime>0f)drawGearTooltip(inspectedGear,hoverX,hoverY,vw,vh);
@@ -1620,8 +1630,13 @@ public class MainActivity extends Activity {
    }
    return false;
   }
+  String mobDisplayName(Mob m){
+   String kind=m.kind;
+   String name=kind.startsWith("orc")?"Ork":kind.equals("boar")?"Wildschwein":kind.equals("deer")?"Hirsch":kind.equals("black_grouse")?"Birkhuhn":kind.equals("rabbit")?"Kaninchen":kind.equals("fox")?"Fuchs":kind.replace('_',' ');
+   return m.alpha?"Alpha "+name:name;
+  }
   void groundShadow(float x,float y,float rx,float ry){
-   paint.setColor(Color.argb(75,12,25,17));paint.setStyle(Paint.Style.FILL);
+   paint.setColor(Color.argb(113,12,25,17));paint.setStyle(Paint.Style.FILL);
    canvas.drawOval(new RectF(x-rx,y-ry,x+rx,y+ry),paint);
   }
   void billboard(String kind,String action,int dir,float x,float y,float w,float h,float time,boolean freeze){
@@ -1649,7 +1664,7 @@ public class MainActivity extends Activity {
     else drawRect(col("#82776b"),d.x-d.w/2,d.y-d.h/2,d.w,d.h);
    }
    drawHouse(forgeX,forgeY,true);
-   groundShadow(merchantX,merchantY+36,19,6);billboard("orc2","idle",0,merchantX,merchantY,79,79,elapsed,false);
+   billboard("orc2","idle",0,merchantX,merchantY,79,79,elapsed,false);
    paint.setTextAlign(Paint.Align.CENTER);paint.setColor(col("#ffe7aa"));paint.setTextSize(13);
    fantasyName("Orc-Händler",merchantX,merchantY-39);paint.setTextAlign(Paint.Align.LEFT);
    if(Math.hypot(px-merchantX,py-merchantY)<50&&!shopOpen){paint.setColor(Color.WHITE);paint.setTextSize(12);
@@ -1669,8 +1684,8 @@ public class MainActivity extends Activity {
     if(m.x<px-vw/2-90||m.x>px+vw/2+90||m.y<py-vh/2-90||m.y>py+vh/2+90)continue;
     String action=m.dead?"death":m.hurtTimer>0?"hurt":m.action;
     float size=(m.kind.startsWith("orc")?79:m.kind.equals("boar")?45:m.kind.equals("deer")?43:36)*(m.alpha?1.28f:1f);
-    if(!m.dead)groundShadow(m.x,m.y+size*.46f,size*.24f,6);billboard(m.kind,action,m.dir,m.x,m.y,size,size,m.dead?m.deathTimer:m.anim,m.dead&&m.deathTimer>.7f);
-    if(!m.dead){paint.setColor(Color.WHITE);paint.setTextSize(12);paint.setTextAlign(Paint.Align.CENTER);paint.setTypeface(Typeface.DEFAULT_BOLD);paint.setTextSize(10);outlinedText((m.alpha?"Alpha ":"")+"Lv. "+m.level,m.x,m.y-size*(m.hostile()?.53f:.64f));paint.setTypeface(Typeface.DEFAULT);paint.setTextAlign(Paint.Align.LEFT);}
+    billboard(m.kind,action,m.dir,m.x,m.y,size,size,m.dead?m.deathTimer:m.anim,m.dead&&m.deathTimer>.7f);
+    if(!m.dead){paint.setColor(Color.WHITE);paint.setTextSize(12);paint.setTextAlign(Paint.Align.CENTER);paint.setTypeface(Typeface.DEFAULT_BOLD);paint.setTextSize(10);outlinedText(mobDisplayName(m)+"  Lv. "+m.level,m.x,m.y-size*(m.hostile()?.53f:.64f));paint.setTypeface(Typeface.DEFAULT);paint.setTextAlign(Paint.Align.LEFT);}
     if(!m.dead&&m.hostile()&&!indoors&&!safeZone(px,py)&&!safeZone(m.x,m.y)
        &&Math.hypot(px-m.x,py-m.y)<285f){
      paint.setTextAlign(Paint.Align.CENTER);paint.setTypeface(Typeface.DEFAULT_BOLD);
@@ -1683,7 +1698,7 @@ public class MainActivity extends Activity {
    }
    String playerKind=sword?"player_sword":"player_unarmed";
    String playerAction=hp<=0?"death":hurtAnim>0?"hurt":attackAnim>0&&sword?"attack":Math.abs(joyX)+Math.abs(joyY)>.08f?(sprintHeld?"run":"walk"):"idle";
-   groundShadow(px,py+37,19,6);billboard(playerKind,playerAction,playerDir,px,py,80.64f,80.64f,hp<=0?deathAnim:attackAnim>0?.4f-attackAnim:elapsed,hp<=0&&deathAnim>.8f);
+   groundShadow(px,py+29,19,6);billboard(playerKind,playerAction,playerDir,px,py,80.64f,80.64f,hp<=0?deathAnim:attackAnim>0?.4f-attackAnim:elapsed,hp<=0&&deathAnim>.8f);
    if(playerHealthVisible>0)healthBar(px,py-56,52,hp,maxHp);
    damageText(px,py-66,lastPlayerDamage,playerDamageTime);
    Drop nearby=nearestDrop();
