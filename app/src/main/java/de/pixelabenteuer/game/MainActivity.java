@@ -393,7 +393,7 @@ public class MainActivity extends Activity {
    if(smithyLayers==null)return;
    String[] atlas={"Decorative_cracks","Walls_interior","Forge","Interior_objects"};
    int[] first={1,286,558,654},cols={19,16,8,13},counts={285,272,96,507};
-   paint.setFilterBitmap(false);paint.setAlpha(255);
+   paint.setColor(Color.WHITE);paint.setColorFilter(null);paint.setFilterBitmap(false);paint.setAlpha(255);
    for(long[] layer:smithyLayers)for(int i=0;i<layer.length;i++){
     long encoded=layer[i],gid=encoded&0x1fffffffL;
     if(gid==0)continue;
