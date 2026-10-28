@@ -1458,7 +1458,7 @@ public class MainActivity extends Activity {
     }
    }
    // NPCs have separate small footprints.
-   if(Math.hypot(x-237f,y-329f)<17f)return true;
+   if(Math.hypot(x-237f,y-321f)<17f)return true;
    if(Math.hypot(x-570f,y-335f)<16f)return true;
    if(Math.hypot(x-622f,y-431f)<21f)return true;
    return false;
