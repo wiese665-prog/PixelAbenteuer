@@ -1069,6 +1069,15 @@ public class MainActivity extends Activity {
     pickupNotice=saved?"Spiel gespeichert":"Speichern fehlgeschlagen";noticeTime=3f;
    }catch(Exception ex){pickupNotice="Speichern fehlgeschlagen";noticeTime=3f;}
   }
+  boolean hasLoadableSave(){
+   try{
+    String json=getContext().getSharedPreferences("pixel_save",MODE_PRIVATE).getString("save",null);
+    if(json==null)return false;
+    org.json.JSONObject root=new org.json.JSONObject(json);
+    return root.has("inventory")&&root.has("equipped")&&root.has("hotbar")&&root.has("mobs")&&root.has("drops")&&root.optInt("hp",0)>0&&root.has("px")&&root.has("py");
+   }catch(Exception ex){return false;}
+  }
+  void newCharacterAfterDeath(){restart();creatorOpen=true;startScreen=false;pauseMenu=false;}
   void loadGame(){
    try{
     String json=getContext().getSharedPreferences("pixel_save",MODE_PRIVATE).getString("save",null);
@@ -1450,7 +1459,7 @@ public class MainActivity extends Activity {
    updateMusic(dt);
    adventurerSpeechTime=Math.max(0,adventurerSpeechTime-dt);
    elapsed+=dt;noticeTime=Math.max(0,noticeTime-dt);swordTimer=Math.max(0,swordTimer-dt);sword=swordTimer>0;attackCooldown=Math.max(0,attackCooldown-dt);attackAnim=Math.max(0,attackAnim-dt);hurtAnim=Math.max(0,hurtAnim-dt);playerHealthVisible=Math.max(0,playerHealthVisible-dt);playerDamageTime=Math.max(0,playerDamageTime-dt);
-   if(hp<=0){deathAnim+=dt;return;}if(inventoryOpen||shopOpen||pauseMenu||startScreen||creatorOpen)return;
+   if(hp<=0){deathAnim+=dt;if(!hasLoadableSave())newCharacterAfterDeath();return;}if(inventoryOpen||shopOpen||pauseMenu||startScreen||creatorOpen)return;
    float mx=joyX,my=joyY,length=(float)Math.hypot(mx,my);
    if(length>1){mx/=length;my/=length;}
    if(indoors){
@@ -1698,7 +1707,7 @@ public class MainActivity extends Activity {
    }
    String playerKind=sword?"player_sword":"player_unarmed";
    String playerAction=hp<=0?"death":hurtAnim>0?"hurt":attackAnim>0&&sword?"attack":Math.abs(joyX)+Math.abs(joyY)>.08f?(sprintHeld?"run":"walk"):"idle";
-   groundShadow(px,py+24,13.3f,4.2f);billboard(playerKind,playerAction,playerDir,px,py,80.64f,80.64f,hp<=0?deathAnim:attackAnim>0?.4f-attackAnim:elapsed,hp<=0&&deathAnim>.8f);
+   if(hp>0){groundShadow(px,py+24,13.3f,4.2f);billboard(playerKind,playerAction,playerDir,px,py,80.64f,80.64f,attackAnim>0?.4f-attackAnim:elapsed,false);}
    if(playerHealthVisible>0)healthBar(px,py-56,52,hp,maxHp);
    damageText(px,py-66,lastPlayerDamage,playerDamageTime);
    Drop nearby=nearestDrop();
@@ -1739,7 +1748,14 @@ public class MainActivity extends Activity {
     paint.setColor(col("#f7e0a6"));c.drawText(pickupNotice,20,65,paint);
     paint.setTypeface(Typeface.DEFAULT);
    }
-   if(hp<=0){drawRect(col("#111111"),vw/2-180,vh/2-45,360,90);paint.setColor(Color.WHITE);paint.setTextSize(24);c.drawText("GAME OVER - Tippen",vw/2-145,vh/2+7,paint);}
+   if(hp<=0){
+    float left=vw/2-190,top=vh/2-100;
+    panel(left,top,380,200);fantasyHeading("CHARAKTER GESTORBEN",vw/2,top+38,21);
+    drawRect(col("#a88751"),left+25,top+64,330,48);drawRect(col("#203638"),left+28,top+67,324,42);
+    paint.setColor(Color.WHITE);paint.setTextAlign(Paint.Align.CENTER);paint.setTextSize(18);c.drawText("SPIELSTAND LADEN",vw/2,top+95,paint);
+    drawRect(col("#a88751"),left+25,top+126,330,48);drawRect(col("#203638"),left+28,top+129,324,42);
+    c.drawText("NEUER CHARAKTER",vw/2,top+157,paint);paint.setTextAlign(Paint.Align.LEFT);
+   }
    c.restore();postInvalidateDelayed(16);
   }
   int inventoryIndex(float x,float y,float vw,float vh){
@@ -1816,7 +1832,15 @@ public class MainActivity extends Activity {
       unequip(slot);return true;
      }
      int idx=inventoryIndex(xx,yy,vw,vh);if(idx>=0){String[] names=inventoryNames();if(idx<names.length){String name=names[idx];Item item=definitions.get(name);if(item!=null){inspectedGear=null;gearTooltipTime=0f;hoverX=xx;hoverY=yy;if(item.equipment())equip(name);else if(item.heal>0)assignHotbar(name);}}}return true;}
-    if(hp<=0){restart();return true;}
+    if(hp<=0){
+     float sc=Math.min(getWidth()/800f,getHeight()/450f),xx=e.getX()/sc,yy=e.getY()/sc,vw=getWidth()/sc,vh=getHeight()/sc;
+     float left=vw/2-190,top=vh/2-100;
+     if(xx>=left+25&&xx<=left+355){
+      if(yy>=top+64&&yy<=top+112){if(hasLoadableSave()){loadGame();if(hp<=0)newCharacterAfterDeath();}else newCharacterAfterDeath();}
+      else if(yy>=top+126&&yy<=top+174)newCharacterAfterDeath();
+     }
+     return true;
+    }
     // In BlueStacks, a left mouse click arrives as a primary mouse/touch press.
     if((e.getSource()&InputDevice.SOURCE_MOUSE)==InputDevice.SOURCE_MOUSE){
      if(e.getButtonState()==0||(e.getButtonState()&MotionEvent.BUTTON_PRIMARY)!=0)attack();
@@ -1835,6 +1859,7 @@ public class MainActivity extends Activity {
     if(shopOpen)shopOpen=false;else if(inventoryOpen){inventoryOpen=false;inspectedGear=null;gearTooltipTime=0f;}else pauseMenu=!pauseMenu;
     joyX=joyY=0;return true;
    }
+   if(hp<=0){if(key==KeyEvent.KEYCODE_ENTER){if(hasLoadableSave()){loadGame();if(hp<=0)newCharacterAfterDeath();}else newCharacterAfterDeath();}else if(key==KeyEvent.KEYCODE_N)newCharacterAfterDeath();return true;}
    if(creatorOpen){if(key==KeyEvent.KEYCODE_ENTER){creatorOpen=false;startScreen=false;pauseMenu=false;}return true;}
    if(startScreen||pauseMenu){if(key==KeyEvent.KEYCODE_ENTER){if(startScreen)creatorOpen=true;else pauseMenu=false;}return true;}
    switch(key){case KeyEvent.KEYCODE_A:case KeyEvent.KEYCODE_DPAD_LEFT:keyLeft=true;updateKeyboardMovement();break;
@@ -1860,7 +1885,7 @@ public class MainActivity extends Activity {
     case KeyEvent.KEYCODE_7:useHotbar(6);break;
     case KeyEvent.KEYCODE_8:useHotbar(7);break;
     case KeyEvent.KEYCODE_9:useHotbar(8);break;
-    case KeyEvent.KEYCODE_ENTER:if(hp<=0)restart();break;
+    case KeyEvent.KEYCODE_ENTER:break;
    }return true;
   }
   @Override public boolean onKeyUp(int key,KeyEvent e){
