@@ -1396,44 +1396,60 @@ public class MainActivity extends Activity {
   }
   // Coordinates are measured against the 42x22 Tiled map (16px per tile).
   // Keep these bounds allocated once rather than recreating them every movement frame.
-  // Pixel-accurate walk mask built from the actual Tiled object and wall sprites.
-  // Floor, carpets and floor-decoration layers are deliberately ignored.
+  // Walk mask based on the Tiled layers, not the visible height of furniture.
+  // Floor and carpet layers (0..2) are always walkable.
   boolean[] smithyCollisionPixels;
   void buildSmithyCollisionPixels(){
    if(smithyCollisionPixels!=null||smithyLayers==null)return;
-   final int width=42*16,height=22*16;
+   final int width=672,height=352;
    boolean[] mask=new boolean[width*height];
-   String[] atlas={"Decorative_cracks","Walls_interior","Forge","Interior_objects"};
-   int[] first={1,286,558,654},cols={19,16,8,13},counts={285,272,96,507};
-   // Layers: 0 Boden, 1 boden2, 2 mehr teppich, 3 Theke und teppiche,
-   // 4 innenraumkisten, 5 Wände, 6 kisten, 7 Objekte, 8 Objekte 2.
-   // Layer 3 mixes a counter and carpets; only the counter tiles are solid.
+   // Layer 3 contains both carpet and counter. Only the counter is solid.
+   // Layer 5 is structural masonry: walls are solid across their entire tiles.
+   // Layers 4,6,7,8 contain props: only the lower part of each connected
+   // group of tiles is the physical footprint; tall artwork is not a wall.
    for(int layerIndex=3;layerIndex<smithyLayers.length;layerIndex++){
-    if(layerIndex==3||layerIndex>=4){
-     long[] layer=smithyLayers[layerIndex];
-     for(int i=0;i<layer.length;i++){
-      int tileX=i%42,tileY=i/42;
-      if(layerIndex==3&&!(tileX>=23&&tileY>=12&&tileY<=14))continue;
-      // Tiled's bottom wall spans the whole row; leave its 2-tile doorway clear.
-      if(layerIndex==5&&tileY>=19&&(tileX==30||tileX==31))continue;
-      long encoded=layer[i],gid=encoded&0x1fffffffL;
-      if(gid==0)continue;
-      int set=-1;
-      for(int k=0;k<4;k++)if(gid>=first[k]&&gid<first[k]+counts[k]){set=k;break;}
-      if(set<0)continue;
-      Bitmap bitmap=buildingSprites.get(atlas[set]);if(bitmap==null)continue;
-      int local=(int)gid-first[set],sx=(local%cols[set])*16,sy=(local/cols[set])*16;
-      if(sx+16>bitmap.getWidth()||sy+16>bitmap.getHeight())continue;
-      boolean flipH=(encoded&0x80000000L)!=0,flipV=(encoded&0x40000000L)!=0,diag=(encoded&0x20000000L)!=0;
-      for(int yy=0;yy<16;yy++)for(int xx=0;xx<16;xx++){
-       int u=xx,v=yy;
-       if(flipH)u=15-u;
-       if(flipV)v=15-v;
-       if(diag){int tmp=u;u=v;v=tmp;}
-       if(Color.alpha(bitmap.getPixel(sx+u,sy+v))<96)continue;
-       int dstX=tileX*16+xx,dstY=tileY*16+yy;
-       mask[dstY*width+dstX]=true;
+    long[] layer=smithyLayers[layerIndex];
+    boolean[] occupied=new boolean[42*22];
+    for(int i=0;i<occupied.length;i++){
+     int tileX=i%42,tileY=i/42;
+     if((layer[i]&0x1fffffffL)==0)continue;
+     if(layerIndex==3&&!(tileX>=23&&tileY>=12&&tileY<=14))continue;
+     if(layerIndex==5&&tileY>=19&&(tileX==30||tileX==31))continue;
+     occupied[i]=true;
+    }
+    if(layerIndex==5){
+     for(int i=0;i<occupied.length;i++)if(occupied[i]){
+      int ox=(i%42)*16,oy=(i/42)*16;
+      for(int yy=0;yy<16;yy++)for(int xx=0;xx<16;xx++)
+       mask[(oy+yy)*width+ox+xx]=true;
+     }
+     continue;
+    }
+    // Group adjoining object tiles to avoid collision on upper sprite parts.
+    boolean[] seen=new boolean[occupied.length];
+    int[] queue=new int[occupied.length];
+    for(int i=0;i<occupied.length;i++){
+     if(!occupied[i]||seen[i])continue;
+     int head=0,tail=0,minX=41,maxX=0,minY=21,maxY=0;
+     queue[tail++]=i;seen[i]=true;
+     while(head<tail){
+      int p=queue[head++],cx=p%42,cy=p/42;
+      minX=Math.min(minX,cx);maxX=Math.max(maxX,cx);
+      minY=Math.min(minY,cy);maxY=Math.max(maxY,cy);
+      int[] neighbors={cx>0?p-1:-1,cx<41?p+1:-1,cy>0?p-42:-1,cy<21?p+42:-1};
+      for(int next:neighbors)if(next>=0&&occupied[next]&&!seen[next]){
+       seen[next]=true;queue[tail++]=next;
       }
+     }
+     // Counter is a physical barrier over its full three-tile depth.
+     // For furniture, reserve the bottom tile row(s) as its footprint.
+     int startY=layerIndex==3?minY:Math.max(minY,maxY-(maxY-minY>=3?1:0));
+     for(int n=0;n<tail;n++){
+      int p=queue[n],tileY=p/42;
+      if(tileY<startY)continue;
+      int ox=(p%42)*16,oy=tileY*16;
+      for(int yy=0;yy<16;yy++)for(int xx=0;xx<16;xx++)
+       mask[(oy+yy)*width+ox+xx]=true;
      }
     }
    }
