@@ -432,16 +432,16 @@ public class MainActivity extends Activity {
    drawSmithyMap(l,t);
    // The seller is drawn only once, using a single stable pose.
    characterTile("Master_Idle",3,2,(int)(elapsed*2)%3,l+177,t+145,81.4f);
-   sellerPortrait(l+510,t+146,(int)(elapsed*3)%3);
+   sellerPortrait(l+510,t+166,(int)(elapsed*3)%3);
    paint.setTextAlign(Paint.Align.CENTER);
    paint.setTypeface(Typeface.DEFAULT_BOLD);
    paint.setTextSize(13);paint.setColor(col("#ffe7aa"));
-   fantasyName("Schmied",l+177,t+97);
-   fantasyName("Händlerin",l+510,t+101);
+   fantasyName("Schmied",l+177,t+77);
+   fantasyName("Händlerin",l+510,t+119);
    paint.setTypeface(Typeface.DEFAULT);paint.setTextSize(11);
    paint.setColor(col("#ffffff"));
    if(Math.hypot(px-237,py-337)<53)drawInteractionKey(l+177,t+104);
-   if(Math.abs(px-570)<58&&py>335&&py<395)drawInteractionKey(l+510,t+116);
+   if(Math.abs(px-570)<58&&py>344&&py<409)drawInteractionKey(l+510,t+139);
    paint.setTextAlign(Paint.Align.LEFT);
    characterTile("Customer",3,2,(int)(elapsed*3)%3,l+562,t+288,52);
    paint.setTextAlign(Paint.Align.CENTER);paint.setTypeface(Typeface.DEFAULT_BOLD);
@@ -768,7 +768,7 @@ public class MainActivity extends Activity {
    if(!indoors)return false;
    if(Math.hypot(px-622,py-462)<37.5f){talkAdventurer();return true;}
    if(Math.hypot(px-237,py-337)<53){showMerchant(1);return true;}
-   if(Math.abs(px-570)<58&&py>335&&py<395){showMerchant(2);return true;}
+   if(Math.abs(px-570)<58&&py>344&&py<409){showMerchant(2);return true;}
    return false;
   }
   void openShop(){if(Math.hypot(px-merchantX,py-merchantY)<50)showMerchant(0);}
@@ -1399,20 +1399,20 @@ public class MainActivity extends Activity {
    float tx=x-60f,ty=y-174f;
    final float margin=8f;
    // Solid walls. The middle passage and the 2-tile southern entrance stay open.
-   if(tx<13||tx>659||ty<46)return true;
+   if(tx<13||tx>659||ty<37)return true;
    if(ty>307&&(tx<480||tx>509))return true;
-   if(tx>317&&tx<350&&(ty<171||ty>227))return true;
+   if(tx>317&&tx<350&&(ty<170||ty>228))return true;
    // The counter separates the saleswoman from the customer area.
-   if(tx>351&&tx<670&&ty>155&&ty<176)return true;
+   if(tx>351&&tx<670&&ty>151&&ty<174)return true;
    // Furniture and props measured from the user's Tiled interior.
    float[][] solids={
     {87,46,133,92}, {217,46,264,92}, // two forges
     {27,79,55,141}, {278,79,305,141}, // stone pillars
     {152,50,206,89}, // ore and wall decoration
-    {199,119,267,167}, // workbench beside the smith
-    {46,99,77,133}, {103,110,136,144}, // crates and cart
+    {144,121,192,146}, {199,119,267,157}, // two worktables, keep rug walkable
+    {54,95,77,132}, {103,110,136,144}, // crates and cart
     {21,213,81,248}, {35,274,119,307}, // southwest displays
-    {211,236,301,307}, // southeast smithy crates
+    {211,236,301,307}, {254,195,303,224}, // crates and wall-side supplies
     {353,37,393,80}, {420,4,477,65}, // northern shop shelves
     {510,64,549,118}, {600,65,641,119},
     {385,63,421,120}, // northern shelves
@@ -1424,7 +1424,7 @@ public class MainActivity extends Activity {
     if(tx>box[0]-margin&&tx<box[2]+margin&&ty>box[1]-margin&&ty<box[3]+margin)return true;
    // NPC feet only; rugs are never solid.
    if(Math.hypot(x-237f,y-337f)<15f)return true;
-   if(Math.hypot(x-570f,y-321f)<15f)return true;
+   if(Math.hypot(x-570f,y-340f)<15f)return true;
    if(Math.hypot(x-622f,y-431f)<20f)return true;
    return false;
   }
