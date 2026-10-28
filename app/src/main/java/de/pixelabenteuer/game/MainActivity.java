@@ -314,7 +314,7 @@ public class MainActivity extends Activity {
    villageProps.add(new VillageProp(atlas,sx,sy,sw,sh,x,y,w,h,radius,frames));
   }
   void loadVillage(){
-   for(String name:new String[]{"exterior","Trees_animation","house_details","Smoke_animation","bird_jump_animation","bird_fly_animation","walls_floor","Interior","tower","market","quests","shrine","sign","lantern"})
+   for(String name:new String[]{"exterior","Trees_animation","house_details","Smoke_animation","bird_jump_animation","bird_fly_animation","walls_floor","Interior","tower","market","quests","shrine","sign","lantern","cottage","inn","bakery","path","herb"})
     try(InputStream in=getAssets().open("village/"+name+".png")){Bitmap b=BitmapFactory.decodeStream(in);if(b!=null)villageArt.put(name,b);}catch(Exception e){android.util.Log.e("PixelVillage","Missing "+name,e);}
    // Hand-placed orchard: wide lanes, trunks rather than canopies collide.
    float[][] trees={{110,310},{104,630},{106,820},{335,150},{690,150},{1000,220},{1000,575},{1010,800},{150,935},{360,945},{600,944},{840,947}};
@@ -336,7 +336,7 @@ public class MainActivity extends Activity {
     addVillageProp("exterior",92,464,14,23,h[0]+101,h[1]+125,24,42,9,1);
    }
    for(float[] g:new float[][]{{190,570},{450,590},{750,590}}){
-    for(int k=0;k<3;k++)addVillageProp("exterior",0,464,32,32,g[0]+k*30,g[1],32,32,0,1);
+    for(int k=0;k<5;k++)fantasyProp("herb",g[0]+k*18,g[1],12,22,0);
    }
    for(float[] f:new float[][]{{350,530},{960,430},{350,885},{960,850},{700,210}})
     addVillageProp("exterior",208,768,16,32,f[0],f[1],24,40,0,1);
@@ -356,7 +356,7 @@ public class MainActivity extends Activity {
    for(int x=startX;x<endX;x+=16)for(int y=startY;y<endY;y+=16){
     int n=Math.floorMod(x*73+y*113+(x/48)*19,31);
     drawRect(col("#759e53"),x,y,16,16);
-    if(roadAt(x+8,y+8,0))villageTile("exterior",128,136,16,16,x,y,16,16);
+    if(roadAt(x+8,y+8,0))villageTile("path",Math.floorMod(x,32),Math.floorMod(y,32),16,16,x,y,16,16);
     else if(n==7){drawRect(col("#92af61"),x+3,y+6,2,3);drawRect(col("#557d43"),x+10,y+10,3,2);}
    }
    for(float[] g:new float[][]{{170,540},{430,560},{730,560}}){
@@ -368,20 +368,12 @@ public class MainActivity extends Activity {
    float[] h=villageHouses[index];canvas.save();canvas.scale(1f,1f/CAMERA_GROUND_Y,h[0],h[1]+112);
    if(index==0)drawHouse(h[0],h[1],true);
    else {
-    paint.setColorFilter(new PorterDuffColorFilter(new int[]{0xffffffff,0xffe3c5a3,0xffa9c9c3,0xffc1bedc,0xffffd19a,0xffa3b7ca}[index],PorterDuff.Mode.MULTIPLY));
-    Bitmap house=villageArt.get("exterior");
-    canvas.drawBitmap(house,new Rect(0,0,144,128),new RectF(h[0]-116,h[1]-90,h[0]+114,h[1]+115),paint);
-    paint.setColorFilter(null);
-    if(index==1||index==4){
-     villageTile("house_details",0,16,144,80,h[0]-116,h[1]-12,230,127);
-     villageTile("exterior",0,0,144,92,h[0]-116,h[1]-126,230,147);
-    }
-
-
+    String houseArt=index==2?"inn":index==4?"bakery":"cottage";
+    villageTile(houseArt,0,0,144,128,h[0]-116,h[1]-90,230,205);
     paint.setTextAlign(Paint.Align.CENTER);paint.setTextSize(13);fantasyName(villageNames[index],h[0],h[1]-98);paint.setTextAlign(Paint.Align.LEFT);
    }
    // Six 48px cells: crop only the smoke above the embedded chimney/roof.
-   villageTile("Smoke_animation",((int)(elapsed*5)%6)*48,0,32,28,h[0]-(index==0?65:78),h[1]-(index==0?162:106),45,39);
+   if(index==0)villageTile("Smoke_animation",((int)(elapsed*5)%6)*48,0,32,28,h[0]-(index==0?65:78),h[1]-(index==0?162:106),45,39);
    canvas.restore();
   }
   void drawVillageProp(VillageProp p){

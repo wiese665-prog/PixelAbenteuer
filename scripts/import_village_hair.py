@@ -62,7 +62,8 @@ def build():
                         w,h = ((16,15) if facing==0 else (16,20) if facing==1 else (20,18))
                         left = round((x0+x1-w)/2) + (-2 if facing==2 else 2 if facing==3 else 0)
                         if facing==0:left+=1
-                        top = y0-2
+                        left += 1
+                        top = y0-1
                     else:
                         w,h = x1-x0+4,y1-y0+3
                         left,top = x0-2,y0-2
