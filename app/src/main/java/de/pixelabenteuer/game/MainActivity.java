@@ -1457,8 +1457,8 @@ public class MainActivity extends Activity {
     float step=(sprintHeld?205:140)*dt/3f;
     for(int sub=0;sub<3;sub++){
      float nx=px+mx*step,ny=py+my*step;
-     if(!blocked(nx,py))px=nx;
-     if(!blocked(px,ny))py=ny;
+     if(!blocked(nx,py)&&!mobFootBlocked(nx,py,null,12f))px=nx;
+     if(!blocked(px,ny)&&!mobFootBlocked(px,ny,null,12f))py=ny;
      if(Math.abs(px-(forgeX+DOOR_OUT_X))<22&&py>forgeY+DOOR_OUT_Y-22&&py<forgeY+DOOR_OUT_Y+10&&my<0){enterOrLeave();break;}
     }
    }
@@ -1522,8 +1522,8 @@ public class MainActivity extends Activity {
      float step=dt/3f;
      for(int sub=0;sub<3;sub++){
       float nx=m.x+vx*step,ny=m.y+vy*step;
-      if(!blocked(nx,m.y)&&(!m.hostile()||!safeZone(nx,m.y)))m.x=nx;else {m.decision=0;m.pathTimer=0;}
-      if(!blocked(m.x,ny)&&(!m.hostile()||!safeZone(m.x,ny)))m.y=ny;else {m.decision=0;m.pathTimer=0;}
+      if(!blocked(nx,m.y)&&!mobFootBlocked(nx,m.y,m,mobFootRadius(m))&&Math.hypot(nx-px,m.y-py)>mobFootRadius(m)+12f&&(!m.hostile()||!safeZone(nx,m.y)))m.x=nx;else {m.decision=0;m.pathTimer=0;}
+      if(!blocked(m.x,ny)&&!mobFootBlocked(m.x,ny,m,mobFootRadius(m))&&Math.hypot(m.x-px,ny-py)>mobFootRadius(m)+12f&&(!m.hostile()||!safeZone(m.x,ny)))m.y=ny;else {m.decision=0;m.pathTimer=0;}
      }
      m.dir=direction(vx,vy);
     }
@@ -1578,6 +1578,23 @@ public class MainActivity extends Activity {
   }
   // Experimental fixed 2.5D camera: ground is foreshortened, sprites stay upright.
   static final float CAMERA_GROUND_Y=0.82f;
+  float mobFootRadius(Mob m){
+   float size=(m.kind.startsWith("orc")?79:m.kind.equals("boar")?45:m.kind.equals("deer")?43:36)*(m.alpha?1.28f:1f);
+   Bitmap b=sprites.get(m.kind+"_idle_front");
+   if(b==null)return size*.22f;
+   int fw=Math.min(b.getHeight(),b.getWidth()),left=fw,right=0;
+   // Only opaque pixels in the bottom quarter are part of the ground footprint.
+   for(int yy=b.getHeight()*3/4;yy<b.getHeight();yy+=2)
+    for(int xx=0;xx<fw;xx+=2)if(Color.alpha(b.getPixel(xx,yy))>100){left=Math.min(left,xx);right=Math.max(right,xx);}
+   return right>left?Math.max(5f,Math.min(size*.32f,size*(right-left)/(float)fw*.42f)):size*.22f;
+  }
+  boolean mobFootBlocked(float x,float y,Mob ignore,float radius){
+   for(Mob other:mobs)if(other!=ignore&&!other.dead){
+    float r=radius+mobFootRadius(other);
+    if(Math.abs(x-other.x)<r&&Math.abs(y-(other.y+mobFootRadius(other)*.3f))<r*.65f)return true;
+   }
+   return false;
+  }
   void groundShadow(float x,float y,float rx,float ry){
    paint.setColor(Color.argb(75,12,25,17));paint.setStyle(Paint.Style.FILL);
    canvas.drawOval(new RectF(x-rx,y-ry,x+rx,y+ry),paint);
@@ -1593,7 +1610,7 @@ public class MainActivity extends Activity {
    paint.reset();paint.setAntiAlias(false);paint.setFilterBitmap(false);paint.setColor(Color.WHITE);
    paint.setColorFilter(null);paint.setAlpha(255);paint.setStyle(Paint.Style.FILL);
    // Clear the entire frame, including any emulator-provided dirty region.
-   c.drawColor(col("#47884a"),android.graphics.PorterDuff.Mode.SRC);c.save();c.scale(scale,scale);c.save();c.translate(vw/2-px,vh/2-py);c.scale(1f,CAMERA_GROUND_Y,px,py);
+   c.drawColor(col("#47884a"),android.graphics.PorterDuff.Mode.SRC);c.save();c.scale(scale,scale);c.save();c.translate(vw/2-px,vh*.62f-py);c.scale(1f,CAMERA_GROUND_Y,px,py);
    int startX=(int)Math.floor((px-vw/2)/32f)*32-32,endX=(int)Math.ceil((px+vw/2)/32f)*32+32;
    int startY=(int)Math.floor((py-vh/2)/32f)*32-32,endY=(int)Math.ceil((py+vh/2)/32f)*32+32;
    for(int x=startX;x<endX;x+=32)for(int y=startY;y<endY;y+=32){
@@ -1603,11 +1620,11 @@ public class MainActivity extends Activity {
    for(Decoration d:decorations){
     if(d.x+d.w<px-vw/2-60||d.x-d.w>px+vw/2+60||d.y+d.h<py-vh/2-60||d.y-d.h>py+vh/2+60)continue;
     if(Math.hypot(d.x-forgeX,d.y-(forgeY+84))<82)continue;
-    if(d.image!=null){paint.setColor(Color.WHITE);paint.setColorFilter(null);paint.setAlpha(255);paint.setStyle(Paint.Style.FILL);c.drawBitmap(d.image,null,new RectF(d.x-d.w/2,d.y-d.h*.8f,d.x+d.w/2,d.y+d.h*.2f),paint);}
+    if(d.image!=null){paint.setColor(Color.WHITE);paint.setColorFilter(null);paint.setAlpha(255);paint.setStyle(Paint.Style.FILL);c.save();c.scale(1f,1f/CAMERA_GROUND_Y,d.x,d.y+d.h*.2f);c.drawBitmap(d.image,null,new RectF(d.x-d.w/2,d.y-d.h*.8f,d.x+d.w/2,d.y+d.h*.2f),paint);c.restore();}
     else drawRect(col("#82776b"),d.x-d.w/2,d.y-d.h/2,d.w,d.h);
    }
    drawHouse(forgeX,forgeY,true);
-   groundShadow(merchantX,merchantY+25,22,7);billboard("orc2","idle",0,merchantX,merchantY,79,79,elapsed,false);
+   groundShadow(merchantX,merchantY+39,22,7);billboard("orc2","idle",0,merchantX,merchantY,79,79,elapsed,false);
    paint.setTextAlign(Paint.Align.CENTER);paint.setColor(col("#ffe7aa"));paint.setTextSize(13);
    fantasyName("Orc-Händler",merchantX,merchantY-39);paint.setTextAlign(Paint.Align.LEFT);
    if(Math.hypot(px-merchantX,py-merchantY)<50&&!shopOpen){paint.setColor(Color.WHITE);paint.setTextSize(12);
@@ -1627,7 +1644,7 @@ public class MainActivity extends Activity {
     if(m.x<px-vw/2-90||m.x>px+vw/2+90||m.y<py-vh/2-90||m.y>py+vh/2+90)continue;
     String action=m.dead?"death":m.hurtTimer>0?"hurt":m.action;
     float size=(m.kind.startsWith("orc")?79:m.kind.equals("boar")?45:m.kind.equals("deer")?43:36)*(m.alpha?1.28f:1f);
-    if(!m.dead)groundShadow(m.x,m.y+size*.30f,size*.27f,6);billboard(m.kind,action,m.dir,m.x,m.y,size,size,m.dead?m.deathTimer:m.anim,m.dead&&m.deathTimer>.7f);
+    if(!m.dead)groundShadow(m.x,m.y+size*.49f,size*.27f,6);billboard(m.kind,action,m.dir,m.x,m.y,size,size,m.dead?m.deathTimer:m.anim,m.dead&&m.deathTimer>.7f);
     if(!m.dead){paint.setColor(Color.WHITE);paint.setTextSize(12);paint.setTextAlign(Paint.Align.CENTER);paint.setTypeface(Typeface.create("serif",Typeface.BOLD_ITALIC));paint.setTextSize(7);outlinedText((m.alpha?"Alpha ":"")+"Lv. "+m.level,m.x,m.y-size*(m.hostile()?.53f:.64f));paint.setTypeface(Typeface.DEFAULT);paint.setTextAlign(Paint.Align.LEFT);}
     if(!m.dead&&m.hostile()&&!indoors&&!safeZone(px,py)&&!safeZone(m.x,m.y)
        &&Math.hypot(px-m.x,py-m.y)<285f){
@@ -1641,7 +1658,7 @@ public class MainActivity extends Activity {
    }
    String playerKind=sword?"player_sword":"player_unarmed";
    String playerAction=hp<=0?"death":hurtAnim>0?"hurt":attackAnim>0&&sword?"attack":Math.abs(joyX)+Math.abs(joyY)>.08f?(sprintHeld?"run":"walk"):"idle";
-   groundShadow(px,py+26,22,7);billboard(playerKind,playerAction,playerDir,px,py,80.64f,80.64f,hp<=0?deathAnim:attackAnim>0?.4f-attackAnim:elapsed,hp<=0&&deathAnim>.8f);
+   groundShadow(px,py+39,22,7);billboard(playerKind,playerAction,playerDir,px,py,80.64f,80.64f,hp<=0?deathAnim:attackAnim>0?.4f-attackAnim:elapsed,hp<=0&&deathAnim>.8f);
    if(playerHealthVisible>0)healthBar(px,py-56,52,hp,maxHp);
    damageText(px,py-66,lastPlayerDamage,playerDamageTime);
    Drop nearby=nearestDrop();
