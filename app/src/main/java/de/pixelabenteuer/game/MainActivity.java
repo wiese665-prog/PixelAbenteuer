@@ -54,7 +54,7 @@ public class MainActivity extends Activity {
    definitions.put(id,item);return id;
   }
   String[] hotbar=new String[9];int selectedHotbar=-1;int copper=0,silver=0,gold=0,hoverSlot=-1;float hoverX=0,hoverY=0;
-  Item inspectedGear=null;String characterName="Abenteurer";int armorStyle=0,characterGender=0;boolean sprintHeld=false;int attackSequence=0;boolean creatorOpen=false;int hairType=0,hairColor=1,skinColor=1,eyeColor=0,combatStyle=0;boolean inventoryOpen=false,shopOpen=false,startScreen=true,pauseMenu=false,controlsOpen=false;float merchantX=265,merchantY=215;
+  Item inspectedGear=null;String characterName="Abenteurer";int armorStyle=0,characterGender=0;boolean sprintHeld=false;int attackSequence=0;boolean creatorOpen=false,calendarOpen=false;int hairType=0,hairColor=1,skinColor=1,eyeColor=0,combatStyle=0;boolean inventoryOpen=false,shopOpen=false,startScreen=true,pauseMenu=false,controlsOpen=false;float merchantX=265,merchantY=215;
   int activeMerchant=0; // 0 Orc-Händler, 1 Schmied, 2 Händlerin
   String[] shopStock={"Apple","Ham","Healthpotion","Healpotion med","Iron Sword","Silver Sword","Leather Armor","Iron Armor","Iron Helmet","Golden Sword"};
   String[] smithStock={"Wooden Sword [Common]","Wooden Sword [Legendär]","Iron Sword [Uncommon]","Iron Sword [Rare]","Silver Sword [Common]","Silver Sword [Legendär]","Golden Sword [Rare]","Golden Sword [Legendär]","Leather Armor [Rare]","Iron Armor [Rare]","Iron Helmet [Legendär]","Leather Boot [Uncommon]"};
@@ -1099,7 +1099,7 @@ public class MainActivity extends Activity {
     mobs.clear();org.json.JSONArray enemies=root.getJSONArray("mobs");for(int i=0;i<enemies.length();i++){org.json.JSONObject o=enemies.getJSONObject(i);
      Mob m=new Mob(o.getString("kind"),(float)o.getDouble("x"),(float)o.getDouble("y"));m.hp=o.getInt("hp");m.maxHp=o.getInt("maxHp");m.level=o.getInt("level");m.damage=o.getInt("damage");m.dead=o.getBoolean("dead");mobs.add(m);}
     drops.clear();org.json.JSONArray ground=root.getJSONArray("drops");for(int i=0;i<ground.length();i++){org.json.JSONObject o=ground.getJSONObject(i);drops.add(new Drop(o.getString("item"),(float)o.getDouble("x"),(float)o.getDouble("y"),0));}
-    startScreen=false;pauseMenu=false;inventoryOpen=false;shopOpen=false;joyX=joyY=0;previous=System.nanoTime();
+    startScreen=false;pauseMenu=false;inventoryOpen=false;shopOpen=false;calendarOpen=false;joyX=joyY=0;previous=System.nanoTime();
     pickupNotice="Spielstand geladen";noticeTime=3f;
    }catch(Exception ex){pickupNotice="Laden fehlgeschlagen";noticeTime=3f;}
   }
@@ -1443,7 +1443,7 @@ public class MainActivity extends Activity {
    gearTooltipTime=Math.max(0f,gearTooltipTime-dt);
    if(!inventoryOpen&&!shopOpen){inspectedGear=null;gearTooltipTime=0f;}
    if(pressedMenuButton>=0){pressedMenuTime-=dt;if(pressedMenuTime<=0f){int button=pressedMenuButton;pressedMenuButton=-1;runMenuButton(button);}}
-   if(!startScreen&&!pauseMenu&&!creatorOpen&&!inventoryOpen&&!shopOpen){
+   if(!startScreen&&!pauseMenu&&!creatorOpen&&!inventoryOpen&&!shopOpen&&!calendarOpen){
     int previousDay=(int)(worldTime/240f);
     worldTime+=dt;
     if((int)(worldTime/240f)>previousDay){
@@ -1459,7 +1459,7 @@ public class MainActivity extends Activity {
    updateMusic(dt);
    adventurerSpeechTime=Math.max(0,adventurerSpeechTime-dt);
    elapsed+=dt;noticeTime=Math.max(0,noticeTime-dt);swordTimer=Math.max(0,swordTimer-dt);sword=swordTimer>0;attackCooldown=Math.max(0,attackCooldown-dt);attackAnim=Math.max(0,attackAnim-dt);hurtAnim=Math.max(0,hurtAnim-dt);playerHealthVisible=Math.max(0,playerHealthVisible-dt);playerDamageTime=Math.max(0,playerDamageTime-dt);
-   if(hp<=0){deathAnim+=dt;if(!hasLoadableSave())newCharacterAfterDeath();return;}if(inventoryOpen||shopOpen||pauseMenu||startScreen||creatorOpen)return;
+   if(hp<=0){deathAnim+=dt;if(!hasLoadableSave())newCharacterAfterDeath();return;}if(inventoryOpen||shopOpen||pauseMenu||startScreen||creatorOpen||calendarOpen)return;
    float mx=joyX,my=joyY,length=(float)Math.hypot(mx,my);
    if(length>1){mx/=length;my/=length;}
    if(indoors){
@@ -1607,8 +1607,32 @@ public class MainActivity extends Activity {
     if(m.hp<=0){m.dead=true;m.deathTimer=0;if(m.hostile()){kills++;if(questActive&&questProgress<questGoal())questProgress++;}else animalKills++;earnExp((m.hostile()?8:3)+m.level*2);loot(m);}
    }
   }
+  int calendarDay(){return Math.max(0,(int)(worldTime/240f));}
+  String calendarEvent(int absoluteDay){return ""; /* Future timed events use absolute game days. */}
+  void drawCalendar(float vw,float vh){
+   float l=vw/2-252,t=vh/2-195;
+   panel(l,t,504,390);
+   int lived=calendarDay(),month=lived/28+1,day=lived%28+1;
+   String[] weekdays={"Mo","Di","Mi","Do","Fr","Sa","So"};
+   paint.setTextAlign(Paint.Align.CENTER);paint.setTypeface(Typeface.DEFAULT_BOLD);
+   paint.setColor(col("#f1d18b"));paint.setTextSize(24);canvas.drawText("KALENDER",vw/2,t+37,paint);
+   paint.setTextSize(15);paint.setColor(Color.WHITE);canvas.drawText("Monat "+month+"  |  Tag "+day+"  |  "+(lived+1)+". Lebenstag",vw/2,t+64,paint);
+   float phase=(worldTime%240f)/240f;
+   String timeOfDay=phase<.25f?"Morgen":phase<.5f?"Tag":phase<.75f?"Abend":"Nacht";
+   paint.setTextSize(13);canvas.drawText(timeOfDay+"  -  "+(int)(phase*24)+":00 Spielzeit",vw/2,t+86,paint);
+   for(int i=0;i<7;i++){paint.setColor(col("#d3b978"));paint.setTextSize(13);canvas.drawText(weekdays[i],l+56+i*65,t+117,paint);}
+   for(int d=0;d<28;d++){
+    int col=d%7,row=d/7;float x=l+35+col*65,y=t+130+row*47;
+    boolean today=d+1==day;
+    drawRect(today?col("#8c713f"):col("#253a36"),x,y,43,38);
+    paint.setColor(today?Color.WHITE:col("#d5dfd7"));paint.setTextSize(15);canvas.drawText(""+(d+1),x+21,y+24,paint);
+    if(!calendarEvent((month-1)*28+d).isEmpty()){paint.setColor(col("#e8b85a"));canvas.drawCircle(x+36,y+8,3,paint);}
+   }
+   paint.setColor(col("#c9d5ce"));paint.setTextSize(13);canvas.drawText("K zum Schliessen  |  Ereignisse folgen spaeter",vw/2,t+353,paint);
+   paint.setTypeface(Typeface.DEFAULT);paint.setTextAlign(Paint.Align.LEFT);
+  }
   void restart(){
-   hairType=0;hairColor=1;skinColor=1;eyeColor=0;combatStyle=0;armorStyle=0;characterGender=0;characterName="Abenteurer";creatorOpen=false;sprintHeld=false;attackSequence=0;
+   hairType=0;hairColor=1;skinColor=1;eyeColor=0;combatStyle=0;armorStyle=0;characterGender=0;characterName="Abenteurer";creatorOpen=false;calendarOpen=false;sprintHeld=false;attackSequence=0;
    indoors=false;currentHouse=0;playerLevel=1;exp=0;attackPower=3;maxHp=12;hp=maxHp;maxMana=20;mana=20;worldTime=0;stockRefreshTimer=0;refreshMerchantStocks();equipped.clear();copper=silver=gold=0;java.util.Arrays.fill(hotbar,null);selectedHotbar=-1;playerDamageTime=0;px=180;py=180;joyX=joyY=0;deathAnim=0;swordTimer=0;sword=false;attackAnim=0;playerHealthVisible=0;kills=animalKills=0;questTier=questProgress=nextQuestDay=0;questActive=false;mobs.clear();drops.clear();inventory.clear();inventoryOpen=false;shopOpen=false;pauseMenu=false;spawnMobs();
   }
   // Experimental fixed 2.5D camera: ground is foreshortened, sprites stay upright.
@@ -1735,6 +1759,7 @@ public class MainActivity extends Activity {
    if(!indoors&&!startScreen&&!pauseMenu&&!inventoryOpen&&!shopOpen)drawMinimap(vw,vh);
    if(!inventoryOpen)drawHotbar(vw,vh);
    if(inventoryOpen)drawInventory(vw,vh);
+   if(calendarOpen&&!creatorOpen&&!startScreen&&!pauseMenu)drawCalendar(vw,vh);
    if(startScreen||pauseMenu){if(controlsOpen)drawControls(vw,vh);else drawMenu(vw,vh);}
    if(creatorOpen)drawCreator(vw,vh);
    if(shopOpen)drawShop(vw,vh);
@@ -1832,6 +1857,7 @@ public class MainActivity extends Activity {
       unequip(slot);return true;
      }
      int idx=inventoryIndex(xx,yy,vw,vh);if(idx>=0){String[] names=inventoryNames();if(idx<names.length){String name=names[idx];Item item=definitions.get(name);if(item!=null){inspectedGear=null;gearTooltipTime=0f;hoverX=xx;hoverY=yy;if(item.equipment())equip(name);else if(item.heal>0)assignHotbar(name);}}}return true;}
+    if(calendarOpen){calendarOpen=false;return true;}
     if(hp<=0){
      float sc=Math.min(getWidth()/800f,getHeight()/450f),xx=e.getX()/sc,yy=e.getY()/sc,vw=getWidth()/sc,vh=getHeight()/sc;
      float left=vw/2-190,top=vh/2-100;
@@ -1854,12 +1880,15 @@ public class MainActivity extends Activity {
    if(key==KeyEvent.KEYCODE_SHIFT_LEFT||key==KeyEvent.KEYCODE_SHIFT_RIGHT){sprintHeld=true;return true;}
    if(key==KeyEvent.KEYCODE_ESCAPE||key==KeyEvent.KEYCODE_BACK){
     if(creatorOpen)return true;
+    if(calendarOpen){calendarOpen=false;return true;}
     if(controlsOpen){return true;}
     if(startScreen)return true;
     if(shopOpen)shopOpen=false;else if(inventoryOpen){inventoryOpen=false;inspectedGear=null;gearTooltipTime=0f;}else pauseMenu=!pauseMenu;
     joyX=joyY=0;return true;
    }
    if(hp<=0){if(key==KeyEvent.KEYCODE_ENTER){if(hasLoadableSave()){loadGame();if(hp<=0)newCharacterAfterDeath();}else newCharacterAfterDeath();}else if(key==KeyEvent.KEYCODE_N)newCharacterAfterDeath();return true;}
+   if(key==KeyEvent.KEYCODE_K&&!creatorOpen&&!startScreen&&!pauseMenu&&hp>0){calendarOpen=!calendarOpen;inventoryOpen=false;shopOpen=false;joyX=joyY=0;return true;}
+   if(calendarOpen){if(key==KeyEvent.KEYCODE_ESCAPE||key==KeyEvent.KEYCODE_BACK)calendarOpen=false;return true;}
    if(creatorOpen){if(key==KeyEvent.KEYCODE_ENTER){creatorOpen=false;startScreen=false;pauseMenu=false;}return true;}
    if(startScreen||pauseMenu){if(key==KeyEvent.KEYCODE_ENTER){if(startScreen)creatorOpen=true;else pauseMenu=false;}return true;}
    switch(key){case KeyEvent.KEYCODE_A:case KeyEvent.KEYCODE_DPAD_LEFT:keyLeft=true;updateKeyboardMovement();break;
