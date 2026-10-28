@@ -38,7 +38,7 @@ def isolate_hair(frame):
 
 
 def build():
-    for kind in ('braid','curl'):
+    for kind in ('braid','curl','bun','long'):
         source = Image.open(ROOT / f'art/source/{kind}-hair.png').convert('RGBA')
         directions = []
         for facing in range(4):
@@ -59,11 +59,17 @@ def build():
                     native = template.crop((col*64,row*64,col*64+64,row*64+64))
                     x0,y0,x1,y1 = native.getbbox()
                     if kind == 'braid':
-                        w,h = ((18,20) if facing==0 else (18,21) if facing==1 else (17,20))
+                        w,h = ((16,20) if facing==0 else (16,21) if facing==1 else (15,20))
                         left = round((x0+x1-w)/2)
                         if facing==0:left+=0
                         left += 0
                         top = y0-1
+                    elif kind in ('bun','long'):
+                        w,h = (16,15) if kind=='bun' else (16,21)
+                        left,top=round((x0+x1-w)/2),y0-1
+                    elif kind in ('bun','long'):
+                        w,h = (16,15) if kind=='bun' else (16,21)
+                        left,top=round((x0+x1-w)/2),y0-1
                     else:
                         w,h = x1-x0+4,y1-y0+3
                         left,top = x0-2,y0-2
@@ -85,7 +91,7 @@ def build():
                 path=ASSETS / f'char_a_{page}/4har/char_a_{page}_4har_{kind}_v{variant:02d}.png'
                 out.save(path)
                 assert set(out.getchannel('A').getdata())<={0,255}
-    print('Exported 56 sheets for twin braids and curls, including walking and combat poses.')
+    print('Exported 112 sheets for braids, curls, bun and long hair, including walking and combat poses.')
 
 
 if __name__ == '__main__':

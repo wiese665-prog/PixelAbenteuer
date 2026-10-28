@@ -1183,7 +1183,7 @@ public class MainActivity extends Activity {
     if(json==null){pickupNotice="Kein Spielstand";noticeTime=3f;return;}
     org.json.JSONObject root=new org.json.JSONObject(json);
     if(!root.has("inventory")||!root.has("equipped")||!root.has("hotbar")||!root.has("mobs")||!root.has("drops"))throw new org.json.JSONException("Incomplete save");
-    characterName=root.optString("characterName","Abenteurer");armorStyle=0;characterGender=root.optInt("characterGender",0);hairType=root.optInt("hairType",0);if(root.optInt("hairCatalog",0)<2&&hairType==2)hairType=1;hairType=Math.max(0,Math.min(3,hairType));hairColor=root.optInt("hairColor",1);skinColor=root.optInt("skinColor",1);eyeColor=root.optInt("eyeColor",0);combatStyle=root.optInt("combatStyle",0);creatorOpen=false;
+    characterName=root.optString("characterName","Abenteurer");armorStyle=0;characterGender=root.optInt("characterGender",0);hairType=root.optInt("hairType",0);if(root.optInt("hairCatalog",0)<2&&hairType==2)hairType=1;hairType=Math.max(0,Math.min(5,hairType));hairColor=root.optInt("hairColor",1);skinColor=root.optInt("skinColor",1);eyeColor=root.optInt("eyeColor",0);combatStyle=root.optInt("combatStyle",0);creatorOpen=false;
     px=(float)root.getDouble("px");py=(float)root.getDouble("py");
     if(!Float.isFinite(px)||!Float.isFinite(py))throw new org.json.JSONException("Invalid position");indoors=root.optBoolean("indoors",false);currentHouse=root.optInt("currentHouse",0);worldTime=(float)root.optDouble("worldTime",0);playerLevel=root.getInt("level");exp=root.getInt("exp");
     gold=root.getInt("gold");silver=root.getInt("silver");copper=root.getInt("copper");kills=root.optInt("kills");animalKills=root.optInt("animalKills");nextQuestDay=root.has("nextQuestDay")?root.optInt("nextQuestDay"):root.optInt("questsCompletedToday")>0?currentQuestDay()+2:0;questTier=root.optInt("questTier");questProgress=root.optInt("questProgress");questActive=root.optBoolean("questActive");
@@ -1237,7 +1237,7 @@ public class MainActivity extends Activity {
    paint.setColor(Color.WHITE);paint.setTextSize(15);
    canvas.drawText(characterName,left+394,top+94,paint);
    String[] names={"GESCHLECHT","FRISUR","HAUTFARBE","HAARFARBE","KAMPFSTIL"};
-   String[] values={characterGender==0?"Maennlich":"Weiblich",new String[]{"Bob","Kurzhaar","Zoepfe","Locken"}[Math.floorMod(hairType,4)],"Variante "+skinColor,"Farbe "+hairColor,new String[]{"Schwert + Schild","Axt + Schild","Streitkolben + Schild"}[combatStyle]};
+   String[] values={characterGender==0?"Maennlich":"Weiblich",new String[]{"Bob","Kurzhaar","Zoepfe","Locken","Dutt","Langhaar"}[Math.floorMod(hairType,6)],"Variante "+skinColor,"Farbe "+hairColor,new String[]{"Schwert + Schild","Axt + Schild","Streitkolben + Schild"}[combatStyle]};
    for(int i=0;i<5;i++){
     float yy=top+121+i*38;
     paint.setTextSize(12);paint.setTypeface(Typeface.DEFAULT_BOLD);
@@ -1275,7 +1275,7 @@ public class MainActivity extends Activity {
    int delta=x<left+449?-1:1;
    switch(index){
     case 0:characterGender=Math.floorMod(characterGender+delta,2);break;
-    case 1:hairType=Math.floorMod(hairType+delta,4);break;
+    case 1:hairType=Math.floorMod(hairType+delta,6);break;
     case 2:skinColor=Math.floorMod(skinColor+delta,11);break;
     case 3:hairColor=Math.floorMod(hairColor+delta,14);break;
     case 4:combatStyle=Math.floorMod(combatStyle+delta,3);break;
@@ -1484,7 +1484,7 @@ public class MainActivity extends Activity {
    int col=fighting?Math.min(3,Math.max(0,(int)(time*10))):(moving?(action.equals("run")?((int)(elapsed*12)%6):(int)(elapsed*8)%6):0);
    characterLayer(page,"0bas","humn",skinColor,row,col,x,y,w,h);
    characterLayer(page,"1out",equipped.containsKey("Brust")?"fstr":(characterGender==0?"boxr":"undi"),1,row,col,x,y,w,h);
-   characterLayer(page,"4har",hairType==2?"braid":hairType==3?"curl":hairType==0?"bob1":"dap1",hairColor,row,col,x,y,w,h);
+   characterLayer(page,"4har",hairType==2?"braid":hairType==3?"curl":hairType==4?"bun":hairType==5?"long":hairType==0?"bob1":"dap1",hairColor,row,col,x,y,w,h);
    if(equipped.containsKey("Kopf"))characterLayer(page,"5hat","pfht",1,row,col,x,y,w,h);
    if(creatorOpen||fighting){
     String weapon=combatStyle==1?"ax01":combatStyle==2?"mc01":"sw01";
