@@ -356,8 +356,8 @@ public class MainActivity extends Activity {
     villageTile("exterior",0,0,144,128,h[0]-116,h[1]-90,230,205);
     paint.setTextAlign(Paint.Align.CENTER);paint.setTextSize(13);fantasyName(villageNames[index],h[0],h[1]-98);paint.setTextAlign(Paint.Align.LEFT);
    }
-   // Six chimney frames, measured 48x48 cells, no embedded background.
-   villageTile("Smoke_animation",((int)(elapsed*5)%6)*48,0,48,48,h[0]-78,h[1]-(index==0?211:154),67,67);
+   // Six 48px cells: crop only the smoke above the embedded chimney/roof.
+   villageTile("Smoke_animation",((int)(elapsed*5)%6)*48,0,32,28,h[0]-(index==0?65:78),h[1]-(index==0?162:106),45,39);
    canvas.restore();
   }
   void drawVillageProp(VillageProp p){
