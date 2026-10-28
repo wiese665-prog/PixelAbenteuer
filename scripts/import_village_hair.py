@@ -42,12 +42,14 @@ def build():
         source = Image.open(ROOT / f'art/source/{kind}-hair.png').convert('RGBA')
         directions = []
         for facing in range(4):
-            frame = source.crop((0,round(facing*source.height/8),round(source.width/8),round((facing+1)*source.height/8)))
-            frame.putdata([p if p[3]>=240 and max(p[:3])-min(p[:3])<70 else (0,0,0,0) for p in frame.getdata()])
-            frame = isolate_hair(frame)
-            if kind == 'pony' and facing >= 2:
-                frame = ImageOps.mirror(frame)
-            directions.append(frame)
+            animation=[]
+            for column in range(8):
+                frame=source.crop((round(column*source.width/8),round(facing*source.height/8),round((column+1)*source.width/8),round((facing+1)*source.height/8)))
+                frame.putdata([p if p[3]>=240 and max(p[:3])-min(p[:3])<70 else (0,0,0,0) for p in frame.getdata()])
+                frame=isolate_hair(frame)
+                if kind=='pony' and facing>=2:frame=ImageOps.mirror(frame)
+                animation.append(frame)
+            directions.append(animation)
         for page in ('p1','pONE3'):
             template = Image.open(ASSETS / f'char_a_{page}/4har/char_a_{page}_4har_dap1_v01.png').convert('RGBA')
             indexed = Image.new('L',(512,512),255)
@@ -59,6 +61,7 @@ def build():
                     if kind == 'pony':
                         w,h = ((16,15) if facing==0 else (16,20) if facing==1 else (20,18))
                         left = round((x0+x1-w)/2) + (-2 if facing==2 else 2 if facing==3 else 0)
+                        if facing==0:left+=1
                         top = y0-2
                     else:
                         w,h = x1-x0+4,y1-y0+3
@@ -66,7 +69,7 @@ def build():
                     # Respect crouching/falling head compression from the native pose.
                     if page=='pONE3' and facing==0 and row==4 and col in (1,2,3):
                         h=max(10,h-2)
-                    hair = directions[facing].resize((w,h),Image.Resampling.NEAREST)
+                    hair = directions[facing][col if row>=4 or page=='pONE3' else 0].resize((w,h),Image.Resampling.NEAREST)
                     for y in range(h):
                         for x in range(w):
                             p=hair.getpixel((x,y))

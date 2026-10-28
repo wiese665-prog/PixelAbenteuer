@@ -299,6 +299,7 @@ public class MainActivity extends Activity {
   class WorldEntry {float depth;Runnable draw;WorldEntry(float y,Runnable action){depth=y;draw=action;}}
   boolean villageZone(float x,float y,float padding){return x>100-padding&&x<1020+padding&&y>96-padding&&y<890+padding;}
   boolean roadAt(float x,float y,float margin){
+   if((Math.abs(y-470)<24&&(x<190||x>920))||(Math.abs(x-410)<24&&y<220))return true;
    for(float[] r:villageRoads)if(x>=r[0]-margin&&x<=r[2]+margin&&y>=r[1]-margin&&y<=r[3]+margin)return true;
    for(float[] house:villageHouses){float doorX=house[0]+(house[0]==forgeX&&house[1]==forgeY?0:63);float bottom=house[1]+112;
     float target=house[1]>500?840:470;if(x>doorX-20-margin&&x<doorX+20+margin&&y>bottom-12-margin&&y<target+margin)return true;}
@@ -313,29 +314,43 @@ public class MainActivity extends Activity {
    villageProps.add(new VillageProp(atlas,sx,sy,sw,sh,x,y,w,h,radius,frames));
   }
   void loadVillage(){
-   for(String name:new String[]{"exterior","Trees_animation","house_details","Smoke_animation","bird_jump_animation","bird_fly_animation","walls_floor","Interior"})
+   for(String name:new String[]{"exterior","Trees_animation","house_details","Smoke_animation","bird_jump_animation","bird_fly_animation","walls_floor","Interior","tower","market","quests","shrine","sign","lantern"})
     try(InputStream in=getAssets().open("village/"+name+".png")){Bitmap b=BitmapFactory.decodeStream(in);if(b!=null)villageArt.put(name,b);}catch(Exception e){android.util.Log.e("PixelVillage","Missing "+name,e);}
    // Hand-placed orchard: wide lanes, trunks rather than canopies collide.
    float[][] trees={{110,310},{104,630},{106,820},{335,150},{690,150},{1000,220},{1000,575},{1010,800},{150,935},{360,945},{600,944},{840,947}};
-   for(int i=0;i<trees.length;i++)addVillageProp("Trees_animation",new int[]{0,192,352}[i%3],0,i%3==2?80:64,80,trees[i][0],trees[i][1],104,130,10,13);
-   Random forest=new Random(39021);
-   for(int i=0,attempt=0;i<32&&attempt<500;attempt++){
-    float x=1080+forest.nextInt(460),y=60+forest.nextInt(870);if(roadAt(x,y,70)||Math.hypot(x-1200,y-470)<100)continue;
-    boolean clear=true;for(VillageProp p:villageProps)if(Math.hypot(x-p.x,y-p.y)<95){clear=false;break;}
-    if(!clear)continue;addVillageProp("Trees_animation",new int[]{0,192,352}[i%3],0,i%3==2?80:64,80,x,y,104,130,10,13);i++;
+   for(int i=0;i<trees.length;i++)addVillageProp("Trees_animation",new int[]{0,192,352}[i%3],0,i%3==2?88:64,80,trees[i][0],trees[i][1],104,130,10,13);
+   for(int side=0;side<4;side++)for(int lane=0;lane<2;lane++)for(int i=0;i<15;i++){
+    float x,y;
+    if(side<2){x=side==0?40+lane*55:1090+lane*120;y=90+i*62;}
+    else{x=70+i*100;y=side==2?62+lane*34:965+lane*30;}
+    if((side<2&&Math.abs(y-470)<88)||(side==2&&Math.abs(x-410)<82))continue;
+    if(x>1560||y>995)continue;
+    int type=(i+side+lane)%3;
+    addVillageProp("Trees_animation",new int[]{0,192,352}[type],0,type==2?88:64,80,x,y,104,130,10,13);
    }
    // Atlas crops are measured from the supplied exterior sheet.
    addVillageProp("exterior",48,496,40,40,610,525,56,56,17,1); // well
    for(int i=1;i<villageHouses.length;i++){
     float[] h=villageHouses[i];
     addVillageProp("exterior",112,464,32,40,h[0]-100,h[1]+132,38,48,12,1);
-    addVillageProp("exterior",96,464,16,32,h[0]+101,h[1]+125,24,42,9,1);
+    addVillageProp("exterior",92,464,14,23,h[0]+101,h[1]+125,24,42,9,1);
    }
    for(float[] g:new float[][]{{190,570},{450,590},{750,590}}){
     for(int k=0;k<3;k++)addVillageProp("exterior",0,464,32,32,g[0]+k*30,g[1],32,32,0,1);
    }
    for(float[] f:new float[][]{{350,530},{960,430},{350,885},{960,850},{700,210}})
     addVillageProp("exterior",208,768,16,32,f[0],f[1],24,40,0,1);
+   fantasyProp("tower",955,170,85,146,23);
+   fantasyProp("market",735,510,92,75,23);
+   fantasyProp("quests",460,530,43,49,10);
+   fantasyProp("shrine",190,220,55,70,15);
+   fantasyProp("sign",135,440,30,44,7);
+   fantasyProp("sign",1195,440,30,44,7);
+   fantasyProp("sign",455,110,30,44,7);
+   for(float[] light:new float[][]{{380,420},{650,575},{650,790},{920,820}})fantasyProp("lantern",light[0],light[1],28,54,6);
+  }
+  void fantasyProp(String name,float x,float y,float w,float h,float radius){
+   Bitmap art=villageArt.get(name);if(art!=null)addVillageProp(name,0,0,art.getWidth(),art.getHeight(),x,y,w,h,radius,1);
   }
   void drawVillageGround(int startX,int endX,int startY,int endY){
    for(int x=startX;x<endX;x+=16)for(int y=startY;y<endY;y+=16){
@@ -353,7 +368,16 @@ public class MainActivity extends Activity {
    float[] h=villageHouses[index];canvas.save();canvas.scale(1f,1f/CAMERA_GROUND_Y,h[0],h[1]+112);
    if(index==0)drawHouse(h[0],h[1],true);
    else {
-    villageTile("exterior",0,0,144,128,h[0]-116,h[1]-90,230,205);
+    paint.setColorFilter(new PorterDuffColorFilter(new int[]{0xffffffff,0xffe3c5a3,0xffa9c9c3,0xffc1bedc,0xffffd19a,0xffa3b7ca}[index],PorterDuff.Mode.MULTIPLY));
+    Bitmap house=villageArt.get("exterior");
+    canvas.drawBitmap(house,new Rect(0,0,144,128),new RectF(h[0]-116,h[1]-90,h[0]+114,h[1]+115),paint);
+    paint.setColorFilter(null);
+    if(index==1||index==4){
+     villageTile("house_details",0,16,144,80,h[0]-116,h[1]-12,230,127);
+     villageTile("exterior",0,0,144,92,h[0]-116,h[1]-126,230,147);
+    }
+
+
     paint.setTextAlign(Paint.Align.CENTER);paint.setTextSize(13);fantasyName(villageNames[index],h[0],h[1]-98);paint.setTextAlign(Paint.Align.LEFT);
    }
    // Six 48px cells: crop only the smoke above the embedded chimney/roof.
@@ -1841,6 +1865,9 @@ public class MainActivity extends Activity {
    int startY=(int)Math.floor((py-vh)/32f)*32-64,endY=(int)Math.ceil((py+vh)/32f)*32+64;
    drawVillageGround(startX,endX,startY,endY);
    drawVillageBirds();
+   if((px<55&&Math.abs(py-470)<65)||(px>WORLD_W-55&&Math.abs(py-470)<65)||(py<55&&Math.abs(px-410)<65)){
+    pickupNotice="Weitere Region folgt spaeter";noticeTime=1f;
+   }
    for(Drop d:drops){
     if(d.x<px-vw/2-35||d.x>px+vw/2+35||d.y<py-vh/2-35||d.y>py+vh/2+35)continue;
     float bob=(float)Math.sin(elapsed*3+d.bob)*2;
