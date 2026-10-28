@@ -1119,7 +1119,7 @@ public class MainActivity extends Activity {
    paint.setColor(Color.WHITE);paint.setTextSize(15);
    canvas.drawText(characterName,left+394,top+94,paint);
    String[] names={"GESCHLECHT","FRISUR","HAUTFARBE","HAARFARBE","KAMPFSTIL"};
-   String[] values={characterGender==0?"Maennlich":"Weiblich",hairType==0?"Bob":"Kurzhaar","Variante "+skinColor,"Farbe "+hairColor,new String[]{"Schwert + Schild","Axt + Schild","Streitkolben + Schild"}[combatStyle]};
+   String[] values={characterGender==0?"Maennlich":"Weiblich",new String[]{"Bob","Kurzhaar","Zottelig"}[Math.floorMod(hairType,3)],"Variante "+skinColor,"Farbe "+hairColor,new String[]{"Schwert + Schild","Axt + Schild","Streitkolben + Schild"}[combatStyle]};
    for(int i=0;i<5;i++){
     float yy=top+121+i*38;
     paint.setTextSize(12);paint.setTypeface(Typeface.DEFAULT_BOLD);
@@ -1157,7 +1157,7 @@ public class MainActivity extends Activity {
    int delta=x<left+449?-1:1;
    switch(index){
     case 0:characterGender=Math.floorMod(characterGender+delta,2);break;
-    case 1:hairType=Math.floorMod(hairType+delta,2);break;
+    case 1:hairType=Math.floorMod(hairType+delta,3);break;
     case 2:skinColor=Math.floorMod(skinColor+delta,11);break;
     case 3:hairColor=Math.floorMod(hairColor+delta,14);break;
     case 4:combatStyle=Math.floorMod(combatStyle+delta,3);break;
@@ -1367,7 +1367,7 @@ public class MainActivity extends Activity {
    int col=fighting?Math.min(3,Math.max(0,(int)(time*10))):(moving?(action.equals("run")?((int)(elapsed*12)%6):(int)(elapsed*8)%6):0);
    characterLayer(page,"0bas","humn",skinColor,row,col,x,y,w,h);
    characterLayer(page,"1out",equipped.containsKey("Brust")?"fstr":(characterGender==0?"boxr":"undi"),1,row,col,x,y,w,h);
-   characterLayer(page,"4har",hairType==0?"bob1":"dap1",hairColor,row,col,x,y,w,h);
+   characterLayer(page,"4har",hairType==2?"tous":hairType==0?"bob1":"dap1",hairColor,row,col,x,y,w,h);
    if(equipped.containsKey("Kopf"))characterLayer(page,"5hat","pfht",1,row,col,x,y,w,h);
    if(creatorOpen||fighting){
     String weapon=combatStyle==1?"ax01":combatStyle==2?"mc01":"sw01";
@@ -1955,3 +1955,4 @@ public class MainActivity extends Activity {
   }
  }
 }
+
