@@ -958,7 +958,9 @@ public class MainActivity extends Activity {
     float x=left+329+(i%6)*67,y=top+104+(i/6)*64;
     slotFrame(x,y,56,names[i]);
     Item item=definitions.get(names[i]);paint.setColor(item!=null&&item.equipment()?rarityColor(item.rarity):col("#d5dad9"));
-    paint.setTextSize(9);String label=names[i].replaceAll(" \\{[0-9]+\\}$","");if(label.length()>10)label=label.substring(0,9)+".";
+    paint.setTextSize(9);String label=names[i].replaceAll(" \\{[0-9]+\\}$","");
+    while(label.length()>1&&paint.measureText(label)>52f)label=label.substring(0,label.length()-1);
+    if(!label.equals(names[i].replaceAll(" \\{[0-9]+\\}$","")))label=label.substring(0,Math.max(1,label.length()-1))+"…";
     canvas.drawText(label,x+2,y+49,paint);
     paint.setColor(col("#ffe4a5"));paint.setTextSize(10);canvas.drawText(""+inventory.get(names[i]),x+42,y+12,paint);
    }
@@ -1668,16 +1670,16 @@ public class MainActivity extends Activity {
     String action=m.dead?"death":m.hurtTimer>0?"hurt":m.action;
     float size=(m.kind.startsWith("orc")?79:m.kind.equals("boar")?45:m.kind.equals("deer")?43:36)*(m.alpha?1.28f:1f);
     if(!m.dead)groundShadow(m.x,m.y+size*.46f,size*.24f,6);billboard(m.kind,action,m.dir,m.x,m.y,size,size,m.dead?m.deathTimer:m.anim,m.dead&&m.deathTimer>.7f);
-    if(!m.dead){paint.setColor(Color.WHITE);paint.setTextSize(12);paint.setTextAlign(Paint.Align.CENTER);paint.setTypeface(Typeface.create("serif",Typeface.BOLD_ITALIC));paint.setTextSize(7);outlinedText((m.alpha?"Alpha ":"")+"Lv. "+m.level,m.x,m.y-size*(m.hostile()?.53f:.64f));paint.setTypeface(Typeface.DEFAULT);paint.setTextAlign(Paint.Align.LEFT);}
+    if(!m.dead){paint.setColor(Color.WHITE);paint.setTextSize(12);paint.setTextAlign(Paint.Align.CENTER);paint.setTypeface(Typeface.DEFAULT_BOLD);paint.setTextSize(10);outlinedText((m.alpha?"Alpha ":"")+"Lv. "+m.level,m.x,m.y-size*(m.hostile()?.53f:.64f));paint.setTypeface(Typeface.DEFAULT);paint.setTextAlign(Paint.Align.LEFT);}
     if(!m.dead&&m.hostile()&&!indoors&&!safeZone(px,py)&&!safeZone(m.x,m.y)
        &&Math.hypot(px-m.x,py-m.y)<285f){
      paint.setTextAlign(Paint.Align.CENTER);paint.setTypeface(Typeface.DEFAULT_BOLD);
      paint.setTextSize(24);paint.setColor(col(m.attackTimer>1.15f?"#ff3b36":"#ffdb55"));
-     outlinedText("!",m.x,m.y-size*.64f-16);
+     outlinedText("!",m.x,m.y-size*.64f-27);
      paint.setTypeface(Typeface.DEFAULT);paint.setTextAlign(Paint.Align.LEFT);
     }
     if(m.healthVisible>0&&(!m.dead||m.deathTimer<1f))healthBar(m.x,m.y-size*.65f-12,42,m.hp,m.maxHp);
-    damageText(m.x,m.y-size*.65f-22,m.lastDamage,m.damageNumberTime);
+    damageText(m.x,m.y-size*.65f-35,m.lastDamage,m.damageNumberTime);
    }
    String playerKind=sword?"player_sword":"player_unarmed";
    String playerAction=hp<=0?"death":hurtAnim>0?"hurt":attackAnim>0&&sword?"attack":Math.abs(joyX)+Math.abs(joyY)>.08f?(sprintHeld?"run":"walk"):"idle";
@@ -1685,7 +1687,7 @@ public class MainActivity extends Activity {
    if(playerHealthVisible>0)healthBar(px,py-56,52,hp,maxHp);
    damageText(px,py-66,lastPlayerDamage,playerDamageTime);
    Drop nearby=nearestDrop();
-   if(nearby!=null&&!inventoryOpen){paint.setColor(col("#fff0c5"));paint.setTextSize(13);paint.setTextAlign(Paint.Align.CENTER);
+   if(nearby!=null&&!inventoryOpen){drawRect(col("#182923"),px-87,py-78,174,25);paint.setColor(col("#fff0c5"));paint.setTextSize(13);paint.setTextAlign(Paint.Align.CENTER);
     canvas.drawText("E  "+nearby.item+" aufheben",px,py-60,paint);paint.setTextAlign(Paint.Align.LEFT);}
    c.restore();
    c.restore(); // End world-only zoom; UI stays at original screen scale.
