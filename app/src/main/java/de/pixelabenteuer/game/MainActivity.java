@@ -1578,15 +1578,23 @@ public class MainActivity extends Activity {
   }
   // Experimental fixed 2.5D camera: ground is foreshortened, sprites stay upright.
   static final float CAMERA_GROUND_Y=0.82f;
+  final HashMap<String,Float> mobFootRadiusCache=new HashMap<>();
   float mobFootRadius(Mob m){
-   float size=(m.kind.startsWith("orc")?79:m.kind.equals("boar")?45:m.kind.equals("deer")?43:36)*(m.alpha?1.28f:1f);
-   Bitmap b=sprites.get(m.kind+"_idle_front");
-   if(b==null)return size*.22f;
-   int fw=Math.min(b.getHeight(),b.getWidth()),left=fw,right=0;
-   // Only opaque pixels in the bottom quarter are part of the ground footprint.
-   for(int yy=b.getHeight()*3/4;yy<b.getHeight();yy+=2)
-    for(int xx=0;xx<fw;xx+=2)if(Color.alpha(b.getPixel(xx,yy))>100){left=Math.min(left,xx);right=Math.max(right,xx);}
-   return right>left?Math.max(5f,Math.min(size*.32f,size*(right-left)/(float)fw*.42f)):size*.22f;
+   Float cached=mobFootRadiusCache.get(m.kind);
+   if(cached==null){
+    float size=m.kind.startsWith("orc")?79:m.kind.equals("boar")?45:m.kind.equals("deer")?43:36;
+    Bitmap b=sprites.get(m.kind+"_idle_front");
+    float radius=size*.22f;
+    if(b!=null){
+     int fw=Math.min(b.getHeight(),b.getWidth()),left=fw,right=0;
+     // Scan the sprite only once per species, never during movement.
+     for(int yy=b.getHeight()*3/4;yy<b.getHeight();yy+=2)
+      for(int xx=0;xx<fw;xx+=2)if(Color.alpha(b.getPixel(xx,yy))>100){left=Math.min(left,xx);right=Math.max(right,xx);}
+     if(right>left)radius=Math.max(5f,Math.min(size*.32f,size*(right-left)/(float)fw*.42f));
+    }
+    cached=radius;mobFootRadiusCache.put(m.kind,cached);
+   }
+   return cached*(m.alpha?1.28f:1f);
   }
   boolean mobFootBlocked(float x,float y,Mob ignore,float radius){
    for(Mob other:mobs)if(other!=ignore&&!other.dead){
