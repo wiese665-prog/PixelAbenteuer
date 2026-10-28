@@ -1636,7 +1636,7 @@ public class MainActivity extends Activity {
    return m.alpha?"Alpha "+name:name;
   }
   void groundShadow(float x,float y,float rx,float ry){
-   paint.setColor(Color.argb(113,12,25,17));paint.setStyle(Paint.Style.FILL);
+   paint.setColor(Color.argb(170,12,25,17));paint.setStyle(Paint.Style.FILL);
    canvas.drawOval(new RectF(x-rx,y-ry,x+rx,y+ry),paint);
   }
   void billboard(String kind,String action,int dir,float x,float y,float w,float h,float time,boolean freeze){
@@ -1698,7 +1698,7 @@ public class MainActivity extends Activity {
    }
    String playerKind=sword?"player_sword":"player_unarmed";
    String playerAction=hp<=0?"death":hurtAnim>0?"hurt":attackAnim>0&&sword?"attack":Math.abs(joyX)+Math.abs(joyY)>.08f?(sprintHeld?"run":"walk"):"idle";
-   groundShadow(px,py+29,19,6);billboard(playerKind,playerAction,playerDir,px,py,80.64f,80.64f,hp<=0?deathAnim:attackAnim>0?.4f-attackAnim:elapsed,hp<=0&&deathAnim>.8f);
+   groundShadow(px,py+24,13.3f,4.2f);billboard(playerKind,playerAction,playerDir,px,py,80.64f,80.64f,hp<=0?deathAnim:attackAnim>0?.4f-attackAnim:elapsed,hp<=0&&deathAnim>.8f);
    if(playerHealthVisible>0)healthBar(px,py-56,52,hp,maxHp);
    damageText(px,py-66,lastPlayerDamage,playerDamageTime);
    Drop nearby=nearestDrop();
