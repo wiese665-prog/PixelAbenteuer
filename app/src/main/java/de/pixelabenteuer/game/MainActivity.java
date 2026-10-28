@@ -354,7 +354,7 @@ public class MainActivity extends Activity {
   }
   // Door anchors are shared by the automatic movement triggers and teleportation.
   final float DOOR_OUT_X=0f,DOOR_OUT_Y=102f;
-  final float DOOR_IN_X=555f,DOOR_IN_Y=480f;
+  final float DOOR_IN_X=555f,DOOR_IN_Y=518f;
   void enterOrLeave(){
    if(indoors){
     indoors=false;px=forgeX+DOOR_OUT_X;py=forgeY+DOOR_OUT_Y+43f;
@@ -362,7 +362,7 @@ public class MainActivity extends Activity {
    }
    if(Math.abs(px-(forgeX+DOOR_OUT_X))<22&&
       py>forgeY+DOOR_OUT_Y-22&&py<forgeY+DOOR_OUT_Y+10){
-    indoors=true;currentHouse=1;px=DOOR_IN_X;py=DOOR_IN_Y-22f;
+    indoors=true;currentHouse=1;px=DOOR_IN_X;py=DOOR_IN_Y-31f;
     joyX=joyY=0;
    }
   }
@@ -431,17 +431,17 @@ public class MainActivity extends Activity {
    // Render the exact nine user-designed Tiled layers instead of the old hardcoded interior.
    drawSmithyMap(l,t);
    // The seller is drawn only once, using a single stable pose.
-   characterTile("Master_Idle",3,2,(int)(elapsed*2)%3,l+236,t+165,81.4f);
-   sellerPortrait(l+510,t+198,(int)(elapsed*3)%3);
+   characterTile("Master_Idle",3,2,(int)(elapsed*2)%3,l+177,t+145,81.4f);
+   sellerPortrait(l+510,t+146,(int)(elapsed*3)%3);
    paint.setTextAlign(Paint.Align.CENTER);
    paint.setTypeface(Typeface.DEFAULT_BOLD);
    paint.setTextSize(13);paint.setColor(col("#ffe7aa"));
-   fantasyName("Schmied",l+251,t+99);
-   fantasyName("Händlerin",l+510,t+159);
+   fantasyName("Schmied",l+177,t+97);
+   fantasyName("Händlerin",l+510,t+101);
    paint.setTypeface(Typeface.DEFAULT);paint.setTextSize(11);
    paint.setColor(col("#ffffff"));
-   if(Math.hypot(px-296,py-349)<50)drawInteractionKey(l+236,t+125);
-   if(Math.hypot(px-570,py-372)<50)drawInteractionKey(l+510,t+168);
+   if(Math.hypot(px-237,py-337)<53)drawInteractionKey(l+177,t+104);
+   if(Math.abs(px-570)<58&&py>335&&py<395)drawInteractionKey(l+510,t+116);
    paint.setTextAlign(Paint.Align.LEFT);
    characterTile("Customer",3,2,(int)(elapsed*3)%3,l+562,t+288,52);
    paint.setTextAlign(Paint.Align.CENTER);paint.setTypeface(Typeface.DEFAULT_BOLD);
@@ -767,8 +767,8 @@ public class MainActivity extends Activity {
   boolean openInteriorMerchant(){
    if(!indoors)return false;
    if(Math.hypot(px-622,py-462)<37.5f){talkAdventurer();return true;}
-   if(Math.hypot(px-296,py-349)<50){showMerchant(1);return true;}
-   if(Math.hypot(px-570,py-372)<50){showMerchant(2);return true;}
+   if(Math.hypot(px-237,py-337)<53){showMerchant(1);return true;}
+   if(Math.abs(px-570)<58&&py>335&&py<395){showMerchant(2);return true;}
    return false;
   }
   void openShop(){if(Math.hypot(px-merchantX,py-merchantY)<50)showMerchant(0);}
@@ -1395,28 +1395,37 @@ public class MainActivity extends Activity {
    canvas.drawBitmap(b,new Rect(frame*frameWidth,0,(frame+1)*frameWidth,b.getHeight()),new RectF(x-w/2,y-h/2,x+w/2,y+h/2),paint);
   }
   boolean interiorObstacle(float x,float y){
-   // Coordinates are interior-world coordinates; player center uses a small footprint.
+   // Convert interior-world feet position to the 672x352 Tiled map.
+   float tx=x-60f,ty=y-174f;
+   final float margin=8f;
+   // Solid walls. The middle passage and the 2-tile southern entrance stay open.
+   if(tx<13||tx>659||ty<46)return true;
+   if(ty>307&&(tx<480||tx>509))return true;
+   if(tx>317&&tx<350&&(ty<171||ty>227))return true;
+   // The counter separates the saleswoman from the customer area.
+   if(tx>351&&tx<670&&ty>155&&ty<176)return true;
+   // Furniture and props measured from the user's Tiled interior.
    float[][] solids={
-    {135,219,249,306},  // forge shifted 15 up
-    {84,372,134,424},   // interior crates (l+24,t+198)
-    {130,433,185,488}, // interior cart (l+70,t+259)
-    {441,255,494,337},  // upper-left shop shelf
-    {630,255,683,337},  // upper-right shop shelf
-    {458,349,718,389},  // counter
-    {78,438,134,509},   // left wall stair shelf
-    {344,438,400,509},  // center left stair shelf
-    {400,438,456,509},  // center right stair shelf
-    {662,438,718,509}   // right wall stair shelf
+    {87,46,133,92}, {217,46,264,92}, // two forges
+    {27,79,55,141}, {278,79,305,141}, // stone pillars
+    {152,50,206,89}, // ore and wall decoration
+    {199,119,267,167}, // workbench beside the smith
+    {46,99,77,133}, {103,110,136,144}, // crates and cart
+    {21,213,81,248}, {35,274,119,307}, // southwest displays
+    {211,236,301,307}, // southeast smithy crates
+    {353,37,393,80}, {420,4,477,65}, // northern shop shelves
+    {510,64,549,118}, {600,65,641,119},
+    {385,63,421,120}, // northern shelves
+    {384,218,424,254}, {415,247,458,305},
+    {574,181,654,247}, {574,248,656,305}, // lower sales displays
+    {494,10,539,57}, {558,9,605,54}
    };
-   final float margin=9f;
    for(float[] box:solids)
-    if(x>box[0]-margin&&x<box[2]+margin&&y>box[1]-margin&&y<box[3]+margin)return true;
-   // NPC footprints: block walking through their feet, not the whole sprite.
-   if(x>249f&&x<343f&&y>283f&&y<340f)return true; // Schmied and worktable
-   if(Math.hypot(x-570f,y-340f)<24f)return true; // Händlerin
-   if(Math.hypot(x-622f,y-431f)<22f)return true; // Abenteurer
-   // Upper stone partition; lower passage remains open.
-   if(x>389&&x<420&&y<389)return true;
+    if(tx>box[0]-margin&&tx<box[2]+margin&&ty>box[1]-margin&&ty<box[3]+margin)return true;
+   // NPC feet only; rugs are never solid.
+   if(Math.hypot(x-237f,y-337f)<15f)return true;
+   if(Math.hypot(x-570f,y-321f)<15f)return true;
+   if(Math.hypot(x-622f,y-431f)<20f)return true;
    return false;
   }
   // Attack animation window; the next group can act immediately afterward.
@@ -1447,13 +1456,13 @@ public class MainActivity extends Activity {
    if(length>1){mx/=length;my/=length;}
    if(indoors){
     if(Math.abs(mx)+Math.abs(my)>.08f)playerDir=direction(mx,my);
-    float nx=Math.max(105,Math.min(695,px+mx*(sprintHeld?205:140)*dt));
-    float ny=Math.max(205,Math.min(492,py+my*(sprintHeld?205:140)*dt));
+    float nx=Math.max(72,Math.min(718,px+mx*(sprintHeld?205:140)*dt));
+    float ny=Math.max(194,Math.min(525,py+my*(sprintHeld?205:140)*dt));
     // Partition occupies x=375..402 in interior player coordinates.
     // The middle opening (y=354..444) is deliberately passable.
     if(!interiorObstacle(nx,py))px=nx;
     if(!interiorObstacle(px,ny))py=ny;
-    if(py>482&&Math.abs(px-DOOR_IN_X)<38&&my>0)enterOrLeave();
+    if(py>DOOR_IN_Y-8&&Math.abs(px-DOOR_IN_X)<17&&my>0)enterOrLeave();
     return;
    }
    if(Math.abs(mx)+Math.abs(my)>.08f){
@@ -1882,7 +1891,7 @@ public class MainActivity extends Activity {
     case KeyEvent.KEYCODE_E:
      if(shopOpen)shopOpen=false;
      else if(indoors){
-      if(!openInteriorMerchant()&&py>465&&Math.abs(px-DOOR_IN_X)<45)enterOrLeave();
+      if(!openInteriorMerchant()&&py>DOOR_IN_Y-35&&Math.abs(px-DOOR_IN_X)<25)enterOrLeave();
      }else if(Math.hypot(px-forgeX,py-(forgeY+84))<65)enterOrLeave();
      else if(Math.hypot(px-merchantX,py-merchantY)<50)openShop();
      else pickup();
