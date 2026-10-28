@@ -366,88 +366,58 @@ public class MainActivity extends Activity {
     joyX=joyY=0;
    }
   }
+  // The player's Tiled map is read once, preserving the exact CSV layer order.
+  long[][] smithyLayers;
+  boolean smithyMapTried=false;
+  void loadSmithyMap(){
+   if(smithyMapTried)return;
+   smithyMapTried=true;
+   try(InputStream in=getAssets().open("maps/Schmiede.tmx")){
+    javax.xml.parsers.DocumentBuilderFactory factory=javax.xml.parsers.DocumentBuilderFactory.newInstance();
+    factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl",true);
+    org.w3c.dom.Document doc=factory.newDocumentBuilder().parse(in);
+    org.w3c.dom.NodeList layers=doc.getElementsByTagName("layer");
+    smithyLayers=new long[layers.getLength()][];
+    for(int n=0;n<layers.getLength();n++){
+     org.w3c.dom.Element layer=(org.w3c.dom.Element)layers.item(n);
+     String csv=layer.getElementsByTagName("data").item(0).getTextContent();
+     String[] cells=csv.trim().split(",");
+     long[] ids=new long[42*22];
+     for(int i=0;i<ids.length&&i<cells.length;i++)ids[i]=Long.parseLong(cells[i].trim());
+     smithyLayers[n]=ids;
+    }
+   }catch(Exception ignored){smithyLayers=null;}
+  }
+  void drawSmithyMap(float l,float t){
+   loadSmithyMap();
+   if(smithyLayers==null)return;
+   String[] atlas={"Decorative_cracks","Walls_interior","Forge","Interior_objects"};
+   int[] first={1,286,558,654},cols={19,16,8,13},counts={285,272,96,507};
+   paint.setFilterBitmap(false);paint.setAlpha(255);
+   for(long[] layer:smithyLayers)for(int i=0;i<layer.length;i++){
+    long encoded=layer[i],gid=encoded&0x1fffffffL;
+    if(gid==0)continue;
+    int set=-1;
+    for(int k=0;k<4;k++)if(gid>=first[k]&&gid<first[k]+counts[k]){set=k;break;}
+    if(set<0)continue;
+    Bitmap bitmap=buildingSprites.get(atlas[set]);if(bitmap==null)continue;
+    int local=(int)gid-first[set],sx=(local%cols[set])*16,sy=(local/cols[set])*16;
+    if(sx+16>bitmap.getWidth()||sy+16>bitmap.getHeight())continue;
+    float x=l+(i%42)*16,y=t+(i/42)*16;
+    boolean flipH=(encoded&0x80000000L)!=0,flipV=(encoded&0x40000000L)!=0,diag=(encoded&0x20000000L)!=0;
+    if(flipH||flipV||diag){
+     canvas.save();canvas.translate(x+8,y+8);
+     if(diag){canvas.rotate(90);canvas.scale(1,-1);}
+     canvas.scale(flipH?-1:1,flipV?-1:1);
+     canvas.drawBitmap(bitmap,new Rect(sx,sy,sx+16,sy+16),new RectF(-8,-8,8,8),paint);
+     canvas.restore();
+    }else canvas.drawBitmap(bitmap,new Rect(sx,sy,sx+16,sy+16),new RectF(x,y,x+16,y+16),paint);
+   }
+  }
   void drawInterior(float vw,float vh){
    float l=vw/2-340,t=vh/2-176;
    drawRect(col("#18141a"),0,0,vw,vh);
-   // Gray square paving from the dedicated right-hand tile strip of Walls_interior.
-   // One shared 16-pixel grid across both sales areas: no independent offsets at the seam.
-   // Keep the original source rectangles unchanged; only the tile placement is unified.
-   // Both floors end on the same bottom edge and share the same tile grid.
-   // Reuse the existing atlas crops unchanged; only repeat counts are adjusted.
-   for(int iy=0;iy<18;iy++)for(int ix=0;ix<40;ix++){
-    float gx=l+20+ix*16,gy=t+52+iy*16;
-    if(ix<20)tile("Walls_interior",240,128,16,16,gx,gy,16,16);
-    else tile("Walls_interior",145,21,12,12,gx,gy,16,16);
-   }
-   // Original wall blocks at their native proportions; no stretched long strip.
-   for(int ix=0;ix<14;ix++)
-    tile("Walls_interior",48+(ix%2)*32,0,32,32,l+16+ix*46,t,46,70);
-   // Side walls: use the matching stone wall cells with a continuous
-   // masonry rhythm. Original atlas cells are kept intact.
-   for(int iy=0;iy<7;iy++){
-    float wallY=t+23+iy*44;
-    // Alternate the two matching stone variants on both outer walls.
-    int stoneX=(iy%2==0)?49:193;
-    tile("Walls_interior",stoneX,128,23,42,l,wallY,22,44);
-    tile("Walls_interior",stoneX==49?193:49,128,23,42,l+658,wallY,22,44);
-   }
-   // Central divider: individual stone segments instead of one vertically
-   // stretched wall sprite. This matches the side-wall masonry and avoids
-   // the smeared pillar visible between the two shop floors.
-   for(int iy=0;iy<5;iy++)
-    tile("Walls_interior",49,128,23,42,l+329,t+12+iy*40,22,40);
-   // No lower partition: leave the forge/shop walkway open.
-   // Floors meet directly beneath the stone divider; no overlaid floor strip.
-   // Forge: show one complete furnace cell, not half an animation sheet.
-   Bitmap furnace=buildingSprites.get("Forge");
-   if(furnace!=null){
-    // Forge.png is a 128x192 sheet of six 64x64 frames.
-    // Crop exactly one frame, trimming transparent margins without crossing
-    // into adjacent frames or cutting off any opaque furnace pixels.
-    int fw=Math.min(64,furnace.getWidth()),fh=Math.min(64,furnace.getHeight());
-    int left=fw,top=fh,right=-1,bottom=-1;
-    for(int fy=0;fy<fh;fy++)for(int fx=0;fx<fw;fx++){
-     if(Color.alpha(furnace.getPixel(fx,fy))>0){
-      left=Math.min(left,fx);top=Math.min(top,fy);
-      right=Math.max(right,fx);bottom=Math.max(bottom,fy);
-     }
-    }
-    if(right>=left&&bottom>=top){
-     int cw=right-left+1,ch=bottom-top+1;
-     float scale=Math.min(92f/cw,99f/ch);
-     float dw=cw*scale,dh=ch*scale;
-     tile("Forge",left,top,cw,ch,l+75+(114-dw)/2,t+10+(122-dh),dw,dh);
-    }
-   }
-   // Reuse the exact exterior crate and cart atlas rectangles without recropping.
-   // Both props sit in the smithy area, clear of the forge and the central passage.
-   tile("Exterior_house",70,162,32,38,l+24,t+198,50,52); // same crates as outside
-   tile("Exterior_house",116,160,34,34,l+70,t+259,55,55); // same complete cart, against the lower-left smithy wall
-   // Two complete rear display shelves and one dragon picture.
-   tile("Interior_objects",13,128,35,63,l+381,t+69,53,80);
-   tile("Interior_objects",163,129,39,62,l+570,t+69,53,80);
-   tile("Interior_objects",114,257,59,49,l+451,t+57,106,59);
-   // Two separate COMPLETE purple rugs (source x=6..60, y=397..421).
-   tile("Interior_objects",70,385,55,40,l+417,t+162,170,60);
-   tile("Interior_objects",70,385,55,40,l+417,t+262,170,60);
-   // The complete counter with its decorative vases, cropped as one object.
-   tile("Interior_objects",16,0,160,27,l+398,t+175,260,40);
-   // Separate shelf against the left wall, using the original unmodified sprite.
-   tile("Interior_objects",98,70,46,59,l+18,t+266,56,69);
-   // Mirror BOTH center shelves horizontally: long backs meet at x=l+340.
-   canvas.save();
-   canvas.scale(-1f,1f,l+312,t+300.5f);
-   tile("Interior_objects",98,70,46,59,l+284,t+266,56,69);
-   canvas.restore();
-   canvas.save();
-   canvas.scale(-1f,1f,l+368,t+300.5f);
-   tile("Interior_objects",148,70,46,59,l+340,t+266,56,69);
-   canvas.restore();
-   // Complete stair-display shelves on the bottom wall, flanking the entry.
-   // Door is at interior x=555 (screen x=l+495); keep a clear central aisle.
-   // Removed duplicate entrance shelf overlapping center pair.
-   tile("Interior_objects",148,70,46,59,l+602,t+266,56,69);
-   // The seller is drawn only once, using a single stable pose.
+   // Render the exact nine user-designed Tiled layers instead of the old hardcoded interior.\n   drawSmithyMap(l,t);\n   // The seller is drawn only once, using a single stable pose.
    characterTile("Master_Idle",3,2,(int)(elapsed*2)%3,l+236,t+165,81.4f);
    sellerPortrait(l+510,t+198,(int)(elapsed*3)%3);
    paint.setTextAlign(Paint.Align.CENTER);
