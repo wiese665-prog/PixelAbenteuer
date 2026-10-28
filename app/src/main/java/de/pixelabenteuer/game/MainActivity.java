@@ -1396,38 +1396,64 @@ public class MainActivity extends Activity {
   }
   // Coordinates are measured against the 42x22 Tiled map (16px per tile).
   // Keep these bounds allocated once rather than recreating them every movement frame.
-  final float[][] smithySolidBounds={
-   {86,51,132,93}, {217,51,263,93}, // furnace bases
-   {28,83,54,140}, {279,83,304,140}, // masonry pillars
-   {153,65,204,90}, // wall-side storage
-   {144,122,191,140}, {200,122,270,146}, // worktables: only solid bases, rug remains open
-   {54,106,77,133}, {104,119,136,144}, // crates and cart
-   {31,242,128,286}, {31,286,125,301}, // southwest racks and crates on rows 15-18
-   {208,224,288,287}, {256,204,301,225}, // crates on rows 14-17
-   {354,48,392,81}, {422,22,476,65}, // north shop displays
-   {511,77,548,119}, {601,77,640,120},
-   {386,77,420,121},
-   {385,227,423,254}, {417,257,457,306},
-   {575,193,653,249}, {575,260,654,306},
-   {495,24,538,58}, {559,23,604,55}
-  };
-  boolean interiorObstacle(float x,float y){
-   // The coordinates describe the character's feet, not the entire sprite.
-   float tx=x-60f,ty=y-174f;
-   final float footRadius=7f;
-   // Walls and the bottom exit. The central opening is intentionally traversable.
-   if(tx<15+footRadius||tx>657-footRadius||ty<40+footRadius)return true;
-   if(ty>304-footRadius&&(tx<480-footRadius||tx>512+footRadius))return true;
-   if(tx>317-footRadius&&tx<350+footRadius&&(ty<169-footRadius||ty>228+footRadius))return true;
-   // Counter: approach from the customer side, never walk through it.
-   if(tx>351-footRadius&&tx<657&&ty>152-footRadius&&ty<174+footRadius)return true;
-   for(float[] box:smithySolidBounds){
-    // Circle-vs-rectangle gives tighter corners than a rectangular player margin.
-    float cx=Math.max(box[0],Math.min(tx,box[2]));
-    float cy=Math.max(box[1],Math.min(ty,box[3]));
-    float dx=tx-cx,dy=ty-cy;
-    if(dx*dx+dy*dy<footRadius*footRadius)return true;
+  // Pixel-accurate walk mask built from the actual Tiled object and wall sprites.
+  // Floor, carpets and floor-decoration layers are deliberately ignored.
+  boolean[] smithyCollisionPixels;
+  void buildSmithyCollisionPixels(){
+   if(smithyCollisionPixels!=null||smithyLayers==null)return;
+   final int width=42*16,height=22*16;
+   boolean[] mask=new boolean[width*height];
+   String[] atlas={"Decorative_cracks","Walls_interior","Forge","Interior_objects"};
+   int[] first={1,286,558,654},cols={19,16,8,13},counts={285,272,96,507};
+   // Layers: 0 Boden, 1 boden2, 2 mehr teppich, 3 Theke und teppiche,
+   // 4 innenraumkisten, 5 Wände, 6 kisten, 7 Objekte, 8 Objekte 2.
+   // Layer 3 mixes a counter and carpets; only the counter tiles are solid.
+   for(int layerIndex=3;layerIndex<smithyLayers.length;layerIndex++){
+    if(layerIndex==3||layerIndex>=4){
+     long[] layer=smithyLayers[layerIndex];
+     for(int i=0;i<layer.length;i++){
+      int tileX=i%42,tileY=i/42;
+      if(layerIndex==3&&!(tileX>=23&&tileY>=12&&tileY<=14))continue;
+      // Tiled's bottom wall spans the whole row; leave its 2-tile doorway clear.
+      if(layerIndex==5&&tileY>=19&&(tileX==30||tileX==31))continue;
+      long encoded=layer[i],gid=encoded&0x1fffffffL;
+      if(gid==0)continue;
+      int set=-1;
+      for(int k=0;k<4;k++)if(gid>=first[k]&&gid<first[k]+counts[k]){set=k;break;}
+      if(set<0)continue;
+      Bitmap bitmap=buildingSprites.get(atlas[set]);if(bitmap==null)continue;
+      int local=(int)gid-first[set],sx=(local%cols[set])*16,sy=(local/cols[set])*16;
+      if(sx+16>bitmap.getWidth()||sy+16>bitmap.getHeight())continue;
+      boolean flipH=(encoded&0x80000000L)!=0,flipV=(encoded&0x40000000L)!=0,diag=(encoded&0x20000000L)!=0;
+      for(int yy=0;yy<16;yy++)for(int xx=0;xx<16;xx++){
+       int u=xx,v=yy;
+       if(flipH)u=15-u;
+       if(flipV)v=15-v;
+       if(diag){int tmp=u;u=v;v=tmp;}
+       if(Color.alpha(bitmap.getPixel(sx+u,sy+v))<96)continue;
+       int dstX=tileX*16+xx,dstY=tileY*16+yy;
+       mask[dstY*width+dstX]=true;
+      }
+     }
+    }
    }
+   smithyCollisionPixels=mask;
+  }
+  boolean interiorObstacle(float x,float y){
+   float tx=x-60f,ty=y-174f;
+   // The player has a small circular foot area.
+   if(tx<8||tx>=664||ty<8||ty>=344)return true;
+   buildSmithyCollisionPixels();
+   if(smithyCollisionPixels!=null){
+    final int radius=6;
+    int cx=Math.round(tx),cy=Math.round(ty);
+    for(int dy=-radius;dy<=radius;dy+=3)for(int dx=-radius;dx<=radius;dx+=3){
+     if(dx*dx+dy*dy>radius*radius)continue;
+     int sx=cx+dx,sy=cy+dy;
+     if(sx<0||sx>=672||sy<0||sy>=352||smithyCollisionPixels[sy*672+sx])return true;
+    }
+   }
+   // NPCs have separate small footprints.
    if(Math.hypot(x-237f,y-337f)<17f)return true;
    if(Math.hypot(x-570f,y-335f)<16f)return true;
    if(Math.hypot(x-622f,y-431f)<21f)return true;
