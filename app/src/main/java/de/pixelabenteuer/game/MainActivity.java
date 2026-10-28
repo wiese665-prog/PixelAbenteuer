@@ -428,7 +428,9 @@ public class MainActivity extends Activity {
   void drawInterior(float vw,float vh){
    float l=vw/2-340,t=vh/2-176;
    drawRect(col("#18141a"),0,0,vw,vh);
-   // Render the exact nine user-designed Tiled layers instead of the old hardcoded interior.\n   drawSmithyMap(l,t);\n   // The seller is drawn only once, using a single stable pose.
+   // Render the exact nine user-designed Tiled layers instead of the old hardcoded interior.
+   drawSmithyMap(l,t);
+   // The seller is drawn only once, using a single stable pose.
    characterTile("Master_Idle",3,2,(int)(elapsed*2)%3,l+236,t+165,81.4f);
    sellerPortrait(l+510,t+198,(int)(elapsed*3)%3);
    paint.setTextAlign(Paint.Align.CENTER);
