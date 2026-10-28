@@ -1400,10 +1400,10 @@ public class MainActivity extends Activity {
    {86,51,132,93}, {217,51,263,93}, // furnace bases
    {28,83,54,140}, {279,83,304,140}, // masonry pillars
    {153,65,204,90}, // wall-side storage
-   {145,125,192,147}, {201,125,267,158}, // worktables (not the carpet)
+   {144,122,191,140}, {200,122,270,146}, // worktables: only solid bases, rug remains open
    {54,106,77,133}, {104,119,136,144}, // crates and cart
-   {22,221,80,249}, {37,280,118,308}, // southwest furniture
-   {213,247,299,307}, {256,204,301,225}, // south smithy crates
+   {31,242,128,286}, {31,286,125,301}, // southwest racks and crates on rows 15-18
+   {208,224,288,287}, {256,204,301,225}, // crates on rows 14-17
    {354,48,392,81}, {422,22,476,65}, // north shop displays
    {511,77,548,119}, {601,77,640,120},
    {386,77,420,121},
@@ -1417,7 +1417,7 @@ public class MainActivity extends Activity {
    final float footRadius=7f;
    // Walls and the bottom exit. The central opening is intentionally traversable.
    if(tx<15+footRadius||tx>657-footRadius||ty<40+footRadius)return true;
-   if(ty>308-footRadius&&(tx<480-footRadius||tx>509+footRadius))return true;
+   if(ty>304-footRadius&&(tx<480-footRadius||tx>512+footRadius))return true;
    if(tx>317-footRadius&&tx<350+footRadius&&(ty<169-footRadius||ty>228+footRadius))return true;
    // Counter: approach from the customer side, never walk through it.
    if(tx>351-footRadius&&tx<657&&ty>152-footRadius&&ty<174+footRadius)return true;
@@ -1428,7 +1428,7 @@ public class MainActivity extends Activity {
     float dx=tx-cx,dy=ty-cy;
     if(dx*dx+dy*dy<footRadius*footRadius)return true;
    }
-   if(Math.hypot(x-237f,y-337f)<20f)return true;
+   if(Math.hypot(x-237f,y-337f)<17f)return true;
    if(Math.hypot(x-570f,y-335f)<16f)return true;
    if(Math.hypot(x-622f,y-431f)<21f)return true;
    return false;
