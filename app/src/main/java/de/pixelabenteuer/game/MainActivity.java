@@ -587,7 +587,7 @@ public class MainActivity extends Activity {
    // Orc merchant: solid body, but still reachable using E from nearby.
    if(Math.hypot(x-merchantX,y-merchantY)<25f)return true;
    if(x<18||y<18||x>WORLD_W-18||y>WORLD_H-18)return true;
-   for(Decoration d:decorations)if(d.solid&&Math.hypot(d.x-forgeX,d.y-forgeY)>185&&collides(d,x,y))return true;
+   for(Decoration d:decorations)if(d.solid&&Math.abs(d.x-x)<d.w*.5f+12f&&Math.abs(d.y-y)<d.h+14f&&Math.abs(d.x-forgeX)+Math.abs(d.y-forgeY)>262f&&collides(d,x,y))return true;
    float dx=x-forgeX,dy=y-forgeY;
    // Match the rendered house and props against their actual sprite alpha.
    // Sample a small foot area to avoid walking through visible edges.
@@ -1520,11 +1520,12 @@ public class MainActivity extends Activity {
     if(Math.abs(vx)+Math.abs(vy)>1){m.pathTimer-=dt;float tx=m.hostile()&&distance<285?px:m.x+vx*1.8f,ty=m.hostile()&&distance<285?py:m.y+vy*1.8f;if(m.pathTimer<=0){if(distance<430f){if(pathSearchBudget>0){pathSearchBudget--;planMobPath(m,tx,ty);}else m.pathTimer=.12f+random.nextFloat()*.12f;}else{m.path.clear();m.pathIndex=0;m.pathTimer=1.5f+random.nextFloat();}}while(m.pathIndex<m.path.size()&&Math.hypot(m.x-m.path.get(m.pathIndex)[0],m.y-m.path.get(m.pathIndex)[1])<10)m.pathIndex++;if(m.pathIndex<m.path.size()){float[] wp=m.path.get(m.pathIndex);float dx=wp[0]-m.x,dy=wp[1]-m.y,len=(float)Math.hypot(dx,dy);if(len>0){float speed=m.hostile()?75f:Math.max(35f,(float)Math.hypot(vx,vy));vx=dx/len*speed;vy=dy/len*speed;}}}
      if(safeZone(m.x,m.y)||safeZone(m.x+vx*dt,m.y+vy*dt)){vx=0;vy=0;m.vx=0;m.vy=0;}
     if(Math.abs(vx)+Math.abs(vy)>1){
+     float mobRadius=mobFootRadius(m),playerSeparation=mobRadius+12f;
      float step=dt/3f;
      for(int sub=0;sub<3;sub++){
       float nx=m.x+vx*step,ny=m.y+vy*step;
-      if(!blocked(nx,m.y)&&!mobFootBlocked(nx,m.y,m,mobFootRadius(m))&&Math.hypot(nx-px,m.y-py)>mobFootRadius(m)+12f&&(!m.hostile()||!safeZone(nx,m.y)))m.x=nx;else {m.decision=0;m.pathTimer=0;}
-      if(!blocked(m.x,ny)&&!mobFootBlocked(m.x,ny,m,mobFootRadius(m))&&Math.hypot(m.x-px,ny-py)>mobFootRadius(m)+12f&&(!m.hostile()||!safeZone(m.x,ny)))m.y=ny;else {m.decision=0;m.pathTimer=0;}
+      if(!blocked(nx,m.y)&&!mobFootBlocked(nx,m.y,m,mobRadius)&&Math.hypot(nx-px,m.y-py)>playerSeparation&&(!m.hostile()||!safeZone(nx,m.y)))m.x=nx;else {m.decision=0;m.pathTimer=0;}
+      if(!blocked(m.x,ny)&&!mobFootBlocked(m.x,ny,m,mobRadius)&&Math.hypot(m.x-px,ny-py)>playerSeparation&&(!m.hostile()||!safeZone(m.x,ny)))m.y=ny;else {m.decision=0;m.pathTimer=0;}
      }
      m.dir=direction(vx,vy);
     }
