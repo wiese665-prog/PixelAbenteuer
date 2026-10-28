@@ -85,7 +85,7 @@ for floor in range(3):
  # Native carpets are floor decorations and stay passable.
  if floor==0:paste(room,interior,(16,240,80,272),(136,60))
  elif floor==1:paste(room,interior,(0,272,112,368),(112,57))
- else:paste(room,objects,(48,16,128,64),(128,65))
+ else:paste(room,Image.open(OUT/'shrine.png').convert('RGBA'),(0,0,80,48),(128,92))
  room.save(PACK/f'floor{floor}.png')
 print('Imported',len(files),'original sheets, three floor shells and native exterior replacements.')
 
