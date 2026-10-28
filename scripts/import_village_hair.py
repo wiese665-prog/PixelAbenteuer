@@ -38,7 +38,7 @@ def isolate_hair(frame):
 
 
 def build():
-    for kind in ('pony','curl'):
+    for kind in ('braid','curl'):
         source = Image.open(ROOT / f'art/source/{kind}-hair.png').convert('RGBA')
         directions = []
         for facing in range(4):
@@ -47,7 +47,7 @@ def build():
                 frame=source.crop((round(column*source.width/8),round(facing*source.height/8),round((column+1)*source.width/8),round((facing+1)*source.height/8)))
                 frame.putdata([p if p[3]>=240 and max(p[:3])-min(p[:3])<70 else (0,0,0,0) for p in frame.getdata()])
                 frame=isolate_hair(frame)
-                if kind=='pony' and facing>=2:frame=ImageOps.mirror(frame)
+                if False:frame=ImageOps.mirror(frame)
                 animation.append(frame)
             directions.append(animation)
         for page in ('p1','pONE3'):
@@ -58,11 +58,11 @@ def build():
                 for col in range(8):
                     native = template.crop((col*64,row*64,col*64+64,row*64+64))
                     x0,y0,x1,y1 = native.getbbox()
-                    if kind == 'pony':
-                        w,h = ((16,15) if facing==0 else (16,20) if facing==1 else (20,18))
-                        left = round((x0+x1-w)/2) + (-2 if facing==2 else 2 if facing==3 else 0)
-                        if facing==0:left+=1
-                        left += 1
+                    if kind == 'braid':
+                        w,h = ((18,20) if facing==0 else (18,21) if facing==1 else (17,20))
+                        left = round((x0+x1-w)/2)
+                        if facing==0:left+=0
+                        left += 0
                         top = y0-1
                     else:
                         w,h = x1-x0+4,y1-y0+3
@@ -85,7 +85,7 @@ def build():
                 path=ASSETS / f'char_a_{page}/4har/char_a_{page}_4har_{kind}_v{variant:02d}.png'
                 out.save(path)
                 assert set(out.getchannel('A').getdata())<={0,255}
-    print('Exported 56 sheets for ponytail and curls, including walking and combat poses.')
+    print('Exported 56 sheets for twin braids and curls, including walking and combat poses.')
 
 
 if __name__ == '__main__':

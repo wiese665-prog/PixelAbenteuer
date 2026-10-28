@@ -257,7 +257,7 @@ public class MainActivity extends Activity {
    float phase=(worldTime%240f)/240f;
    float night=(float)Math.max(0,Math.min(1,(-Math.cos(phase*6.2831853f)-.10f)/.85f));
    // Clouds always have 30% transparency (70% opacity), regardless of time of day.
-   final int alpha=179;
+   final int alpha=55;
    // Screen-space cloud shadows drift across the landscape independently of the camera.
    for(int i=0;i<5;i++){
     // Day: white Cloud + grey Cloud2. Night: black Cloud1 + grey Cloud2.
@@ -301,7 +301,7 @@ public class MainActivity extends Activity {
   boolean roadAt(float x,float y,float margin){
    if((Math.abs(y-470)<24&&(x<190||x>920))||(Math.abs(x-410)<24&&y<220))return true;
    for(float[] r:villageRoads)if(x>=r[0]-margin&&x<=r[2]+margin&&y>=r[1]-margin&&y<=r[3]+margin)return true;
-   for(float[] house:villageHouses){float doorX=house[0]+(house[0]==forgeX&&house[1]==forgeY?0:63);float bottom=house[1]+112;
+   for(float[] house:villageHouses){float doorX=house[0]+(((house[0]==forgeX&&house[1]==forgeY)||(house[0]==830&&house[1]==300))?0:63);float bottom=house[1]+112;
     float target=house[1]>500?840:470;if(x>doorX-20-margin&&x<doorX+20+margin&&y>bottom-12-margin&&y<target+margin)return true;}
    return false;
   }
@@ -350,7 +350,7 @@ public class MainActivity extends Activity {
    for(float[] light:new float[][]{{380,420},{650,575},{650,790},{920,820}})fantasyProp("lantern",light[0],light[1],28,54,6);
   }
   void fantasyProp(String name,float x,float y,float w,float h,float radius){
-   Bitmap art=villageArt.get(name);if(art!=null)addVillageProp(name,0,0,art.getWidth(),art.getHeight(),x,y,w,h,radius,1);
+   Bitmap art=villageArt.get(name);if(art!=null)addVillageProp(name,0,0,art.getWidth(),art.getHeight(),x,y,art.getWidth()*1.6f,art.getHeight()*1.6f,radius,1);
   }
   void drawVillageGround(int startX,int endX,int startY,int endY){
    for(int x=startX;x<endX;x+=16)for(int y=startY;y<endY;y+=16){
@@ -369,7 +369,8 @@ public class MainActivity extends Activity {
    if(index==0)drawHouse(h[0],h[1],true);
    else {
     String houseArt=index==2?"inn":index==4?"bakery":"cottage";
-    villageTile(houseArt,0,0,144,128,h[0]-116,h[1]-90,230,205);
+    Bitmap sprite=villageArt.get(houseArt);
+    if(sprite!=null)villageTile(houseArt,0,0,sprite.getWidth(),sprite.getHeight(),h[0]-sprite.getWidth()*.8f,h[1]+115-sprite.getHeight()*1.6f,sprite.getWidth()*1.6f,sprite.getHeight()*1.6f);
     paint.setTextAlign(Paint.Align.CENTER);paint.setTextSize(13);fantasyName(villageNames[index],h[0],h[1]-98);paint.setTextAlign(Paint.Align.LEFT);
    }
    // Six 48px cells: crop only the smoke above the embedded chimney/roof.
@@ -1236,7 +1237,7 @@ public class MainActivity extends Activity {
    paint.setColor(Color.WHITE);paint.setTextSize(15);
    canvas.drawText(characterName,left+394,top+94,paint);
    String[] names={"GESCHLECHT","FRISUR","HAUTFARBE","HAARFARBE","KAMPFSTIL"};
-   String[] values={characterGender==0?"Maennlich":"Weiblich",new String[]{"Bob","Kurzhaar","Pferdeschwanz","Locken"}[Math.floorMod(hairType,4)],"Variante "+skinColor,"Farbe "+hairColor,new String[]{"Schwert + Schild","Axt + Schild","Streitkolben + Schild"}[combatStyle]};
+   String[] values={characterGender==0?"Maennlich":"Weiblich",new String[]{"Bob","Kurzhaar","Zoepfe","Locken"}[Math.floorMod(hairType,4)],"Variante "+skinColor,"Farbe "+hairColor,new String[]{"Schwert + Schild","Axt + Schild","Streitkolben + Schild"}[combatStyle]};
    for(int i=0;i<5;i++){
     float yy=top+121+i*38;
     paint.setTextSize(12);paint.setTypeface(Typeface.DEFAULT_BOLD);
@@ -1483,7 +1484,7 @@ public class MainActivity extends Activity {
    int col=fighting?Math.min(3,Math.max(0,(int)(time*10))):(moving?(action.equals("run")?((int)(elapsed*12)%6):(int)(elapsed*8)%6):0);
    characterLayer(page,"0bas","humn",skinColor,row,col,x,y,w,h);
    characterLayer(page,"1out",equipped.containsKey("Brust")?"fstr":(characterGender==0?"boxr":"undi"),1,row,col,x,y,w,h);
-   characterLayer(page,"4har",hairType==2?"pony":hairType==3?"curl":hairType==0?"bob1":"dap1",hairColor,row,col,x,y,w,h);
+   characterLayer(page,"4har",hairType==2?"braid":hairType==3?"curl":hairType==0?"bob1":"dap1",hairColor,row,col,x,y,w,h);
    if(equipped.containsKey("Kopf"))characterLayer(page,"5hat","pfht",1,row,col,x,y,w,h);
    if(creatorOpen||fighting){
     String weapon=combatStyle==1?"ax01":combatStyle==2?"mc01":"sw01";
