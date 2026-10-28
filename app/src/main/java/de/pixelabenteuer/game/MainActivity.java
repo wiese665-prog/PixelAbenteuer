@@ -432,16 +432,16 @@ public class MainActivity extends Activity {
    drawSmithyMap(l,t);
    // The seller is drawn only once, using a single stable pose.
    characterTile("Master_Idle",3,2,(int)(elapsed*2)%3,l+177,t+145,81.4f);
-   sellerPortrait(l+510,t+166,(int)(elapsed*3)%3);
+   sellerPortrait(l+510,t+161,(int)(elapsed*3)%3);
    paint.setTextAlign(Paint.Align.CENTER);
    paint.setTypeface(Typeface.DEFAULT_BOLD);
    paint.setTextSize(13);paint.setColor(col("#ffe7aa"));
    fantasyName("Schmied",l+177,t+77);
-   fantasyName("Händlerin",l+510,t+119);
+   fantasyName("Händlerin",l+510,t+114);
    paint.setTypeface(Typeface.DEFAULT);paint.setTextSize(11);
    paint.setColor(col("#ffffff"));
    if(Math.hypot(px-237,py-337)<53)drawInteractionKey(l+177,t+104);
-   if(Math.abs(px-570)<58&&py>344&&py<409)drawInteractionKey(l+510,t+139);
+   if(Math.abs(px-570)<58&&py>344&&py<409)drawInteractionKey(l+510,t+134);
    paint.setTextAlign(Paint.Align.LEFT);
    characterTile("Customer",3,2,(int)(elapsed*3)%3,l+562,t+288,52);
    paint.setTextAlign(Paint.Align.CENTER);paint.setTypeface(Typeface.DEFAULT_BOLD);
@@ -1394,38 +1394,43 @@ public class MainActivity extends Activity {
    paint.setColor(Color.WHITE);paint.setColorFilter(null);paint.setAlpha(255);paint.setStyle(Paint.Style.FILL);paint.setFilterBitmap(false);
    canvas.drawBitmap(b,new Rect(frame*frameWidth,0,(frame+1)*frameWidth,b.getHeight()),new RectF(x-w/2,y-h/2,x+w/2,y+h/2),paint);
   }
+  // Coordinates are measured against the 42x22 Tiled map (16px per tile).
+  // Keep these bounds allocated once rather than recreating them every movement frame.
+  final float[][] smithySolidBounds={
+   {86,51,132,93}, {217,51,263,93}, // furnace bases
+   {28,83,54,140}, {279,83,304,140}, // masonry pillars
+   {153,65,204,90}, // wall-side storage
+   {145,125,192,147}, {201,125,267,158}, // worktables (not the carpet)
+   {54,106,77,133}, {104,119,136,144}, // crates and cart
+   {22,221,80,249}, {37,280,118,308}, // southwest furniture
+   {213,247,299,307}, {256,204,301,225}, // south smithy crates
+   {354,48,392,81}, {422,22,476,65}, // north shop displays
+   {511,77,548,119}, {601,77,640,120},
+   {386,77,420,121},
+   {385,227,423,254}, {417,257,457,306},
+   {575,193,653,249}, {575,260,654,306},
+   {495,24,538,58}, {559,23,604,55}
+  };
   boolean interiorObstacle(float x,float y){
-   // Convert interior-world feet position to the 672x352 Tiled map.
+   // The coordinates describe the character's feet, not the entire sprite.
    float tx=x-60f,ty=y-174f;
-   final float margin=8f;
-   // Solid walls. The middle passage and the 2-tile southern entrance stay open.
-   if(tx<13||tx>659||ty<37)return true;
-   if(ty>307&&(tx<480||tx>509))return true;
-   if(tx>317&&tx<350&&(ty<170||ty>228))return true;
-   // The counter separates the saleswoman from the customer area.
-   if(tx>351&&tx<670&&ty>151&&ty<174)return true;
-   // Furniture and props measured from the user's Tiled interior.
-   float[][] solids={
-    {87,46,133,92}, {217,46,264,92}, // two forges
-    {27,79,55,141}, {278,79,305,141}, // stone pillars
-    {152,50,206,89}, // ore and wall decoration
-    {144,121,192,146}, {199,119,267,157}, // two worktables, keep rug walkable
-    {54,95,77,132}, {103,110,136,144}, // crates and cart
-    {21,213,81,248}, {35,274,119,307}, // southwest displays
-    {211,236,301,307}, {254,195,303,224}, // crates and wall-side supplies
-    {353,37,393,80}, {420,4,477,65}, // northern shop shelves
-    {510,64,549,118}, {600,65,641,119},
-    {385,63,421,120}, // northern shelves
-    {384,218,424,254}, {415,247,458,305},
-    {574,181,654,247}, {574,248,656,305}, // lower sales displays
-    {494,10,539,57}, {558,9,605,54}
-   };
-   for(float[] box:solids)
-    if(tx>box[0]-margin&&tx<box[2]+margin&&ty>box[1]-margin&&ty<box[3]+margin)return true;
-   // NPC feet only; rugs are never solid.
-   if(Math.hypot(x-237f,y-337f)<15f)return true;
-   if(Math.hypot(x-570f,y-340f)<15f)return true;
-   if(Math.hypot(x-622f,y-431f)<20f)return true;
+   final float footRadius=7f;
+   // Walls and the bottom exit. The central opening is intentionally traversable.
+   if(tx<15+footRadius||tx>657-footRadius||ty<40+footRadius)return true;
+   if(ty>308-footRadius&&(tx<480-footRadius||tx>509+footRadius))return true;
+   if(tx>317-footRadius&&tx<350+footRadius&&(ty<169-footRadius||ty>228+footRadius))return true;
+   // Counter: approach from the customer side, never walk through it.
+   if(tx>351-footRadius&&tx<657&&ty>152-footRadius&&ty<174+footRadius)return true;
+   for(float[] box:smithySolidBounds){
+    // Circle-vs-rectangle gives tighter corners than a rectangular player margin.
+    float cx=Math.max(box[0],Math.min(tx,box[2]));
+    float cy=Math.max(box[1],Math.min(ty,box[3]));
+    float dx=tx-cx,dy=ty-cy;
+    if(dx*dx+dy*dy<footRadius*footRadius)return true;
+   }
+   if(Math.hypot(x-237f,y-337f)<20f)return true;
+   if(Math.hypot(x-570f,y-335f)<16f)return true;
+   if(Math.hypot(x-622f,y-431f)<21f)return true;
    return false;
   }
   // Attack animation window; the next group can act immediately afterward.
