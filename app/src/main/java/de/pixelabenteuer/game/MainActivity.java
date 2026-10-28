@@ -55,7 +55,7 @@ public class MainActivity extends Activity {
   }
   String[] hotbar=new String[9];int selectedHotbar=-1;int copper=0,silver=0,gold=0,hoverSlot=-1;float hoverX=0,hoverY=0;
   Item inspectedGear=null;String characterName="Abenteurer";int armorStyle=0,characterGender=0;boolean sprintHeld=false;int attackSequence=0;boolean creatorOpen=false;int hairType=0,hairColor=1,skinColor=1,eyeColor=0,combatStyle=0;boolean inventoryOpen=false,shopOpen=false,startScreen=true,pauseMenu=false,controlsOpen=false;float merchantX=265,merchantY=215;
-  int activeMerchant=0; // 0 Orc-Händler, 1 Schmid, 2 Händlerin
+  int activeMerchant=0; // 0 Orc-Händler, 1 Schmied, 2 Händlerin
   String[] shopStock={"Apple","Ham","Healthpotion","Healpotion med","Iron Sword","Silver Sword","Leather Armor","Iron Armor","Iron Helmet","Golden Sword"};
   String[] smithStock={"Wooden Sword [Common]","Wooden Sword [Legendär]","Iron Sword [Uncommon]","Iron Sword [Rare]","Silver Sword [Common]","Silver Sword [Legendär]","Golden Sword [Rare]","Golden Sword [Legendär]","Leather Armor [Rare]","Iron Armor [Rare]","Iron Helmet [Legendär]","Leather Boot [Uncommon]"};
   final float STOCK_REFRESH_SECONDS=300f;
@@ -453,7 +453,7 @@ public class MainActivity extends Activity {
    paint.setTextAlign(Paint.Align.CENTER);
    paint.setTypeface(Typeface.DEFAULT_BOLD);
    paint.setTextSize(13);paint.setColor(col("#ffe7aa"));
-   fantasyName("Schmid",l+251,t+99);
+   fantasyName("Schmied",l+251,t+99);
    fantasyName("Händlerin",l+510,t+159);
    paint.setTypeface(Typeface.DEFAULT);paint.setTextSize(11);
    paint.setColor(col("#ffffff"));
@@ -740,7 +740,7 @@ public class MainActivity extends Activity {
    stockRotation++;
   }
   String[] activeStock(){return activeMerchant==1?smithStock:activeMerchant==2?sellerStock:shopStock;}
-  String merchantTitle(){return activeMerchant==1?"SCHMID":activeMerchant==2?"HAENDLERIN":"ORC-HAENDLER";}
+  String merchantTitle(){return activeMerchant==1?"SCHMIED":activeMerchant==2?"HAENDLERIN":"ORC-HAENDLER";}
   void showMerchant(int merchant){activeMerchant=merchant;shopOpen=true;inventoryOpen=false;hoverSlot=-1;joyX=joyY=0;}
   String adventurerSpeech="";float adventurerSpeechTime=0f;
   // One active contract at a time. New contracts appear 2 or 3 game days after turn-in.
@@ -770,7 +770,7 @@ public class MainActivity extends Activity {
      "Ein guter Helm rettet Leben.","Ich habe schon bessere Klingen gesehen.",
      "Pass auf die Wildschweine auf!","Die Ruinen bergen alte Geheimnisse.",
      "Heute ist es ungewoehnlich ruhig.","Meine Stiefel sind voellig durchgelaufen.",
-     "Der Schmid kennt sein Handwerk.","Hast du genug Proviant dabei?",
+     "Der Schmied kennt sein Handwerk.","Hast du genug Proviant dabei?",
      "Ein mutiger Held kennt auch den Rueckzug.","Im Wald raschelt es nachts seltsam.",
      "Ich suche noch nach einer alten Karte.","Gold ist nicht alles, aber es hilft.",
      "Der Haendler feilscht wie ein Fuchs.","Manche Orks tragen seltene Beute.",
@@ -1420,7 +1420,7 @@ public class MainActivity extends Activity {
    for(float[] box:solids)
     if(x>box[0]-margin&&x<box[2]+margin&&y>box[1]-margin&&y<box[3]+margin)return true;
    // NPC footprints: block walking through their feet, not the whole sprite.
-   if(x>249f&&x<343f&&y>283f&&y<340f)return true; // Schmid and worktable
+   if(x>249f&&x<343f&&y>283f&&y<340f)return true; // Schmied and worktable
    if(Math.hypot(x-570f,y-340f)<24f)return true; // Händlerin
    if(Math.hypot(x-622f,y-431f)<22f)return true; // Abenteurer
    // Upper stone partition; lower passage remains open.
