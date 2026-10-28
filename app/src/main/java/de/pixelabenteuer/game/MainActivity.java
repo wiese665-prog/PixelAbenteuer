@@ -288,6 +288,7 @@ public class MainActivity extends Activity {
   boolean safeZone(float x,float y){return villageZone(x,y,0);}
   // World coordinates shared by rendering, collision, paths and wildlife guards.
   final float[][] villageHouses={{550,300},{270,380},{830,300},{270,690},{550,690},{830,690}};
+  final float[] villageDoorOffsets={0,64,-3.2f,0,64,0};
   final String[] villageNames={"Schmiede","Kraeuterhaus","Gasthaus","Wohnhaus","Baeckerei","Gilde"};
   final float[][] villageRoads={{160,195,450,235},{386,195,434,932},{666,450,714,932},{180,450,1210,490},{180,820,930,860},{430,442,666,570}};
   final ArrayList<VillageProp> villageProps=new ArrayList<>();
@@ -302,7 +303,7 @@ public class MainActivity extends Activity {
    if((Math.abs(y-470)<24&&(x<190||x>920))||(Math.abs(x-410)<24&&y<220))return true;
    if(Math.abs(x-1010)<18&&y>385&&y<470)return true;
    for(float[] r:villageRoads)if(x>=r[0]-margin&&x<=r[2]+margin&&y>=r[1]-margin&&y<=r[3]+margin)return true;
-   for(int i=0;i<villageHouses.length;i++){float[] house=villageHouses[i];float doorX=house[0]+new float[]{0,64,-3.2f,0,64,0}[i];float bottom=house[1]+112;
+   for(int i=0;i<villageHouses.length;i++){float[] house=villageHouses[i];float doorX=house[0]+villageDoorOffsets[i];float bottom=house[1]+112;
     float target=house[1]>500?840:470;if(x>doorX-20-margin&&x<doorX+20+margin&&y>bottom-12-margin&&y<target+margin)return true;}
    return false;
   }
