@@ -1416,6 +1416,10 @@ public class MainActivity extends Activity {
      if(layerIndex==3&&!(gid>=654&&gid<=703&&tileY>=9&&tileY<=10&&tileX>=21))continue;
      // The bottom doorway is two tiles wide, regardless of wall art.
      if(layerIndex==5&&tileY>=19&&(tileX==30||tileX==31))continue;
+     // Open passage between smithy (left) and shop (right).
+     // Tiled has decorative wall IDs across the visible opening;
+     // those must not become invisible solid masonry.
+     if(layerIndex==5&&tileX>=18&&tileX<=22&&tileY>=10&&tileY<=14&&gid<654)continue;
      // Stone masonry must be solid, but do not treat shop decorations
      // placed on the walls layer as a full solid wall.
      boolean masonry=layerIndex==5&&gid<654;
