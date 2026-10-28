@@ -1481,6 +1481,7 @@ public class MainActivity extends Activity {
       attackingOrcs.add(candidate);
     }
    }
+   int pathSearchBudget=2; // Never start dozens of expensive A* searches in one frame.
    for(Mob m:mobs){
     if(m.dead){m.deathTimer+=dt;continue;}
     m.anim+=dt;m.attackTimer=Math.max(0,m.attackTimer-dt);m.hurtTimer=Math.max(0,m.hurtTimer-dt);m.healthVisible=Math.max(0,m.healthVisible-dt);m.damageNumberTime=Math.max(0,m.damageNumberTime-dt);
@@ -1516,7 +1517,7 @@ public class MainActivity extends Activity {
      }
      vx=m.vx;vy=m.vy;action=Math.abs(vx)+Math.abs(vy)<1?"idle":"walk";
     }
-    if(Math.abs(vx)+Math.abs(vy)>1){m.pathTimer-=dt;float tx=m.hostile()&&distance<285?px:m.x+vx*1.8f,ty=m.hostile()&&distance<285?py:m.y+vy*1.8f;if(m.pathTimer<=0){if(distance<430f)planMobPath(m,tx,ty);else{m.path.clear();m.pathIndex=0;m.pathTimer=1.5f+random.nextFloat();}}while(m.pathIndex<m.path.size()&&Math.hypot(m.x-m.path.get(m.pathIndex)[0],m.y-m.path.get(m.pathIndex)[1])<10)m.pathIndex++;if(m.pathIndex<m.path.size()){float[] wp=m.path.get(m.pathIndex);float dx=wp[0]-m.x,dy=wp[1]-m.y,len=(float)Math.hypot(dx,dy);if(len>0){float speed=m.hostile()?75f:Math.max(35f,(float)Math.hypot(vx,vy));vx=dx/len*speed;vy=dy/len*speed;}}}
+    if(Math.abs(vx)+Math.abs(vy)>1){m.pathTimer-=dt;float tx=m.hostile()&&distance<285?px:m.x+vx*1.8f,ty=m.hostile()&&distance<285?py:m.y+vy*1.8f;if(m.pathTimer<=0){if(distance<430f){if(pathSearchBudget>0){pathSearchBudget--;planMobPath(m,tx,ty);}else m.pathTimer=.12f+random.nextFloat()*.12f;}else{m.path.clear();m.pathIndex=0;m.pathTimer=1.5f+random.nextFloat();}}while(m.pathIndex<m.path.size()&&Math.hypot(m.x-m.path.get(m.pathIndex)[0],m.y-m.path.get(m.pathIndex)[1])<10)m.pathIndex++;if(m.pathIndex<m.path.size()){float[] wp=m.path.get(m.pathIndex);float dx=wp[0]-m.x,dy=wp[1]-m.y,len=(float)Math.hypot(dx,dy);if(len>0){float speed=m.hostile()?75f:Math.max(35f,(float)Math.hypot(vx,vy));vx=dx/len*speed;vy=dy/len*speed;}}}
      if(safeZone(m.x,m.y)||safeZone(m.x+vx*dt,m.y+vy*dt)){vx=0;vy=0;m.vx=0;m.vy=0;}
     if(Math.abs(vx)+Math.abs(vy)>1){
      float step=dt/3f;
@@ -1531,6 +1532,18 @@ public class MainActivity extends Activity {
    }
   }
   void planMobPath(Mob m,float tx,float ty){
+    // Straight, unobstructed paths do not need an A* search or allocations.
+    float dxDirect=tx-m.x,dyDirect=ty-m.y;
+    float lengthDirect=(float)Math.hypot(dxDirect,dyDirect);
+    if(lengthDirect<170f){
+     boolean clear=true;
+     int probes=Math.max(1,(int)(lengthDirect/18f));
+     for(int p=1;p<=probes;p++){
+      float xx=m.x+dxDirect*p/probes,yy=m.y+dyDirect*p/probes;
+      if(blocked(xx,yy)||(m.hostile()&&safeZone(xx,yy))){clear=false;break;}
+     }
+     if(clear){m.path.clear();m.pathIndex=0;m.pathTimer=.8f+random.nextFloat()*.35f;return;}
+    }
     final int cell=24,cols=(WORLD_W+cell-1)/cell,rows=(WORLD_H+cell-1)/cell,total=cols*rows;
     int sx=Math.max(0,Math.min(cols-1,(int)(m.x/cell))),sy=Math.max(0,Math.min(rows-1,(int)(m.y/cell)));
     int gx=Math.max(0,Math.min(cols-1,(int)(tx/cell))),gy=Math.max(0,Math.min(rows-1,(int)(ty/cell)));
