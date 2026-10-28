@@ -472,7 +472,7 @@ public class MainActivity extends Activity {
    paint.setTextAlign(Paint.Align.LEFT);paint.setTypeface(Typeface.DEFAULT);
    float cx=l+340+(px-400),cy=t+176+(py-350);
    String indoorAction=hp<=0?"death":hurtAnim>0?"hurt":attackAnim>0&&sword?"attack":Math.abs(joyX)+Math.abs(joyY)>.08f?(sprintHeld?"run":"walk"):"idle";
-   drawSprite(sword?"player_sword":"player_unarmed",indoorAction,playerDir,cx,cy,80.64f,80.64f,hp<=0?deathAnim:attackAnim>0?.4f-attackAnim:elapsed,hp<=0&&deathAnim>.8f);
+   drawSprite(sword?"player_sword":"player_unarmed",indoorAction,playerDir,cx,cy,88.704f,88.704f,hp<=0?deathAnim:attackAnim>0?.4f-attackAnim:elapsed,hp<=0&&deathAnim>.8f);
    paint.setColor(col("#fff2d5"));paint.setTextSize(13);
    canvas.drawText("SCHMIEDE  |  Ausgang unten mittig",l+221,t+345,paint);
   }
@@ -1458,7 +1458,7 @@ public class MainActivity extends Activity {
     }
    }
    // NPCs have separate small footprints.
-   if(Math.hypot(x-237f,y-337f)<17f)return true;
+   if(Math.hypot(x-237f,y-329f)<17f)return true;
    if(Math.hypot(x-570f,y-335f)<16f)return true;
    if(Math.hypot(x-622f,y-431f)<21f)return true;
    return false;
