@@ -58,15 +58,20 @@ def build():
                 for col in range(8):
                     native = template.crop((col*64,row*64,col*64+64,row*64+64))
                     x0,y0,x1,y1 = native.getbbox()
+                    if kind == 'long':
+                        # Keep the native scalp footprint in every pose. Long
+                        # strands alone leave holes when the head turns in attacks.
+                        for ny in range(y0,y1):
+                            for nx in range(x0,x1):
+                                pixel=native.getpixel((nx,ny))
+                                if pixel[3]>=128:
+                                    indexed.putpixel((col*64+nx,row*64+ny),closest(pixel[:3]))
                     if kind == 'braid':
                         w,h = ((16,20) if facing==0 else (16,21) if facing==1 else (15,20))
                         left = round((x0+x1-w)/2)
                         if facing==0:left+=0
                         left += 0
                         top = y0-1
-                    elif kind in ('bun','long'):
-                        w,h = (16,15) if kind=='bun' else (16,21)
-                        left,top=round((x0+x1-w)/2),y0-1
                     elif kind in ('bun','long'):
                         w,h = (16,15) if kind=='bun' else (16,21)
                         left,top=round((x0+x1-w)/2),y0-1

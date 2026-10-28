@@ -300,8 +300,9 @@ public class MainActivity extends Activity {
   boolean villageZone(float x,float y,float padding){return x>100-padding&&x<1020+padding&&y>96-padding&&y<890+padding;}
   boolean roadAt(float x,float y,float margin){
    if((Math.abs(y-470)<24&&(x<190||x>920))||(Math.abs(x-410)<24&&y<220))return true;
+   if(Math.abs(x-1010)<18&&y>385&&y<470)return true;
    for(float[] r:villageRoads)if(x>=r[0]-margin&&x<=r[2]+margin&&y>=r[1]-margin&&y<=r[3]+margin)return true;
-   for(float[] house:villageHouses){float doorX=house[0]+(((house[0]==forgeX&&house[1]==forgeY)||(house[0]==830&&house[1]==300))?0:63);float bottom=house[1]+112;
+   for(float[] house:villageHouses){float doorX=house[0]+(((house[0]==forgeX&&house[1]==forgeY)||(house[0]==830&&house[1]==300))?0:(house[0]==550&&house[1]==690?12:32));float bottom=house[1]+112;
     float target=house[1]>500?840:470;if(x>doorX-20-margin&&x<doorX+20+margin&&y>bottom-12-margin&&y<target+margin)return true;}
    return false;
   }
@@ -340,7 +341,7 @@ public class MainActivity extends Activity {
    }
    for(float[] f:new float[][]{{350,530},{960,430},{350,885},{960,850},{700,210}})
     addVillageProp("exterior",208,768,16,32,f[0],f[1],24,40,0,1);
-   fantasyProp("tower",955,170,85,146,23);
+   fantasyProp("tower",1010,350,154,256,40);
    fantasyProp("market",735,510,92,75,23);
    fantasyProp("quests",460,530,43,49,10);
    fantasyProp("shrine",190,220,55,70,15);
