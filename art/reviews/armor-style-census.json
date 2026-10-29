@@ -1,0 +1,3668 @@
+[
+  {
+    "page": "p1",
+    "layer": "1out",
+    "name": "boxr_v01",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 60,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      5,
+      12,
+      2,
+      7
+    ],
+    "palette": [
+      {
+        "hex": "#52525f",
+        "pixels": 500
+      },
+      {
+        "hex": "#7c8989",
+        "pixels": 421
+      },
+      {
+        "hex": "#a7b5a7",
+        "pixels": 291
+      },
+      {
+        "hex": "#dcdccb",
+        "pixels": 196
+      },
+      {
+        "hex": "#181818",
+        "pixels": 6
+      }
+    ]
+  },
+  {
+    "page": "p1",
+    "layer": "1out",
+    "name": "fstr_v01",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 64,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      11,
+      20,
+      15,
+      29
+    ],
+    "palette": [
+      {
+        "hex": "#181818",
+        "pixels": 3289
+      },
+      {
+        "hex": "#716558",
+        "pixels": 2163
+      },
+      {
+        "hex": "#a69878",
+        "pixels": 1667
+      },
+      {
+        "hex": "#8d2246",
+        "pixels": 781
+      },
+      {
+        "hex": "#c7c4a2",
+        "pixels": 764
+      },
+      {
+        "hex": "#5b1839",
+        "pixels": 748
+      },
+      {
+        "hex": "#1e2b41",
+        "pixels": 530
+      },
+      {
+        "hex": "#be5667",
+        "pixels": 369
+      },
+      {
+        "hex": "#3c5575",
+        "pixels": 339
+      }
+    ]
+  },
+  {
+    "page": "p1",
+    "layer": "1out",
+    "name": "fstr_v02",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 64,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      11,
+      20,
+      15,
+      29
+    ],
+    "palette": [
+      {
+        "hex": "#181818",
+        "pixels": 3289
+      },
+      {
+        "hex": "#704058",
+        "pixels": 2163
+      },
+      {
+        "hex": "#b08898",
+        "pixels": 1667
+      },
+      {
+        "hex": "#454995",
+        "pixels": 781
+      },
+      {
+        "hex": "#e0c8d8",
+        "pixels": 764
+      },
+      {
+        "hex": "#2c2353",
+        "pixels": 748
+      },
+      {
+        "hex": "#421c1f",
+        "pixels": 530
+      },
+      {
+        "hex": "#5371b0",
+        "pixels": 369
+      },
+      {
+        "hex": "#623528",
+        "pixels": 339
+      }
+    ]
+  },
+  {
+    "page": "p1",
+    "layer": "1out",
+    "name": "fstr_v03",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 64,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      11,
+      20,
+      15,
+      29
+    ],
+    "palette": [
+      {
+        "hex": "#181818",
+        "pixels": 3289
+      },
+      {
+        "hex": "#52525f",
+        "pixels": 2163
+      },
+      {
+        "hex": "#7c8989",
+        "pixels": 1667
+      },
+      {
+        "hex": "#632e11",
+        "pixels": 781
+      },
+      {
+        "hex": "#a7b5a7",
+        "pixels": 764
+      },
+      {
+        "hex": "#3d1200",
+        "pixels": 748
+      },
+      {
+        "hex": "#2e4048",
+        "pixels": 530
+      },
+      {
+        "hex": "#8d6340",
+        "pixels": 369
+      },
+      {
+        "hex": "#2d836d",
+        "pixels": 339
+      }
+    ]
+  },
+  {
+    "page": "p1",
+    "layer": "1out",
+    "name": "fstr_v04",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 64,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      11,
+      20,
+      15,
+      29
+    ],
+    "palette": [
+      {
+        "hex": "#181818",
+        "pixels": 3289
+      },
+      {
+        "hex": "#945816",
+        "pixels": 2163
+      },
+      {
+        "hex": "#cd9217",
+        "pixels": 1667
+      },
+      {
+        "hex": "#9b3c1b",
+        "pixels": 781
+      },
+      {
+        "hex": "#e1cd4e",
+        "pixels": 764
+      },
+      {
+        "hex": "#5a2818",
+        "pixels": 748
+      },
+      {
+        "hex": "#2c253e",
+        "pixels": 530
+      },
+      {
+        "hex": "#dc6831",
+        "pixels": 369
+      },
+      {
+        "hex": "#453f60",
+        "pixels": 339
+      }
+    ]
+  },
+  {
+    "page": "p1",
+    "layer": "1out",
+    "name": "fstr_v05",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 64,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      11,
+      20,
+      15,
+      29
+    ],
+    "palette": [
+      {
+        "hex": "#181818",
+        "pixels": 3289
+      },
+      {
+        "hex": "#205858",
+        "pixels": 2163
+      },
+      {
+        "hex": "#389878",
+        "pixels": 1667
+      },
+      {
+        "hex": "#453f60",
+        "pixels": 781
+      },
+      {
+        "hex": "#a0d880",
+        "pixels": 764
+      },
+      {
+        "hex": "#2c253e",
+        "pixels": 748
+      },
+      {
+        "hex": "#584020",
+        "pixels": 530
+      },
+      {
+        "hex": "#63778f",
+        "pixels": 369
+      },
+      {
+        "hex": "#806838",
+        "pixels": 339
+      }
+    ]
+  },
+  {
+    "page": "p1",
+    "layer": "1out",
+    "name": "pfpn_v01",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 64,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      11,
+      20,
+      15,
+      29
+    ],
+    "palette": [
+      {
+        "hex": "#181818",
+        "pixels": 3164
+      },
+      {
+        "hex": "#193364",
+        "pixels": 2246
+      },
+      {
+        "hex": "#3a6797",
+        "pixels": 1617
+      },
+      {
+        "hex": "#815c21",
+        "pixels": 1459
+      },
+      {
+        "hex": "#5999bd",
+        "pixels": 1000
+      },
+      {
+        "hex": "#b29149",
+        "pixels": 995
+      },
+      {
+        "hex": "#e0d28e",
+        "pixels": 531
+      }
+    ]
+  },
+  {
+    "page": "p1",
+    "layer": "1out",
+    "name": "pfpn_v02",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 64,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      11,
+      20,
+      15,
+      29
+    ],
+    "palette": [
+      {
+        "hex": "#181818",
+        "pixels": 3164
+      },
+      {
+        "hex": "#583828",
+        "pixels": 2246
+      },
+      {
+        "hex": "#986038",
+        "pixels": 1617
+      },
+      {
+        "hex": "#364a3f",
+        "pixels": 1459
+      },
+      {
+        "hex": "#f09848",
+        "pixels": 1000
+      },
+      {
+        "hex": "#5b7f6a",
+        "pixels": 995
+      },
+      {
+        "hex": "#a8c898",
+        "pixels": 531
+      }
+    ]
+  },
+  {
+    "page": "p1",
+    "layer": "1out",
+    "name": "pfpn_v03",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 64,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      11,
+      20,
+      15,
+      29
+    ],
+    "palette": [
+      {
+        "hex": "#181818",
+        "pixels": 3164
+      },
+      {
+        "hex": "#304050",
+        "pixels": 2246
+      },
+      {
+        "hex": "#586870",
+        "pixels": 1617
+      },
+      {
+        "hex": "#704058",
+        "pixels": 1459
+      },
+      {
+        "hex": "#90a0b0",
+        "pixels": 1000
+      },
+      {
+        "hex": "#b08898",
+        "pixels": 995
+      },
+      {
+        "hex": "#e0c8d8",
+        "pixels": 531
+      }
+    ]
+  },
+  {
+    "page": "p1",
+    "layer": "1out",
+    "name": "pfpn_v04",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 64,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      11,
+      20,
+      15,
+      29
+    ],
+    "palette": [
+      {
+        "hex": "#181818",
+        "pixels": 3164
+      },
+      {
+        "hex": "#204858",
+        "pixels": 2246
+      },
+      {
+        "hex": "#389088",
+        "pixels": 1617
+      },
+      {
+        "hex": "#702818",
+        "pixels": 1459
+      },
+      {
+        "hex": "#78d8e8",
+        "pixels": 1000
+      },
+      {
+        "hex": "#c84830",
+        "pixels": 995
+      },
+      {
+        "hex": "#f09850",
+        "pixels": 531
+      }
+    ]
+  },
+  {
+    "page": "p1",
+    "layer": "1out",
+    "name": "pfpn_v05",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 64,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      11,
+      20,
+      15,
+      29
+    ],
+    "palette": [
+      {
+        "hex": "#181818",
+        "pixels": 3164
+      },
+      {
+        "hex": "#425865",
+        "pixels": 2246
+      },
+      {
+        "hex": "#8aafac",
+        "pixels": 1617
+      },
+      {
+        "hex": "#7f4935",
+        "pixels": 1459
+      },
+      {
+        "hex": "#c7e5dc",
+        "pixels": 1000
+      },
+      {
+        "hex": "#b47f54",
+        "pixels": 995
+      },
+      {
+        "hex": "#dab988",
+        "pixels": 531
+      }
+    ]
+  },
+  {
+    "page": "p1",
+    "layer": "1out",
+    "name": "undi_v01",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 64,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      4,
+      10,
+      2,
+      13
+    ],
+    "palette": [
+      {
+        "hex": "#52525f",
+        "pixels": 638
+      },
+      {
+        "hex": "#7c8989",
+        "pixels": 512
+      },
+      {
+        "hex": "#a7b5a7",
+        "pixels": 341
+      },
+      {
+        "hex": "#dcdccb",
+        "pixels": 184
+      },
+      {
+        "hex": "#181818",
+        "pixels": 11
+      }
+    ]
+  },
+  {
+    "page": "p1",
+    "layer": "5hat",
+    "name": "pfht_v01",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 64,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      14,
+      16,
+      13,
+      17
+    ],
+    "palette": [
+      {
+        "hex": "#fcb099",
+        "pixels": 2662
+      },
+      {
+        "hex": "#6b3235",
+        "pixels": 2377
+      },
+      {
+        "hex": "#a9494c",
+        "pixels": 2130
+      },
+      {
+        "hex": "#ea7268",
+        "pixels": 1946
+      },
+      {
+        "hex": "#181818",
+        "pixels": 1182
+      }
+    ]
+  },
+  {
+    "page": "p1",
+    "layer": "5hat",
+    "name": "pfht_v02",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 64,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      14,
+      16,
+      13,
+      17
+    ],
+    "palette": [
+      {
+        "hex": "#e7e7cd",
+        "pixels": 2662
+      },
+      {
+        "hex": "#716558",
+        "pixels": 2377
+      },
+      {
+        "hex": "#a69878",
+        "pixels": 2130
+      },
+      {
+        "hex": "#c7c4a2",
+        "pixels": 1946
+      },
+      {
+        "hex": "#181818",
+        "pixels": 1182
+      }
+    ]
+  },
+  {
+    "page": "p1",
+    "layer": "5hat",
+    "name": "pfht_v03",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 64,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      14,
+      16,
+      13,
+      17
+    ],
+    "palette": [
+      {
+        "hex": "#b7b5af",
+        "pixels": 2662
+      },
+      {
+        "hex": "#332c28",
+        "pixels": 2377
+      },
+      {
+        "hex": "#54504e",
+        "pixels": 2130
+      },
+      {
+        "hex": "#82807d",
+        "pixels": 1946
+      },
+      {
+        "hex": "#181818",
+        "pixels": 1182
+      }
+    ]
+  },
+  {
+    "page": "p1",
+    "layer": "5hat",
+    "name": "pfht_v04",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 64,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      14,
+      16,
+      13,
+      17
+    ],
+    "palette": [
+      {
+        "hex": "#cca874",
+        "pixels": 2662
+      },
+      {
+        "hex": "#421c1f",
+        "pixels": 2377
+      },
+      {
+        "hex": "#623528",
+        "pixels": 2130
+      },
+      {
+        "hex": "#916944",
+        "pixels": 1946
+      },
+      {
+        "hex": "#181818",
+        "pixels": 1182
+      }
+    ]
+  },
+  {
+    "page": "p1",
+    "layer": "5hat",
+    "name": "pfht_v05",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 64,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      14,
+      16,
+      13,
+      17
+    ],
+    "palette": [
+      {
+        "hex": "#d8db97",
+        "pixels": 2662
+      },
+      {
+        "hex": "#2d4245",
+        "pixels": 2377
+      },
+      {
+        "hex": "#51795c",
+        "pixels": 2130
+      },
+      {
+        "hex": "#97ae79",
+        "pixels": 1946
+      },
+      {
+        "hex": "#181818",
+        "pixels": 1182
+      }
+    ]
+  },
+  {
+    "page": "p1",
+    "layer": "5hat",
+    "name": "pnty_v01",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 64,
+    "alpha": [
+      0,
+      134,
+      221,
+      255
+    ],
+    "bounds_range": [
+      15,
+      18,
+      10,
+      14
+    ],
+    "palette": [
+      {
+        "hex": "#1e2b41",
+        "pixels": 1854
+      },
+      {
+        "hex": "#3c5575",
+        "pixels": 1683
+      },
+      {
+        "hex": "#6293ad",
+        "pixels": 1605
+      },
+      {
+        "hex": "#99d6e3",
+        "pixels": 1434
+      },
+      {
+        "hex": "#8d2246",
+        "pixels": 482
+      },
+      {
+        "hex": "#be5667",
+        "pixels": 446
+      },
+      {
+        "hex": "#5b1839",
+        "pixels": 402
+      },
+      {
+        "hex": "#181818",
+        "pixels": 96
+      },
+      {
+        "hex": "#211321",
+        "pixels": 69
+      }
+    ]
+  },
+  {
+    "page": "p1",
+    "layer": "5hat",
+    "name": "pnty_v02",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 64,
+    "alpha": [
+      0,
+      134,
+      221,
+      255
+    ],
+    "bounds_range": [
+      15,
+      18,
+      10,
+      14
+    ],
+    "palette": [
+      {
+        "hex": "#421c1f",
+        "pixels": 1854
+      },
+      {
+        "hex": "#623528",
+        "pixels": 1683
+      },
+      {
+        "hex": "#916944",
+        "pixels": 1605
+      },
+      {
+        "hex": "#cca874",
+        "pixels": 1434
+      },
+      {
+        "hex": "#454995",
+        "pixels": 482
+      },
+      {
+        "hex": "#5371b0",
+        "pixels": 446
+      },
+      {
+        "hex": "#2c2353",
+        "pixels": 402
+      },
+      {
+        "hex": "#181818",
+        "pixels": 96
+      },
+      {
+        "hex": "#211321",
+        "pixels": 69
+      }
+    ]
+  },
+  {
+    "page": "p1",
+    "layer": "5hat",
+    "name": "pnty_v03",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 64,
+    "alpha": [
+      0,
+      134,
+      221,
+      255
+    ],
+    "bounds_range": [
+      15,
+      18,
+      10,
+      14
+    ],
+    "palette": [
+      {
+        "hex": "#2e4048",
+        "pixels": 1854
+      },
+      {
+        "hex": "#2d836d",
+        "pixels": 1683
+      },
+      {
+        "hex": "#4cc180",
+        "pixels": 1605
+      },
+      {
+        "hex": "#a4eaa9",
+        "pixels": 1434
+      },
+      {
+        "hex": "#632e11",
+        "pixels": 482
+      },
+      {
+        "hex": "#8d6340",
+        "pixels": 446
+      },
+      {
+        "hex": "#3d1200",
+        "pixels": 402
+      },
+      {
+        "hex": "#181818",
+        "pixels": 96
+      },
+      {
+        "hex": "#211321",
+        "pixels": 69
+      }
+    ]
+  },
+  {
+    "page": "p1",
+    "layer": "5hat",
+    "name": "pnty_v04",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 64,
+    "alpha": [
+      0,
+      134,
+      221,
+      255
+    ],
+    "bounds_range": [
+      15,
+      18,
+      10,
+      14
+    ],
+    "palette": [
+      {
+        "hex": "#2c253e",
+        "pixels": 1854
+      },
+      {
+        "hex": "#453f60",
+        "pixels": 1683
+      },
+      {
+        "hex": "#63778f",
+        "pixels": 1605
+      },
+      {
+        "hex": "#adc3cc",
+        "pixels": 1434
+      },
+      {
+        "hex": "#9b3c1b",
+        "pixels": 482
+      },
+      {
+        "hex": "#dc6831",
+        "pixels": 446
+      },
+      {
+        "hex": "#5a2818",
+        "pixels": 402
+      },
+      {
+        "hex": "#181818",
+        "pixels": 96
+      },
+      {
+        "hex": "#211321",
+        "pixels": 69
+      }
+    ]
+  },
+  {
+    "page": "p1",
+    "layer": "5hat",
+    "name": "pnty_v05",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 64,
+    "alpha": [
+      0,
+      134,
+      221,
+      255
+    ],
+    "bounds_range": [
+      15,
+      18,
+      10,
+      14
+    ],
+    "palette": [
+      {
+        "hex": "#584020",
+        "pixels": 1854
+      },
+      {
+        "hex": "#806838",
+        "pixels": 1683
+      },
+      {
+        "hex": "#b8a058",
+        "pixels": 1605
+      },
+      {
+        "hex": "#f8d880",
+        "pixels": 1434
+      },
+      {
+        "hex": "#453f60",
+        "pixels": 482
+      },
+      {
+        "hex": "#63778f",
+        "pixels": 446
+      },
+      {
+        "hex": "#2c253e",
+        "pixels": 402
+      },
+      {
+        "hex": "#181818",
+        "pixels": 96
+      },
+      {
+        "hex": "#211321",
+        "pixels": 69
+      }
+    ]
+  },
+  {
+    "page": "pONE2",
+    "layer": "1out",
+    "name": "boxr_v01",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 42,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      8,
+      14,
+      5,
+      8
+    ],
+    "palette": [
+      {
+        "hex": "#181818",
+        "pixels": 600
+      },
+      {
+        "hex": "#52525f",
+        "pixels": 490
+      },
+      {
+        "hex": "#7c8989",
+        "pixels": 266
+      },
+      {
+        "hex": "#a7b5a7",
+        "pixels": 155
+      },
+      {
+        "hex": "#dcdccb",
+        "pixels": 105
+      }
+    ]
+  },
+  {
+    "page": "pONE2",
+    "layer": "1out",
+    "name": "fstr_v01",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 44,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      14,
+      20,
+      14,
+      23
+    ],
+    "palette": [
+      {
+        "hex": "#181818",
+        "pixels": 3323
+      },
+      {
+        "hex": "#716558",
+        "pixels": 1663
+      },
+      {
+        "hex": "#a69878",
+        "pixels": 1005
+      },
+      {
+        "hex": "#5b1839",
+        "pixels": 719
+      },
+      {
+        "hex": "#1e2b41",
+        "pixels": 638
+      },
+      {
+        "hex": "#8d2246",
+        "pixels": 489
+      },
+      {
+        "hex": "#c7c4a2",
+        "pixels": 459
+      },
+      {
+        "hex": "#be5667",
+        "pixels": 307
+      },
+      {
+        "hex": "#3c5575",
+        "pixels": 231
+      }
+    ]
+  },
+  {
+    "page": "pONE2",
+    "layer": "1out",
+    "name": "fstr_v02",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 44,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      14,
+      20,
+      14,
+      23
+    ],
+    "palette": [
+      {
+        "hex": "#181818",
+        "pixels": 3323
+      },
+      {
+        "hex": "#704058",
+        "pixels": 1663
+      },
+      {
+        "hex": "#b08898",
+        "pixels": 1005
+      },
+      {
+        "hex": "#2c2353",
+        "pixels": 719
+      },
+      {
+        "hex": "#421c1f",
+        "pixels": 638
+      },
+      {
+        "hex": "#454995",
+        "pixels": 489
+      },
+      {
+        "hex": "#e0c8d8",
+        "pixels": 459
+      },
+      {
+        "hex": "#5371b0",
+        "pixels": 307
+      },
+      {
+        "hex": "#623528",
+        "pixels": 231
+      }
+    ]
+  },
+  {
+    "page": "pONE2",
+    "layer": "1out",
+    "name": "fstr_v03",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 44,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      14,
+      20,
+      14,
+      23
+    ],
+    "palette": [
+      {
+        "hex": "#181818",
+        "pixels": 3323
+      },
+      {
+        "hex": "#52525f",
+        "pixels": 1663
+      },
+      {
+        "hex": "#7c8989",
+        "pixels": 1005
+      },
+      {
+        "hex": "#3d1200",
+        "pixels": 719
+      },
+      {
+        "hex": "#2e4048",
+        "pixels": 638
+      },
+      {
+        "hex": "#632e11",
+        "pixels": 489
+      },
+      {
+        "hex": "#a7b5a7",
+        "pixels": 459
+      },
+      {
+        "hex": "#8d6340",
+        "pixels": 307
+      },
+      {
+        "hex": "#2d836d",
+        "pixels": 231
+      }
+    ]
+  },
+  {
+    "page": "pONE2",
+    "layer": "1out",
+    "name": "fstr_v04",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 44,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      14,
+      20,
+      14,
+      23
+    ],
+    "palette": [
+      {
+        "hex": "#181818",
+        "pixels": 3323
+      },
+      {
+        "hex": "#945816",
+        "pixels": 1663
+      },
+      {
+        "hex": "#cd9217",
+        "pixels": 1005
+      },
+      {
+        "hex": "#5a2818",
+        "pixels": 719
+      },
+      {
+        "hex": "#2c253e",
+        "pixels": 638
+      },
+      {
+        "hex": "#9b3c1b",
+        "pixels": 489
+      },
+      {
+        "hex": "#e1cd4e",
+        "pixels": 459
+      },
+      {
+        "hex": "#dc6831",
+        "pixels": 307
+      },
+      {
+        "hex": "#453f60",
+        "pixels": 231
+      }
+    ]
+  },
+  {
+    "page": "pONE2",
+    "layer": "1out",
+    "name": "fstr_v05",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 44,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      14,
+      20,
+      14,
+      23
+    ],
+    "palette": [
+      {
+        "hex": "#181818",
+        "pixels": 3323
+      },
+      {
+        "hex": "#205858",
+        "pixels": 1663
+      },
+      {
+        "hex": "#389878",
+        "pixels": 1005
+      },
+      {
+        "hex": "#2c253e",
+        "pixels": 719
+      },
+      {
+        "hex": "#584020",
+        "pixels": 638
+      },
+      {
+        "hex": "#453f60",
+        "pixels": 489
+      },
+      {
+        "hex": "#a0d880",
+        "pixels": 459
+      },
+      {
+        "hex": "#63778f",
+        "pixels": 307
+      },
+      {
+        "hex": "#806838",
+        "pixels": 231
+      }
+    ]
+  },
+  {
+    "page": "pONE2",
+    "layer": "1out",
+    "name": "pfpn_v01",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 44,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      14,
+      21,
+      14,
+      23
+    ],
+    "palette": [
+      {
+        "hex": "#181818",
+        "pixels": 3405
+      },
+      {
+        "hex": "#193364",
+        "pixels": 1774
+      },
+      {
+        "hex": "#3a6797",
+        "pixels": 1108
+      },
+      {
+        "hex": "#815c21",
+        "pixels": 1070
+      },
+      {
+        "hex": "#5999bd",
+        "pixels": 722
+      },
+      {
+        "hex": "#b29149",
+        "pixels": 600
+      },
+      {
+        "hex": "#e0d28e",
+        "pixels": 271
+      }
+    ]
+  },
+  {
+    "page": "pONE2",
+    "layer": "1out",
+    "name": "pfpn_v02",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 44,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      14,
+      21,
+      14,
+      23
+    ],
+    "palette": [
+      {
+        "hex": "#181818",
+        "pixels": 3405
+      },
+      {
+        "hex": "#583828",
+        "pixels": 1774
+      },
+      {
+        "hex": "#986038",
+        "pixels": 1108
+      },
+      {
+        "hex": "#364a3f",
+        "pixels": 1070
+      },
+      {
+        "hex": "#f09848",
+        "pixels": 722
+      },
+      {
+        "hex": "#5b7f6a",
+        "pixels": 600
+      },
+      {
+        "hex": "#a8c898",
+        "pixels": 271
+      }
+    ]
+  },
+  {
+    "page": "pONE2",
+    "layer": "1out",
+    "name": "pfpn_v03",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 44,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      14,
+      21,
+      14,
+      23
+    ],
+    "palette": [
+      {
+        "hex": "#181818",
+        "pixels": 3405
+      },
+      {
+        "hex": "#304050",
+        "pixels": 1774
+      },
+      {
+        "hex": "#586870",
+        "pixels": 1108
+      },
+      {
+        "hex": "#704058",
+        "pixels": 1070
+      },
+      {
+        "hex": "#90a0b0",
+        "pixels": 722
+      },
+      {
+        "hex": "#b08898",
+        "pixels": 600
+      },
+      {
+        "hex": "#e0c8d8",
+        "pixels": 271
+      }
+    ]
+  },
+  {
+    "page": "pONE2",
+    "layer": "1out",
+    "name": "pfpn_v04",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 44,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      14,
+      21,
+      14,
+      23
+    ],
+    "palette": [
+      {
+        "hex": "#181818",
+        "pixels": 3405
+      },
+      {
+        "hex": "#204858",
+        "pixels": 1774
+      },
+      {
+        "hex": "#389088",
+        "pixels": 1108
+      },
+      {
+        "hex": "#702818",
+        "pixels": 1070
+      },
+      {
+        "hex": "#78d8e8",
+        "pixels": 722
+      },
+      {
+        "hex": "#c84830",
+        "pixels": 600
+      },
+      {
+        "hex": "#f09850",
+        "pixels": 271
+      }
+    ]
+  },
+  {
+    "page": "pONE2",
+    "layer": "1out",
+    "name": "pfpn_v05",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 44,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      14,
+      21,
+      14,
+      23
+    ],
+    "palette": [
+      {
+        "hex": "#181818",
+        "pixels": 3405
+      },
+      {
+        "hex": "#425865",
+        "pixels": 1774
+      },
+      {
+        "hex": "#8aafac",
+        "pixels": 1108
+      },
+      {
+        "hex": "#7f4935",
+        "pixels": 1070
+      },
+      {
+        "hex": "#c7e5dc",
+        "pixels": 722
+      },
+      {
+        "hex": "#b47f54",
+        "pixels": 600
+      },
+      {
+        "hex": "#dab988",
+        "pixels": 271
+      }
+    ]
+  },
+  {
+    "page": "pONE2",
+    "layer": "1out",
+    "name": "undi_v01",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 43,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      5,
+      12,
+      4,
+      11
+    ],
+    "palette": [
+      {
+        "hex": "#52525f",
+        "pixels": 530
+      },
+      {
+        "hex": "#7c8989",
+        "pixels": 417
+      },
+      {
+        "hex": "#a7b5a7",
+        "pixels": 335
+      },
+      {
+        "hex": "#181818",
+        "pixels": 292
+      },
+      {
+        "hex": "#dcdccb",
+        "pixels": 140
+      }
+    ]
+  },
+  {
+    "page": "pONE2",
+    "layer": "5hat",
+    "name": "pfht_v01",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 44,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      14,
+      16,
+      13,
+      17
+    ],
+    "palette": [
+      {
+        "hex": "#fcb099",
+        "pixels": 1777
+      },
+      {
+        "hex": "#6b3235",
+        "pixels": 1646
+      },
+      {
+        "hex": "#a9494c",
+        "pixels": 1479
+      },
+      {
+        "hex": "#ea7268",
+        "pixels": 1393
+      },
+      {
+        "hex": "#181818",
+        "pixels": 812
+      }
+    ]
+  },
+  {
+    "page": "pONE2",
+    "layer": "5hat",
+    "name": "pfht_v02",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 44,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      14,
+      16,
+      13,
+      17
+    ],
+    "palette": [
+      {
+        "hex": "#e7e7cd",
+        "pixels": 1777
+      },
+      {
+        "hex": "#716558",
+        "pixels": 1646
+      },
+      {
+        "hex": "#a69878",
+        "pixels": 1479
+      },
+      {
+        "hex": "#c7c4a2",
+        "pixels": 1393
+      },
+      {
+        "hex": "#181818",
+        "pixels": 812
+      }
+    ]
+  },
+  {
+    "page": "pONE2",
+    "layer": "5hat",
+    "name": "pfht_v03",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 44,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      14,
+      16,
+      13,
+      17
+    ],
+    "palette": [
+      {
+        "hex": "#b7b5af",
+        "pixels": 1777
+      },
+      {
+        "hex": "#332c28",
+        "pixels": 1646
+      },
+      {
+        "hex": "#54504e",
+        "pixels": 1479
+      },
+      {
+        "hex": "#82807d",
+        "pixels": 1393
+      },
+      {
+        "hex": "#181818",
+        "pixels": 812
+      }
+    ]
+  },
+  {
+    "page": "pONE2",
+    "layer": "5hat",
+    "name": "pfht_v04",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 44,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      14,
+      16,
+      13,
+      17
+    ],
+    "palette": [
+      {
+        "hex": "#cca874",
+        "pixels": 1777
+      },
+      {
+        "hex": "#421c1f",
+        "pixels": 1646
+      },
+      {
+        "hex": "#623528",
+        "pixels": 1479
+      },
+      {
+        "hex": "#916944",
+        "pixels": 1393
+      },
+      {
+        "hex": "#181818",
+        "pixels": 812
+      }
+    ]
+  },
+  {
+    "page": "pONE2",
+    "layer": "5hat",
+    "name": "pfht_v05",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 44,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      14,
+      16,
+      13,
+      17
+    ],
+    "palette": [
+      {
+        "hex": "#d8db97",
+        "pixels": 1777
+      },
+      {
+        "hex": "#2d4245",
+        "pixels": 1646
+      },
+      {
+        "hex": "#51795c",
+        "pixels": 1479
+      },
+      {
+        "hex": "#97ae79",
+        "pixels": 1393
+      },
+      {
+        "hex": "#181818",
+        "pixels": 812
+      }
+    ]
+  },
+  {
+    "page": "pONE2",
+    "layer": "5hat",
+    "name": "pnty_v01",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 44,
+    "alpha": [
+      0,
+      134,
+      221,
+      255
+    ],
+    "bounds_range": [
+      15,
+      17,
+      10,
+      14
+    ],
+    "palette": [
+      {
+        "hex": "#1e2b41",
+        "pixels": 1297
+      },
+      {
+        "hex": "#3c5575",
+        "pixels": 1124
+      },
+      {
+        "hex": "#6293ad",
+        "pixels": 1101
+      },
+      {
+        "hex": "#99d6e3",
+        "pixels": 970
+      },
+      {
+        "hex": "#8d2246",
+        "pixels": 340
+      },
+      {
+        "hex": "#be5667",
+        "pixels": 305
+      },
+      {
+        "hex": "#5b1839",
+        "pixels": 264
+      },
+      {
+        "hex": "#181818",
+        "pixels": 81
+      },
+      {
+        "hex": "#211321",
+        "pixels": 78
+      }
+    ]
+  },
+  {
+    "page": "pONE2",
+    "layer": "5hat",
+    "name": "pnty_v02",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 44,
+    "alpha": [
+      0,
+      134,
+      221,
+      255
+    ],
+    "bounds_range": [
+      15,
+      17,
+      10,
+      14
+    ],
+    "palette": [
+      {
+        "hex": "#421c1f",
+        "pixels": 1297
+      },
+      {
+        "hex": "#623528",
+        "pixels": 1124
+      },
+      {
+        "hex": "#916944",
+        "pixels": 1101
+      },
+      {
+        "hex": "#cca874",
+        "pixels": 970
+      },
+      {
+        "hex": "#454995",
+        "pixels": 340
+      },
+      {
+        "hex": "#5371b0",
+        "pixels": 305
+      },
+      {
+        "hex": "#2c2353",
+        "pixels": 264
+      },
+      {
+        "hex": "#181818",
+        "pixels": 81
+      },
+      {
+        "hex": "#211321",
+        "pixels": 78
+      }
+    ]
+  },
+  {
+    "page": "pONE2",
+    "layer": "5hat",
+    "name": "pnty_v03",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 44,
+    "alpha": [
+      0,
+      134,
+      221,
+      255
+    ],
+    "bounds_range": [
+      15,
+      17,
+      10,
+      14
+    ],
+    "palette": [
+      {
+        "hex": "#2e4048",
+        "pixels": 1297
+      },
+      {
+        "hex": "#2d836d",
+        "pixels": 1124
+      },
+      {
+        "hex": "#4cc180",
+        "pixels": 1101
+      },
+      {
+        "hex": "#a4eaa9",
+        "pixels": 970
+      },
+      {
+        "hex": "#632e11",
+        "pixels": 340
+      },
+      {
+        "hex": "#8d6340",
+        "pixels": 305
+      },
+      {
+        "hex": "#3d1200",
+        "pixels": 264
+      },
+      {
+        "hex": "#181818",
+        "pixels": 81
+      },
+      {
+        "hex": "#211321",
+        "pixels": 78
+      }
+    ]
+  },
+  {
+    "page": "pONE2",
+    "layer": "5hat",
+    "name": "pnty_v04",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 44,
+    "alpha": [
+      0,
+      134,
+      221,
+      255
+    ],
+    "bounds_range": [
+      15,
+      17,
+      10,
+      14
+    ],
+    "palette": [
+      {
+        "hex": "#2c253e",
+        "pixels": 1297
+      },
+      {
+        "hex": "#453f60",
+        "pixels": 1124
+      },
+      {
+        "hex": "#63778f",
+        "pixels": 1101
+      },
+      {
+        "hex": "#adc3cc",
+        "pixels": 970
+      },
+      {
+        "hex": "#9b3c1b",
+        "pixels": 340
+      },
+      {
+        "hex": "#dc6831",
+        "pixels": 305
+      },
+      {
+        "hex": "#5a2818",
+        "pixels": 264
+      },
+      {
+        "hex": "#181818",
+        "pixels": 81
+      },
+      {
+        "hex": "#211321",
+        "pixels": 78
+      }
+    ]
+  },
+  {
+    "page": "pONE2",
+    "layer": "5hat",
+    "name": "pnty_v05",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 44,
+    "alpha": [
+      0,
+      134,
+      221,
+      255
+    ],
+    "bounds_range": [
+      15,
+      17,
+      10,
+      14
+    ],
+    "palette": [
+      {
+        "hex": "#584020",
+        "pixels": 1297
+      },
+      {
+        "hex": "#806838",
+        "pixels": 1124
+      },
+      {
+        "hex": "#b8a058",
+        "pixels": 1101
+      },
+      {
+        "hex": "#f8d880",
+        "pixels": 970
+      },
+      {
+        "hex": "#453f60",
+        "pixels": 340
+      },
+      {
+        "hex": "#63778f",
+        "pixels": 305
+      },
+      {
+        "hex": "#2c253e",
+        "pixels": 264
+      },
+      {
+        "hex": "#181818",
+        "pixels": 81
+      },
+      {
+        "hex": "#211321",
+        "pixels": 78
+      }
+    ]
+  },
+  {
+    "page": "pONE3",
+    "layer": "1out",
+    "name": "boxr_v01",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 62,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      8,
+      14,
+      3,
+      7
+    ],
+    "palette": [
+      {
+        "hex": "#181818",
+        "pixels": 797
+      },
+      {
+        "hex": "#52525f",
+        "pixels": 679
+      },
+      {
+        "hex": "#7c8989",
+        "pixels": 423
+      },
+      {
+        "hex": "#a7b5a7",
+        "pixels": 217
+      },
+      {
+        "hex": "#dcdccb",
+        "pixels": 119
+      }
+    ]
+  },
+  {
+    "page": "pONE3",
+    "layer": "1out",
+    "name": "fstr_v01",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 64,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      14,
+      22,
+      14,
+      21
+    ],
+    "palette": [
+      {
+        "hex": "#181818",
+        "pixels": 4886
+      },
+      {
+        "hex": "#716558",
+        "pixels": 2227
+      },
+      {
+        "hex": "#a69878",
+        "pixels": 1343
+      },
+      {
+        "hex": "#5b1839",
+        "pixels": 1015
+      },
+      {
+        "hex": "#c7c4a2",
+        "pixels": 851
+      },
+      {
+        "hex": "#1e2b41",
+        "pixels": 812
+      },
+      {
+        "hex": "#8d2246",
+        "pixels": 785
+      },
+      {
+        "hex": "#be5667",
+        "pixels": 448
+      },
+      {
+        "hex": "#3c5575",
+        "pixels": 324
+      }
+    ]
+  },
+  {
+    "page": "pONE3",
+    "layer": "1out",
+    "name": "fstr_v02",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 64,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      14,
+      22,
+      14,
+      21
+    ],
+    "palette": [
+      {
+        "hex": "#181818",
+        "pixels": 4886
+      },
+      {
+        "hex": "#704058",
+        "pixels": 2227
+      },
+      {
+        "hex": "#b08898",
+        "pixels": 1343
+      },
+      {
+        "hex": "#2c2353",
+        "pixels": 1015
+      },
+      {
+        "hex": "#e0c8d8",
+        "pixels": 851
+      },
+      {
+        "hex": "#421c1f",
+        "pixels": 812
+      },
+      {
+        "hex": "#454995",
+        "pixels": 785
+      },
+      {
+        "hex": "#5371b0",
+        "pixels": 448
+      },
+      {
+        "hex": "#623528",
+        "pixels": 324
+      }
+    ]
+  },
+  {
+    "page": "pONE3",
+    "layer": "1out",
+    "name": "fstr_v03",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 64,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      14,
+      22,
+      14,
+      21
+    ],
+    "palette": [
+      {
+        "hex": "#181818",
+        "pixels": 4886
+      },
+      {
+        "hex": "#52525f",
+        "pixels": 2227
+      },
+      {
+        "hex": "#7c8989",
+        "pixels": 1343
+      },
+      {
+        "hex": "#3d1200",
+        "pixels": 1015
+      },
+      {
+        "hex": "#a7b5a7",
+        "pixels": 851
+      },
+      {
+        "hex": "#2e4048",
+        "pixels": 812
+      },
+      {
+        "hex": "#632e11",
+        "pixels": 785
+      },
+      {
+        "hex": "#8d6340",
+        "pixels": 448
+      },
+      {
+        "hex": "#2d836d",
+        "pixels": 324
+      }
+    ]
+  },
+  {
+    "page": "pONE3",
+    "layer": "1out",
+    "name": "fstr_v04",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 64,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      14,
+      22,
+      14,
+      21
+    ],
+    "palette": [
+      {
+        "hex": "#181818",
+        "pixels": 4886
+      },
+      {
+        "hex": "#945816",
+        "pixels": 2227
+      },
+      {
+        "hex": "#cd9217",
+        "pixels": 1343
+      },
+      {
+        "hex": "#5a2818",
+        "pixels": 1015
+      },
+      {
+        "hex": "#e1cd4e",
+        "pixels": 851
+      },
+      {
+        "hex": "#2c253e",
+        "pixels": 812
+      },
+      {
+        "hex": "#9b3c1b",
+        "pixels": 785
+      },
+      {
+        "hex": "#dc6831",
+        "pixels": 448
+      },
+      {
+        "hex": "#453f60",
+        "pixels": 324
+      }
+    ]
+  },
+  {
+    "page": "pONE3",
+    "layer": "1out",
+    "name": "fstr_v05",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 64,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      14,
+      22,
+      14,
+      21
+    ],
+    "palette": [
+      {
+        "hex": "#181818",
+        "pixels": 4886
+      },
+      {
+        "hex": "#205858",
+        "pixels": 2227
+      },
+      {
+        "hex": "#389878",
+        "pixels": 1343
+      },
+      {
+        "hex": "#2c253e",
+        "pixels": 1015
+      },
+      {
+        "hex": "#a0d880",
+        "pixels": 851
+      },
+      {
+        "hex": "#584020",
+        "pixels": 812
+      },
+      {
+        "hex": "#453f60",
+        "pixels": 785
+      },
+      {
+        "hex": "#63778f",
+        "pixels": 448
+      },
+      {
+        "hex": "#806838",
+        "pixels": 324
+      }
+    ]
+  },
+  {
+    "page": "pONE3",
+    "layer": "1out",
+    "name": "pfpn_v01",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 64,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      14,
+      22,
+      14,
+      22
+    ],
+    "palette": [
+      {
+        "hex": "#181818",
+        "pixels": 4836
+      },
+      {
+        "hex": "#193364",
+        "pixels": 2493
+      },
+      {
+        "hex": "#3a6797",
+        "pixels": 1636
+      },
+      {
+        "hex": "#815c21",
+        "pixels": 1549
+      },
+      {
+        "hex": "#5999bd",
+        "pixels": 1049
+      },
+      {
+        "hex": "#b29149",
+        "pixels": 867
+      },
+      {
+        "hex": "#e0d28e",
+        "pixels": 457
+      }
+    ]
+  },
+  {
+    "page": "pONE3",
+    "layer": "1out",
+    "name": "pfpn_v02",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 64,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      14,
+      22,
+      14,
+      22
+    ],
+    "palette": [
+      {
+        "hex": "#181818",
+        "pixels": 4836
+      },
+      {
+        "hex": "#583828",
+        "pixels": 2493
+      },
+      {
+        "hex": "#986038",
+        "pixels": 1636
+      },
+      {
+        "hex": "#364a3f",
+        "pixels": 1549
+      },
+      {
+        "hex": "#f09848",
+        "pixels": 1049
+      },
+      {
+        "hex": "#5b7f6a",
+        "pixels": 867
+      },
+      {
+        "hex": "#a8c898",
+        "pixels": 457
+      }
+    ]
+  },
+  {
+    "page": "pONE3",
+    "layer": "1out",
+    "name": "pfpn_v03",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 64,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      14,
+      22,
+      14,
+      22
+    ],
+    "palette": [
+      {
+        "hex": "#181818",
+        "pixels": 4836
+      },
+      {
+        "hex": "#304050",
+        "pixels": 2493
+      },
+      {
+        "hex": "#586870",
+        "pixels": 1636
+      },
+      {
+        "hex": "#704058",
+        "pixels": 1549
+      },
+      {
+        "hex": "#90a0b0",
+        "pixels": 1049
+      },
+      {
+        "hex": "#b08898",
+        "pixels": 867
+      },
+      {
+        "hex": "#e0c8d8",
+        "pixels": 457
+      }
+    ]
+  },
+  {
+    "page": "pONE3",
+    "layer": "1out",
+    "name": "pfpn_v04",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 64,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      14,
+      22,
+      14,
+      22
+    ],
+    "palette": [
+      {
+        "hex": "#181818",
+        "pixels": 4836
+      },
+      {
+        "hex": "#204858",
+        "pixels": 2493
+      },
+      {
+        "hex": "#389088",
+        "pixels": 1636
+      },
+      {
+        "hex": "#702818",
+        "pixels": 1549
+      },
+      {
+        "hex": "#78d8e8",
+        "pixels": 1049
+      },
+      {
+        "hex": "#c84830",
+        "pixels": 867
+      },
+      {
+        "hex": "#f09850",
+        "pixels": 457
+      }
+    ]
+  },
+  {
+    "page": "pONE3",
+    "layer": "1out",
+    "name": "pfpn_v05",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 64,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      14,
+      22,
+      14,
+      22
+    ],
+    "palette": [
+      {
+        "hex": "#181818",
+        "pixels": 4836
+      },
+      {
+        "hex": "#425865",
+        "pixels": 2493
+      },
+      {
+        "hex": "#8aafac",
+        "pixels": 1636
+      },
+      {
+        "hex": "#7f4935",
+        "pixels": 1549
+      },
+      {
+        "hex": "#c7e5dc",
+        "pixels": 1049
+      },
+      {
+        "hex": "#b47f54",
+        "pixels": 867
+      },
+      {
+        "hex": "#dab988",
+        "pixels": 457
+      }
+    ]
+  },
+  {
+    "page": "pONE3",
+    "layer": "1out",
+    "name": "undi_v01",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 62,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      6,
+      12,
+      5,
+      12
+    ],
+    "palette": [
+      {
+        "hex": "#52525f",
+        "pixels": 781
+      },
+      {
+        "hex": "#7c8989",
+        "pixels": 592
+      },
+      {
+        "hex": "#181818",
+        "pixels": 584
+      },
+      {
+        "hex": "#a7b5a7",
+        "pixels": 391
+      },
+      {
+        "hex": "#dcdccb",
+        "pixels": 136
+      }
+    ]
+  },
+  {
+    "page": "pONE3",
+    "layer": "5hat",
+    "name": "pfht_v01",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 64,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      14,
+      16,
+      13,
+      17
+    ],
+    "palette": [
+      {
+        "hex": "#fcb099",
+        "pixels": 2608
+      },
+      {
+        "hex": "#6b3235",
+        "pixels": 2367
+      },
+      {
+        "hex": "#a9494c",
+        "pixels": 2103
+      },
+      {
+        "hex": "#ea7268",
+        "pixels": 2022
+      },
+      {
+        "hex": "#181818",
+        "pixels": 1118
+      }
+    ]
+  },
+  {
+    "page": "pONE3",
+    "layer": "5hat",
+    "name": "pfht_v02",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 64,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      14,
+      16,
+      13,
+      17
+    ],
+    "palette": [
+      {
+        "hex": "#e7e7cd",
+        "pixels": 2608
+      },
+      {
+        "hex": "#716558",
+        "pixels": 2367
+      },
+      {
+        "hex": "#a69878",
+        "pixels": 2103
+      },
+      {
+        "hex": "#c7c4a2",
+        "pixels": 2022
+      },
+      {
+        "hex": "#181818",
+        "pixels": 1118
+      }
+    ]
+  },
+  {
+    "page": "pONE3",
+    "layer": "5hat",
+    "name": "pfht_v03",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 64,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      14,
+      16,
+      13,
+      17
+    ],
+    "palette": [
+      {
+        "hex": "#b7b5af",
+        "pixels": 2608
+      },
+      {
+        "hex": "#332c28",
+        "pixels": 2367
+      },
+      {
+        "hex": "#54504e",
+        "pixels": 2103
+      },
+      {
+        "hex": "#82807d",
+        "pixels": 2022
+      },
+      {
+        "hex": "#181818",
+        "pixels": 1118
+      }
+    ]
+  },
+  {
+    "page": "pONE3",
+    "layer": "5hat",
+    "name": "pfht_v04",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 64,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      14,
+      16,
+      13,
+      17
+    ],
+    "palette": [
+      {
+        "hex": "#cca874",
+        "pixels": 2608
+      },
+      {
+        "hex": "#421c1f",
+        "pixels": 2367
+      },
+      {
+        "hex": "#623528",
+        "pixels": 2103
+      },
+      {
+        "hex": "#916944",
+        "pixels": 2022
+      },
+      {
+        "hex": "#181818",
+        "pixels": 1118
+      }
+    ]
+  },
+  {
+    "page": "pONE3",
+    "layer": "5hat",
+    "name": "pfht_v05",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 64,
+    "alpha": [
+      0,
+      255
+    ],
+    "bounds_range": [
+      14,
+      16,
+      13,
+      17
+    ],
+    "palette": [
+      {
+        "hex": "#d8db97",
+        "pixels": 2608
+      },
+      {
+        "hex": "#2d4245",
+        "pixels": 2367
+      },
+      {
+        "hex": "#51795c",
+        "pixels": 2103
+      },
+      {
+        "hex": "#97ae79",
+        "pixels": 2022
+      },
+      {
+        "hex": "#181818",
+        "pixels": 1118
+      }
+    ]
+  },
+  {
+    "page": "pONE3",
+    "layer": "5hat",
+    "name": "pnty_v01",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 64,
+    "alpha": [
+      0,
+      134,
+      221,
+      255
+    ],
+    "bounds_range": [
+      15,
+      17,
+      11,
+      14
+    ],
+    "palette": [
+      {
+        "hex": "#1e2b41",
+        "pixels": 1912
+      },
+      {
+        "hex": "#3c5575",
+        "pixels": 1684
+      },
+      {
+        "hex": "#6293ad",
+        "pixels": 1610
+      },
+      {
+        "hex": "#99d6e3",
+        "pixels": 1424
+      },
+      {
+        "hex": "#8d2246",
+        "pixels": 477
+      },
+      {
+        "hex": "#be5667",
+        "pixels": 441
+      },
+      {
+        "hex": "#5b1839",
+        "pixels": 407
+      },
+      {
+        "hex": "#181818",
+        "pixels": 78
+      },
+      {
+        "hex": "#211321",
+        "pixels": 15
+      }
+    ]
+  },
+  {
+    "page": "pONE3",
+    "layer": "5hat",
+    "name": "pnty_v02",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 64,
+    "alpha": [
+      0,
+      134,
+      221,
+      255
+    ],
+    "bounds_range": [
+      15,
+      17,
+      11,
+      14
+    ],
+    "palette": [
+      {
+        "hex": "#421c1f",
+        "pixels": 1912
+      },
+      {
+        "hex": "#623528",
+        "pixels": 1684
+      },
+      {
+        "hex": "#916944",
+        "pixels": 1610
+      },
+      {
+        "hex": "#cca874",
+        "pixels": 1424
+      },
+      {
+        "hex": "#454995",
+        "pixels": 477
+      },
+      {
+        "hex": "#5371b0",
+        "pixels": 441
+      },
+      {
+        "hex": "#2c2353",
+        "pixels": 407
+      },
+      {
+        "hex": "#181818",
+        "pixels": 78
+      },
+      {
+        "hex": "#211321",
+        "pixels": 15
+      }
+    ]
+  },
+  {
+    "page": "pONE3",
+    "layer": "5hat",
+    "name": "pnty_v03",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 64,
+    "alpha": [
+      0,
+      134,
+      221,
+      255
+    ],
+    "bounds_range": [
+      15,
+      17,
+      11,
+      14
+    ],
+    "palette": [
+      {
+        "hex": "#2e4048",
+        "pixels": 1912
+      },
+      {
+        "hex": "#2d836d",
+        "pixels": 1684
+      },
+      {
+        "hex": "#4cc180",
+        "pixels": 1610
+      },
+      {
+        "hex": "#a4eaa9",
+        "pixels": 1424
+      },
+      {
+        "hex": "#632e11",
+        "pixels": 477
+      },
+      {
+        "hex": "#8d6340",
+        "pixels": 441
+      },
+      {
+        "hex": "#3d1200",
+        "pixels": 407
+      },
+      {
+        "hex": "#181818",
+        "pixels": 78
+      },
+      {
+        "hex": "#211321",
+        "pixels": 15
+      }
+    ]
+  },
+  {
+    "page": "pONE3",
+    "layer": "5hat",
+    "name": "pnty_v04",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 64,
+    "alpha": [
+      0,
+      134,
+      221,
+      255
+    ],
+    "bounds_range": [
+      15,
+      17,
+      11,
+      14
+    ],
+    "palette": [
+      {
+        "hex": "#2c253e",
+        "pixels": 1912
+      },
+      {
+        "hex": "#453f60",
+        "pixels": 1684
+      },
+      {
+        "hex": "#63778f",
+        "pixels": 1610
+      },
+      {
+        "hex": "#adc3cc",
+        "pixels": 1424
+      },
+      {
+        "hex": "#9b3c1b",
+        "pixels": 477
+      },
+      {
+        "hex": "#dc6831",
+        "pixels": 441
+      },
+      {
+        "hex": "#5a2818",
+        "pixels": 407
+      },
+      {
+        "hex": "#181818",
+        "pixels": 78
+      },
+      {
+        "hex": "#211321",
+        "pixels": 15
+      }
+    ]
+  },
+  {
+    "page": "pONE3",
+    "layer": "5hat",
+    "name": "pnty_v05",
+    "sheet": [
+      512,
+      512
+    ],
+    "frame": [
+      64,
+      64
+    ],
+    "frames": 64,
+    "alpha": [
+      0,
+      134,
+      221,
+      255
+    ],
+    "bounds_range": [
+      15,
+      17,
+      11,
+      14
+    ],
+    "palette": [
+      {
+        "hex": "#584020",
+        "pixels": 1912
+      },
+      {
+        "hex": "#806838",
+        "pixels": 1684
+      },
+      {
+        "hex": "#b8a058",
+        "pixels": 1610
+      },
+      {
+        "hex": "#f8d880",
+        "pixels": 1424
+      },
+      {
+        "hex": "#453f60",
+        "pixels": 477
+      },
+      {
+        "hex": "#63778f",
+        "pixels": 441
+      },
+      {
+        "hex": "#2c253e",
+        "pixels": 407
+      },
+      {
+        "hex": "#181818",
+        "pixels": 78
+      },
+      {
+        "hex": "#211321",
+        "pixels": 15
+      }
+    ]
+  }
+]

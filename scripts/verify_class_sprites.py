@@ -8,6 +8,10 @@ def frame(im,r,c):return im.crop((c*64,r*64,c*64+64,r*64+64))
 allowed=set()
 for path in [A/'village/grass_details.png',A/'village/guild/Mage1.png',A/'village/guild/Fighter2_Walk_without_shadow.png',C/'char_a_p1/1out/char_a_p1_1out_fstr_v01.png']:
  allowed.update(p[:3] for p in Image.open(path).convert('RGBA').get_flattened_data() if p[3])
+for page in ('p1','pONE2','pONE3'):
+ for native in ('fstr','pfpn'):
+  for variant in range(1,6):
+   allowed.update(p[:3] for p in sheet(page,'1out',native,variant).get_flattened_data() if p[3])
 count=0
 for page in ('p1','pONE2','pONE3','pBOW','pCAST'):
  for layer,names in [('1out',['rngr','robe']),('5hat',['hood','mgHt']),('6tla',['bow1','staf','quvr'])]:
@@ -18,6 +22,15 @@ for page in ('p1','pONE2','pONE3','pBOW','pCAST'):
    for row in range(8):
     for col in range(8):
      assert frame(im,row,col).getbbox(),(page,name,row,col,'missing frame');count+=1
+# Garments must use character-equipment palettes, not grass or scenery colors.
+armor_colors=set()
+for variant in range(1,6):
+ armor_colors.update(px[:3] for px in sheet('p1','1out','pfpn',variant).get_flattened_data() if px[3])
+for page in ('p1','pONE2','pONE3','pBOW','pCAST'):
+ for layer,name in [('1out','rngr'),('1out','robe'),('5hat','hood'),('5hat','mgHt')]:
+  actual={px[:3] for px in sheet(page,layer,name).get_flattened_data() if px[3]}
+  assert actual<=armor_colors,(page,name,'not an original equipment color')
+  assert (24,24,24) in actual,(page,name,'native outline missing')
 for page in ('pBOW','pCAST'):
  for variant in range(11):
   body=sheet(page,'0bas','humn',variant);original=sheet('pONE2','0bas','humn',variant)
