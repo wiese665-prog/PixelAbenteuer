@@ -1070,6 +1070,7 @@ public class MainActivity extends Activity {
    define("Wooden Armor","Common","Brust",0,1,1,0);
    define("Leather Armor","Uncommon","Brust",0,2,3,0);
    define("Iron Armor","Rare","Brust",0,6,8,0);
+   define("Wooden Helmet","Common","Kopf",0,1,0,0);
    define("Leather Helmet","Common","Kopf",0,1,1,0);
    define("Iron Helmet","Rare","Kopf",0,5,5,0);
    define("Wizard Hat","Super Rare","Kopf",4,2,8,0);
@@ -1103,7 +1104,7 @@ public class MainActivity extends Activity {
     while(pages.hasNext()){String page=pages.next();org.json.JSONArray cells=root.getJSONArray(page);int[] coords=new int[128];
      for(int i=0;i<64;i++){org.json.JSONArray point=cells.getJSONArray(i);coords[i*2]=point.getInt(0);coords[i*2+1]=point.getInt(1);}classGrips.put(page,coords);}
    }catch(Exception e){android.util.Log.e("PixelClasses","Missing hand attachment data",e);}
-   for(String name:new String[]{"Wooden Armor","Leather Armor","Iron Armor","Leather Helmet","Iron Helmet","Helm","Leather Boot","Iron Boot","Belt","Bag"}){
+   for(String name:new String[]{"Wooden Armor","Leather Armor","Iron Armor","Wooden Helmet","Leather Helmet","Iron Helmet","Helm","Leather Boot","Iron Boot","Belt","Bag"}){
     try(InputStream in=getAssets().open("equipment_items/"+name+".png")){itemImages.put(name,BitmapFactory.decodeStream(in));}catch(Exception e){android.util.Log.e("PixelEquipment","Missing "+name,e);}
    }
    Bitmap mageHat=itemImages.get("Magierhut");if(mageHat!=null)itemImages.put("Wizard Hat",mageHat);
@@ -1117,7 +1118,7 @@ public class MainActivity extends Activity {
    return pos>=0&&name.endsWith("]")?name.substring(0,pos):name;
   }
   void defineEquipmentVariants(){
-   String[] bases={"Wooden Sword","Iron Sword","Silver Sword","Golden Sword","Wooden Armor","Leather Armor","Iron Armor","Leather Helmet","Iron Helmet","Leather Boot","Iron Boot"};
+   String[] bases={"Wooden Sword","Iron Sword","Silver Sword","Golden Sword","Wooden Armor","Leather Armor","Iron Armor","Wooden Helmet","Leather Helmet","Iron Helmet","Leather Boot","Iron Boot"};
    String[] rarities={"Common","Uncommon","Rare","Super Rare","Legendär"};
    for(String base:bases){
     Item original=definitions.get(base);
@@ -1192,7 +1193,7 @@ public class MainActivity extends Activity {
   void ensureClassStock(){
    // Both new classes remain available in old saves without rerolling stock.
    if(smithStock.length>=2){smithStock[smithStock.length-2]="Jagdbogen";smithStock[smithStock.length-1]="Magierstab";}
-   sellerStock=new String[]{"Apple","Green Apple","Ham","Cheese","Mushroom","Healthpotion","Healthpotion large","Healpotion med","Waldlaeuferwams","Waldlaeuferkapuze","Magierrobe","Magierhut"};
+   sellerStock=new String[]{"Apple","Green Apple","Ham","Cheese","Mushroom","Healthpotion","Healthpotion large","Healpotion med","Waldlaeuferwams","Waldlaeuferkapuze","Magierrobe","Magierhut","Wooden Helmet"};
    if(shopStock.length>=2){shopStock[shopStock.length-2]="Jagdbogen";shopStock[shopStock.length-1]="Magierstab";}
   }
   String[] activeStock(){return activeMerchant==1?smithStock:activeMerchant==2?sellerStock:shopStock;}

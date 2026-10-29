@@ -2,6 +2,7 @@
 from pathlib import Path
 from PIL import Image,ImageDraw
 import json
+from native_headgear import headgear
 ROOT=Path(__file__).resolve().parents[1];A=ROOT/'app/src/main/assets';C=A/'sprites/ManaSeedCharacter'
 OUTLINE=(24,24,24)
 METAL=[(82,82,95),(124,137,137),(167,181,167),(220,220,203)]
@@ -12,8 +13,8 @@ MATERIALS={
  'wdAr':[OUTLINE,*WOOD,*LEATHER[:3],(113,101,88),(166,152,120)],
  'ltAr':[OUTLINE,*LEATHER[:3],(54,74,63),(91,127,106),(168,200,152),(88,56,40),(152,96,56)],
  'irAr':[OUTLINE,*METAL[:3],*LEATHER[:3],(46,64,72),(45,131,109)]}
-HATS={'leHl':LEATHER,'irHl':METAL,'stHl':[(46,64,72),(82,82,95),(124,137,137),(167,181,167)]}
-ITEMS={'Wooden Armor':('1out','wdAr'),'Leather Armor':('1out','ltAr'),'Iron Armor':('1out','irAr'),'Leather Helmet':('5hat','leHl'),'Iron Helmet':('5hat','irHl'),'Helm':('5hat','stHl'),'Leather Boot':('8feet','leBt'),'Iron Boot':('8feet','irBt'),'Belt':('9belt','belt'),'Bag':('9belt','bag')}
+HATS={'wdHl':WOOD,'leHl':LEATHER,'irHl':METAL,'stHl':[(46,64,72),(82,82,95),(124,137,137),(167,181,167)]}
+ITEMS={'Wooden Helmet':('5hat','wdHl'),'Wooden Armor':('1out','wdAr'),'Leather Armor':('1out','ltAr'),'Iron Armor':('1out','irAr'),'Leather Helmet':('5hat','leHl'),'Iron Helmet':('5hat','irHl'),'Helm':('5hat','stHl'),'Leather Boot':('8feet','leBt'),'Iron Boot':('8feet','irBt'),'Belt':('9belt','belt'),'Bag':('9belt','bag')}
 def path(page,layer,name):return C/f'char_a_{page}'/('' if layer=='0bas' else layer)/f'char_a_{page}_{layer}_{name}_v01.png'
 def read(page,layer,name):return Image.open(path(page,layer,name)).convert('RGBA')
 def frame(im,r,c):return im.crop((c*64,r*64,c*64+64,r*64+64))
@@ -37,7 +38,8 @@ for page in ('p1','pONE2','pONE3','pBOW','pCAST'):
     sheets[name].alpha_composite(q,(col*64,row*64))
    for name,ramp in HATS.items():
     src=[(107,50,53),(169,73,76),(234,114,104),(252,176,153)]
-    q=recolor(helmet,dict(zip(src,ramp)));sheets[name].alpha_composite(q,(col*64,row*64))
+    q=headgear(name,head if head.getbbox() else frame(read('pONE2','4har','bob1'),row%4,0),row%4) if name in ('wdHl','leHl','irHl') else recolor(helmet,dict(zip(src,ramp)))
+    sheets[name].alpha_composite(q,(col*64,row*64))
    if bb:
     foot=bb[3]
     for name,ramp in [('leBt',LEATHER),('irBt',METAL)]:
@@ -65,4 +67,4 @@ icons=A/'equipment_items';icons.mkdir(exist_ok=True)
 for item,(layer,name) in ITEMS.items():
  im=frame(read('p1',layer,name),0,0);im=im.crop(im.getbbox());scale=min(2,28//max(im.size));im=im.resize((im.width*scale,im.height*scale),Image.Resampling.NEAREST)
  icon=Image.new('RGBA',(32,32));icon.alpha_composite(im,((32-im.width)//2,(32-im.height)//2));icon.save(icons/f'{item}.png')
-print('50 native equipment sheets and 10 matching icons built from original animation masks and material colors.')
+print('55 native equipment sheets and 11 matching icons built from original animation masks and material colors.')

@@ -21,6 +21,7 @@ final class CharacterEquipment {
  }
  static String hat(String item) {
   switch(base(item)) {
+   case "Wooden Helmet":return "wdHl";
    case "Leather Helmet":return "leHl";
    case "Iron Helmet":return "irHl";
    case "Helm":return "stHl";

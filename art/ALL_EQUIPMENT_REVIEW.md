@@ -2,6 +2,8 @@
 
 Grundlage: [Rüstungsanalyse](ARMOR_STYLE_ANALYSIS.md), 66 ursprüngliche Outfit-/Hutblätter, alle definierten tragbaren Rüstungsgegenstände und die tatsächlichen Renderpfade in Charaktererstellung, Innenräumen und Außenwelt.
 
+Die anschließende vollständige Neuzeichnung der Kopfbedeckungen ist in [HEADGEAR_REDESIGN.md](HEADGEAR_REDESIGN.md) dokumentiert. Die dort beschriebenen eigenen Silhouetten ersetzen die anfänglichen Helm-Umfärbungen.
+
 ## Befunde und Umsetzung
 
 | Gegenstand | Bisheriger Befund | Überarbeitung |

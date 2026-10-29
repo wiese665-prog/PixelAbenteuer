@@ -10,7 +10,7 @@ public final class CharacterEquipmentTest {
   return ImageIO.read(p.toFile());
  }
  public static void main(String[] args)throws Exception{
-  String[][] cases={{"Wooden Armor","1out","wdAr"},{"Leather Armor","1out","ltAr"},{"Iron Armor","1out","irAr"},{"Leather Helmet","5hat","leHl"},{"Iron Helmet","5hat","irHl"},{"Helm","5hat","stHl"},{"Wizard Hat","5hat","mgHt"},{"Magierhut","5hat","mgHt"},{"Waldlaeuferkapuze","5hat","hood"},{"Magierrobe","1out","robe"},{"Waldlaeuferwams","1out","rngr"},{"Leather Boot","8feet","leBt"},{"Iron Boot","8feet","irBt"},{"Belt","9belt","belt"},{"Bag","9belt","bag"}};
+  String[][] cases={{"Wooden Helmet","5hat","wdHl"},{"Wooden Armor","1out","wdAr"},{"Leather Armor","1out","ltAr"},{"Iron Armor","1out","irAr"},{"Leather Helmet","5hat","leHl"},{"Iron Helmet","5hat","irHl"},{"Helm","5hat","stHl"},{"Wizard Hat","5hat","mgHt"},{"Magierhut","5hat","mgHt"},{"Waldlaeuferkapuze","5hat","hood"},{"Magierrobe","1out","robe"},{"Waldlaeuferwams","1out","rngr"},{"Leather Boot","8feet","leBt"},{"Iron Boot","8feet","irBt"},{"Belt","9belt","belt"},{"Bag","9belt","bag"}};
   int resolved=0;
   for(String[] item:cases)for(String suffix:new String[]{""," [Rare]"," [Legendär] {42}"}){
    String raw=item[0]+suffix,actual=item[1].equals("1out")?CharacterEquipment.outfit(raw,0):item[1].equals("5hat")?CharacterEquipment.hat(raw):item[1].equals("8feet")?CharacterEquipment.boots(raw):CharacterEquipment.belt(raw);
@@ -27,6 +27,6 @@ public final class CharacterEquipmentTest {
   check(CharacterEquipment.outfit(null,0).equals("boxr"),"empty male outfit");
   check(CharacterEquipment.outfit(null,1).equals("undi"),"empty female outfit");
   check(CharacterEquipment.hat(null).isEmpty()&&CharacterEquipment.boots(null).isEmpty()&&CharacterEquipment.belt(null).isEmpty(),"unequip left visible gear");
-  System.out.println(resolved+" actual item/rarity/page resolutions passed; all 15 items, four directions and empty slots.");
+  System.out.println(resolved+" actual item/rarity/page resolutions passed; all 16 items, four directions and empty slots.");
  }
 }

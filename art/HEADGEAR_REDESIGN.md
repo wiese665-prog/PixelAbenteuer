@@ -1,0 +1,30 @@
+# Neue Kopfbedeckungen – 29. Oktober 2026
+
+Die vorige Umsetzung unterschied mehrere Helme nur über ihre Farben. Kapuze und Magierhut hatten außerdem zu runde beziehungsweise unpassende Konturen. Grundlage der Neuzeichnung sind die nativen 64×64-Frames, die ursprünglichen Materialpaletten und die tatsächlichen Kopfpositionen aus der Rüstungsanalyse.
+
+## Eigene Formen
+
+- **Holzhelm (`Wooden Helmet`, `wdHl`)**: flache Krone aus Holzsegmenten mit senkrechter Maserung, Lederstirnband und offener Gesichtsseite. Keine Umfärbung des Eisenhelms.
+- **Eisenhelm (`irHl`)**: gewölbte Schale mit Mittelgrat, vorstehendem Stirnrand, kurzen Wangenplatten und frontalem Nasenschutz. Der Nacken erhält einen eigenen Schutz statt einer Stofffalte.
+- **Lederhelm (`leHl`)**: kleinere, offene Lederhaube mit niedriger Krone, freier Gesichtspartie und kurzem Nackenteil. Ebenfalls neu gezeichnet, damit die bisher beim Holzset gezeigte braune Kopfbedeckung nicht unverändert bleibt.
+- **Waldläuferkapuze (`hood`)**: engere asymmetrische Stoffkontur, klare Gesichtsaussparung, kurze Kinn-/Nackenpartie und wenige zusammenhängende Stofffalten. Der breite runde Rahmen entfällt.
+- **Magierhut (`mgHt`)**: kompakter Kegel mit kurzer umgelegter Spitze, schmalerem Profilrand, wenigen blauen Lichtflächen und gedämpftem Messingband. Die lange seitliche schwarze Spitze entfällt.
+
+Einen eigenständigen Holzhelm gab es vorher nicht. Die Vergleichstafel kombinierte Holzrüstung mit Lederhelm. Daher ist der neue Holzhelm ein eigener ausrüstbarer Kopfgegenstand; vorhandene Lederhelme bleiben Lederhelme. Maela führt den Holzhelm auch in bestehenden Spielständen. Er unterstützt dieselben Seltenheits-/Instanzsuffixe wie die anderen Ausrüstungsgegenstände.
+
+## Pixelmaß, Farben und Animation
+
+Alle Formen werden direkt in nativen Pixeln gezeichnet: eine Pixelreihe für Kanten, kleine klare Farbcluster statt weicher Übergänge, binäres Alpha und ausschließlich originale Charakterfarben. Holz, Stahl, Leder und Stoff behalten getrennte Schatten-/Mittel-/Lichttöne. Körper, Rüstungen und Waffen werden nicht skaliert, verschoben oder umgefärbt.
+
+`native_headgear.py` ist die gemeinsame Quelle für beide bestehenden Spritegeneratoren. Jede Kopfbedeckung folgt der tatsächlichen Kopfposition des jeweiligen Frames, einschließlich der verschobenen Köpfe beim Gehen, Schlagen, Bogen-/Zauberangriff und bei Reaktionsposen. Vorder-, Rück- und Profilansichten haben eigene sichtbare Flächen. Links wird um den jeweiligen nativen Kopfmittelpunkt gespiegelt, nicht um die Zellmitte.
+
+25 neu gezeichnete Blätter = fünf Kopfbedeckungen × fünf Animationsseiten. Dazu die passenden Inventarsymbole. Wizard Hat bleibt derselbe sichtbare Gegenstand wie Magierhut.
+
+## Prüfung
+
+- `verify_headgear.py`: 1.600 neu gezeichnete Kopfbedeckungsframes; exakte Kopfanbindung, native Farben, binäres Alpha und keine angeschnittenen Zellränder.
+- Fünf tatsächlich unterschiedliche Alphasilhouetten je Pose. Holz-/Eisenkonturen müssen deutlich voneinander abweichen; verschiedene RGB-Werte allein bestehen die Prüfung nicht.
+- Bestehende Klassen-/Materialprüfungen bleiben aktiv. Originalkonturgleichheit wird weiterhin für die nicht neu entworfenen Brustmaterialien und den unveränderten Standardhelm geprüft.
+- `CharacterEquipmentTest`: 16 Gegenstände, drei Namens-/Seltenheitsvarianten, fünf Animationsseiten, vier Richtungen und leere Slots.
+- [Aktuelle Vergleichstafel](reviews/all-equipment-comparison.png) und [Bewegungsübersicht](reviews/all-equipment-animation.gif) sind Kompositionen der tatsächlichen Produktionslayer, keine Geräteaufnahmen.
+- Android-Build über GitHub Actions; neuer Gerätetest und FPS-Messung weiterhin offen.

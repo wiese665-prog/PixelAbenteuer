@@ -6,7 +6,7 @@ def read(page,layer,name):return Image.open(C/f'char_a_{page}'/('' if layer=='0b
 def frame(im,r,c):return im.crop((c*64,r*64,c*64+64,r*64+64))
 from PIL import Image,ImageDraw
 OUT=ROOT/'art/reviews';OUT.mkdir(exist_ok=True)
-sets=[('Holz','wdAr','leHl','leBt','belt'),('Leder','ltAr','leHl','leBt','bag'),('Eisen','irAr','irHl','irBt','belt'),('Helm / Eisen','irAr','stHl','irBt',''),('Waldlaeufer','rngr','hood','leBt',''),('Magier','robe','mgHt','irBt','')]
+sets=[('Holz','wdAr','wdHl','leBt','belt'),('Leder','ltAr','leHl','leBt','bag'),('Eisen','irAr','irHl','irBt','belt'),('Helm / Eisen','irAr','stHl','irBt',''),('Waldlaeufer','rngr','hood','leBt',''),('Magier','robe','mgHt','irBt','')]
 def pose(page,row,col,outfit,hat,boots,belt):
  im=Image.new('RGBA',(64,64))
  for l,n in [('0bas','humn'),('1out',outfit),('8feet',boots),('9belt',belt),('5hat',hat)]:

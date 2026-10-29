@@ -6,6 +6,7 @@ from pathlib import Path
 from PIL import Image,ImageDraw
 from collections import Counter
 import json,sys
+from native_headgear import headgear
 ROOT=Path(__file__).resolve().parents[1];A=ROOT/'app/src/main/assets';C=A/'sprites/ManaSeedCharacter'
 GREEN=[(24,24,24),(54,74,63),(91,127,106),(168,200,152)]
 CLOTHBLUE=[(24,24,24),(25,51,100),(58,103,151),(89,153,189)]
@@ -87,34 +88,8 @@ for page in ('p1','pONE2','pONE3','pBOW','pCAST'):
      if facing<2:d.line([(cx-1,waist+1),(cx-1+sway,hem-2)],fill=opaque(CLOTHBLUE[2]))
      d.line((cx-half+1,waist-1,cx+half-1,waist-1),fill=opaque(TRIM[0]))
      if facing!=1:d.point((cx,waist-1),fill=opaque(TRIM[2]))
-   # A sewn cloth hood: broad fabric folds, face cutout and neck closure.
-   # Its silhouette is independent of every hairstyle beneath it.
-   q=poses['hood'];d=ImageDraw.Draw(q);rx=max(7,(x1-x0)//2)
-   d.polygon([(cx-rx,y0+5),(cx-rx+2,y0),(cx-1,y0-2),(cx+rx-3,y0),(cx+rx,y0+5),(cx+rx-1,y0+12),(cx+3,y0+16),(cx-3,y0+16),(cx-rx+1,y0+12)],fill=opaque(GREEN[0]))
-   d.polygon([(cx-rx+2,y0+5),(cx-4,y0+1),(cx+2,y0),(cx+rx-2,y0+5),(cx+rx-2,y0+10),(cx+2,y0+14),(cx-3,y0+14),(cx-rx+2,y0+10)],fill=opaque(GREEN[1]))
-   d.polygon([(cx-5,y0+3),(cx-1,y0+1),(cx+2,y0+3),(cx-3,y0+5)],fill=opaque(GREEN[2]))
-   if facing==0:
-    opening=[(cx-4,y0+7),(cx+3,y0+7),(cx+4,y0+10),(cx+2,y0+13),(cx-2,y0+13),(cx-4,y0+10)]
-    d.polygon(opening,fill=(0,0,0,0));d.line(opening+[opening[0]],fill=opaque(GREEN[0]))
-   elif facing in (2,3):
-    signface=1 if facing==2 else -1
-    opening=[(cx+signface,y0+7),(cx+signface*(rx-1),y0+6),(cx+signface*rx,y0+12),(cx+signface*3,y0+14),(cx+signface,y0+11)]
-    d.polygon(opening,fill=(0,0,0,0));d.line([opening[-1],opening[0],opening[1]],fill=opaque(GREEN[0]))
-   else:
-    d.line([(cx-4,y0+7),(cx,y0+12),(cx+4,y0+7)],fill=opaque(GREEN[0]))
-    d.line([(cx-3,y0+6),(cx,y0+9)],fill=opaque(GREEN[2]))
-   d.polygon([(cx-3,y0+14),(cx,y0+16),(cx+3,y0+14),(cx+2,y0+17),(cx-2,y0+17)],fill=opaque(GREEN[0]))
-   d.point((cx,y0+16),fill=opaque(GREEN[2]))
-   # Compact bent crown, clustered cloth highlights and a foreshortened brim.
-   q=poses['mgHt'];d=ImageDraw.Draw(q);mirror=-1 if facing in (1,3) else 1
-   def hp(points):return [(cx+mirror*x,y0+y) for x,y in points]
-   d.polygon(hp([(-6,5),(-4,0),(-3,-4),(-6,-5),(-5,-7),(-1,-6),(2,-4),(4,0),(6,5)]),fill=opaque(CLOTHBLUE[0]))
-   d.polygon(hp([(-4,4),(-2,0),(-2,-4),(0,-4),(2,-1),(3,4)]),fill=opaque(CLOTHBLUE[1]))
-   d.polygon(hp([(-3,3),(-2,-2),(0,-3),(1,-1),(0,2)]),fill=opaque(CLOTHBLUE[2]))
-   d.line(hp([(-4,4),(0,5),(4,4)]),fill=opaque(TRIM[1]))
-   brim=7 if facing in (2,3) else 9
-   d.polygon([(cx-brim,y0+6),(cx-3,y0+5),(cx+brim-1,y0+6),(cx+brim,y0+7),(cx+3,y0+9),(cx-4,y0+8),(cx-brim,y0+7)],fill=opaque(CLOTHBLUE[0]))
-   d.line([(cx-brim+2,y0+6),(cx-2,y0+6),(cx+brim-2,y0+7)],fill=opaque(CLOTHBLUE[2]))
+   poses['hood']=headgear('hood',cap,facing)
+   poses['mgHt']=headgear('mgHt',cap,facing)
    # Short shoulder-mounted quiver sits behind the torso, away from the bow.
    q=poses['quvr'];d=ImageDraw.Draw(q)
    qx=cx+(-4 if facing==2 else 4 if facing==3 else 3);qy=y0+14
