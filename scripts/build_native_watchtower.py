@@ -7,6 +7,18 @@ source=Image.open(root/'art/source/watchtower-approved.png').convert('RGBA')
 source.putalpha(source.getchannel('A').point(lambda a:255 if a>=128 else 0))
 source=source.crop(source.getbbox());h=204;w=round(source.width*h/source.height)
 sprite=source.resize((w,h),Image.Resampling.NEAREST)
+# Remove only the one-pixel dark cutout fringe and isolated edge spurs.
+# Read an immutable mask so trimming never propagates into the building.
+raw=sprite.copy();removed=0
+for yy in range(h):
+ for xx in range(w):
+  p=raw.getpixel((xx,yy))
+  if not p[3]:continue
+  neighbors=sum(0<=nx<w and 0<=ny<h and raw.getpixel((nx,ny))[3]>0 for nx,ny in [(xx-1,yy),(xx+1,yy),(xx,yy-1),(xx,yy+1)])
+  dark=.2126*p[0]+.7152*p[1]+.0722*p[2]<45
+  if neighbors<4 and (dark or neighbors<=1):
+   sprite.putpixel((xx,yy),(0,0,0,0));removed+=1
+print(f'Trimmed {removed} fringe/spur pixels; interior, canvas and placement preserved.')
 # Native source material palette, excluding almost-black outline colors.
 allowed=set()
 for path in [A/'sprites/Exterior_house.png',A/'village/exterior.png',A/'village/guild/Exterior(1).png']:

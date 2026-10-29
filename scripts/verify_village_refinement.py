@@ -10,13 +10,23 @@ approved=rgba(ROOT/'art/source/watchtower-approved.png')
 approved.putalpha(approved.getchannel('A').point(lambda a:255 if a>=128 else 0))
 approved=approved.crop(approved.getbbox());height=204;width=round(approved.width*height/approved.height)
 expected=Image.new('RGBA',(160,208));expected.alpha_composite(approved.resize((width,height),Image.Resampling.NEAREST),((160-width)//2,208-height))
-tower=rgba(v/'tower.png');assert tower.getchannel('A').tobytes()==expected.getchannel('A').tobytes()
+tower=rgba(v/'tower.png')
+# Only the original one-pixel perimeter may be trimmed, never an interior pixel.
+from PIL import ImageFilter,ImageChops
+oldmask=expected.getchannel('A');newmask=tower.getchannel('A')
+assert not ImageChops.subtract(newmask,oldmask).getbbox(), 'tower silhouette expanded'
+padded=Image.new('L',(162,210));padded.paste(oldmask,(1,1))
+core=padded.filter(ImageFilter.MinFilter(3)).crop((1,1,161,209))
+assert not ImageChops.subtract(core,newmask).getbbox(), 'tower interior eroded'
+removed=sum(a>b for a,b in zip(oldmask.get_flattened_data(),newmask.get_flattened_data()))
+assert 0<removed<sum(a>0 for a in oldmask.get_flattened_data())*.08, ('excessive cutout trim',removed)
+assert tower.size==expected.size==(160,208)
 allowed=set()
 for p in [assets/'sprites/Exterior_house.png',v/'exterior.png',v/'guild/Exterior(1).png']:
  allowed.update(c[:3] for c in rgba(p).get_flattened_data() if c[3] and .2126*c[0]+.7152*c[1]+.0722*c[2]>=38)
 assert {c[:3] for c in tower.get_flattened_data() if c[3]}<=allowed
 assert set(tower.getchannel('A').get_flattened_data())<={0,255}
-assert tower.getbbox()[3]==208
+assert 207<=tower.getbbox()[3]<=208
 # All six houses have actual opening states and a matching closed final pose.
 for i in range(6):
  im=rgba(v/f'door{i}.png');assert im.height%6==0;h=im.height//6

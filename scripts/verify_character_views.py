@@ -39,11 +39,13 @@ for page in ['p1','pONE2','pONE3']:
     if variant==1:
      original=frame(native,row,col)
      if original.getbbox() is None:original=frame(native,row%4)
-     assert h.getchannel('A').tobytes()==original.getchannel('A').tobytes(),('crown shifted',page,row,col)
-     x0,y0,x1,y1=original.getbbox()
-     for yy in range(y0,max(y0,y1-3)):
-      for xx in range(x0,x1):
-       if original.getpixel((xx,yy))[3]:assert h.getpixel((xx,yy))==original.getpixel((xx,yy)),('crown recolored',page,row,col,xx,yy)
+     # The redesigned crown must cover the native head in its actual pose.
+     # It deliberately has new colors, locks and contours, not bob pixels.
+     for yy in range(64):
+      for xx in range(64):
+       if original.getpixel((xx,yy))[3]:
+        assert h.getpixel((xx,yy))[3]==255,('exposed head',page,row,col,xx,yy)
+     assert h.tobytes()!=original.tobytes(),('old bob reused',page,row,col)
     if row%4 in (2,3):
      scalp=frame(native,row,col)
      if scalp.getbbox() is None:scalp=frame(native,row%4)
@@ -54,4 +56,4 @@ for page in ['p1','pONE2','pONE3']:
     assert len(shapes)>1,('long hair does not animate',variant,row)
   if page=='pONE2':
    for facing in (2,3):rear_covered(frame(native,facing),frame(hair,facing),facing)
-print(f'Armed-idle equipment: all four views populated. Long hair: {poses} poses, native palettes, rear scalp covered in side stand/walk/combat and creator views.')
+print(f'Armed-idle equipment: all four views populated. Long hair: {poses} poses, redrawn crowns and locks, native palettes, rear scalp covered in side stand/walk/combat and creator views.')
