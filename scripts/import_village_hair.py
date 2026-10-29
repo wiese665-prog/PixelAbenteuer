@@ -82,6 +82,21 @@ def build():
                             p=hair.getpixel((x,y))
                             if p[3]>=128:
                                 indexed.putpixel((col*64+left+x,row*64+top+y),closest(p[:3]))
+            if kind == 'long':
+                # Close only the rear half of the native side scalp where the
+                # approved long strands leave skin visible. Do not add native
+                # bangs or overwrite the long-hair silhouette and highlights.
+                for row in (2,3,6,7):
+                    facing=row%4
+                    for col in range(8):
+                        native=template.crop((col*64,row*64,col*64+64,row*64+64))
+                        x0,y0,x1,y1=native.getbbox();middle=(x0+x1)//2
+                        for ny in range(y0,y1):
+                            for nx in range(x0,x1):
+                                rear=nx<middle if facing==2 else nx>=middle
+                                pixel=native.getpixel((nx,ny));pos=(col*64+nx,row*64+ny)
+                                if rear and pixel[3]>=128 and indexed.getpixel(pos)==255:
+                                    indexed.putpixel(pos,closest(pixel[:3]))
             for variant in range(14):
                 palette_image=Image.open(ASSETS / f'char_a_p1/4har/char_a_p1_4har_dap1_v{variant:02d}.png').convert('RGBA')
                 colors=Counter(p[:3] for p in palette_image.getdata() if p[3]==255)

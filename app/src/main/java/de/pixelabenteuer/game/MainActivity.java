@@ -472,7 +472,7 @@ public class MainActivity extends Activity {
    boolean antialias=paint.isAntiAlias();paint.setAntiAlias(true);
    Paint.Align align=paint.getTextAlign();Typeface face=paint.getTypeface();float size=paint.getTextSize();int color=paint.getColor();
    paint.setTextAlign(Paint.Align.CENTER);paint.setTypeface(residentTypeface);paint.setTextSize(RESIDENT_LABEL_SIZE);paint.setColor(col("#fff0c8"));outlinedText(name,x,y);
-   paint.setColor(col("#c28aff"));outlinedText(title,x,y+15);
+   paint.setTypeface(Typeface.DEFAULT);paint.setColor(col("#c28aff"));outlinedText(title,x,y+15);
    paint.setTextAlign(align);paint.setTypeface(face);paint.setTextSize(size);paint.setColor(color);paint.setAntiAlias(antialias);canvas.restore();
   }
   void drawResidentSpeech(VillageResidents.Resident n,float x,float y){
@@ -1751,6 +1751,27 @@ public class MainActivity extends Activity {
    paint.setColor(Color.WHITE);paint.setAlpha(255);paint.setColorFilter(null);paint.setFilterBitmap(false);
    canvas.drawBitmap(b,new Rect(left,top,left+cell,top+cell),new RectF(x-w/2,y-h/2,x+w/2,y+h/2),paint);
   }
+  void drawCreatorCharacter(float x,float y,float w,float h,int facing){
+   // Body, outfit, hands and equipment share the same armed idle pose.
+   String weapon=combatStyle==1?"ax01":combatStyle==2?"mc01":"sw01";
+   String shield=equipped.getOrDefault("Schild","").contains("Iron")?"sh03":"sh01";
+   boolean weaponBehind=facing==1||facing==3,shieldBehind=facing==1||facing==2;
+   if(weaponBehind)characterLayer("pONE2","6tla",weapon,1,facing,0,x,y,w,h);
+   if(shieldBehind)characterLayer("pONE2","7tlb",shield,1,facing,0,x,y,w,h);
+   characterLayer("pONE2","0bas","humn",skinColor,facing,0,x,y,w,h);
+   characterLayer("pONE2","1out",equipped.containsKey("Brust")?"fstr":(characterGender==0?"boxr":"undi"),1,facing,0,x,y,w,h);
+   String hair=hairType==2?"braid":hairType==3?"curl":hairType==4?"bun":hairType==5?"long":hairType==0?"bob1":"dap1";
+   if(hairType<2)characterLayer("pONE2","4har",hair,hairColor,facing,0,x,y,w,h);
+   else {
+    // Native p1 -> armed-idle head displacement, in source pixels. Preserve
+    // the custom haircut while attaching it to the pONE2 head in each view.
+    int dx=facing==1||facing==2?-1:facing==3?1:0,dy=facing==1?3:1;
+    characterLayer("p1","4har",hair,hairColor,facing,0,x+dx*w/64f,y+dy*h/64f,w,h);
+   }
+   if(equipped.containsKey("Kopf"))characterLayer("pONE2","5hat","pfht",1,facing,0,x,y,w,h);
+   if(!weaponBehind)characterLayer("pONE2","6tla",weapon,1,facing,0,x,y,w,h);
+   if(!shieldBehind)characterLayer("pONE2","7tlb",shield,1,facing,0,x,y,w,h);
+  }
   void drawCharacter(float x,float y,float w,float h,int dir,String action,float time){
    boolean fighting=action.equals("attack")||action.equals("hurt")||action.equals("death");
    String page=fighting?"pONE3":"p1";
@@ -1760,6 +1781,7 @@ public class MainActivity extends Activity {
    // Sprite-sheet direction order differs from the game's front/back/left/right order.
    // Mana Seed: row 0 front, row 1 back, row 2 right, row 3 left.
    int facing=dir==0?0:dir==1?1:dir==2?3:2;
+   if(creatorOpen&&!fighting){drawCreatorCharacter(x,y,w,h,facing);return;}
    boolean moving=action.equals("walk")||action.equals("run");
    int row=fighting?(action.equals("attack")?(attackSequence%2)*4+facing:action.equals("hurt")?facing:4+facing):(moving?4+facing:facing);
    int col=fighting?Math.min(3,Math.max(0,(int)(time*10))):(moving?(action.equals("run")?((int)(elapsed*12)%6):(int)(elapsed*8)%6):0);
@@ -1767,19 +1789,13 @@ public class MainActivity extends Activity {
    characterLayer(page,"1out",equipped.containsKey("Brust")?"fstr":(characterGender==0?"boxr":"undi"),1,row,col,x,y,w,h);
    characterLayer(page,"4har",hairType==2?"braid":hairType==3?"curl":hairType==4?"bun":hairType==5?"long":hairType==0?"bob1":"dap1",hairColor,row,col,x,y,w,h);
    if(equipped.containsKey("Kopf"))characterLayer(page,"5hat","pfht",1,row,col,x,y,w,h);
-   if(creatorOpen||fighting){
+   if(fighting){
     String weapon=combatStyle==1?"ax01":combatStyle==2?"mc01":"sw01";
-    // Creator preview: draw the weapon AFTER the body and outfit, so the
-    // blade and handle cannot disappear behind the character sprite.
-    if(creatorOpen||equipped.containsKey("Schild"))characterLayer(fighting?"pONE3":"pONE2","7tlb",equipped.getOrDefault("Schild","").contains("Iron")?"sh03":"sh01",1,fighting?row:facing,fighting?col:0,x,y,w,h);
-    // Preview weapon is the foremost layer, including in front of the shield.
-    if(creatorOpen){
-     // Render the weapon last and slightly enlarged so its blade is not obscured by the body.
-     characterLayer("pONE2","6tla",weapon,1,facing,0,x-9f,y+5f,w*1.20f,h*1.20f);
-    }
-    else characterLayer("pONE3","6tla",weapon,1,row,col,x,y,w,h);
+    if(equipped.containsKey("Schild"))characterLayer("pONE3","7tlb",equipped.getOrDefault("Schild","").contains("Iron")?"sh03":"sh01",1,row,col,x,y,w,h);
+    characterLayer("pONE3","6tla",weapon,1,row,col,x,y,w,h);
    }
   }
+
   void drawSprite(String kind,String action,int dir,float x,float y,float w,float h,float time,boolean freeze){
    if(kind.startsWith("player")){drawCharacter(x,y,w,h,dir,action,time);return;}
 
