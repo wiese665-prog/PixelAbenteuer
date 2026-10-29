@@ -27,7 +27,7 @@ for f in range(6):
    if y>=28 and not 14<=x<32 or y>=14 and x>=32 or r>g*1.2 and r>b*1.15:a[y,x,3]=0
  chimney.alpha_composite(Image.fromarray(a),(0,f*48))
 chimney.save(OUT/'chimney_animation.png')
-# Distinct long-front inn with two native gables, yellow plaster and small arches.
+# Distinct long-front inn: matching plaster, closed timber sides and one tiled roof.
 windows=Image.open(PACK/'Windows_doors.png').convert('RGBA')
 def component(im,box):
  from scipy.ndimage import label
@@ -42,19 +42,19 @@ for x in range(16,160,16):
  inn.alpha_composite(hall.crop((48,90,64,96)),(x,90))
  inn.alpha_composite(hall.crop((44,136,60,140)),(x,136))
 inn.alpha_composite(hall.crop((40,96,120,144)),(48,96))
-# Roof tiles are repeated as native strips, not stretched.
+# One continuous roof, with complete native left/right caps and aligned tiles.
 inn.alpha_composite(hall.crop((160,0,176,64)),(8,0))
-for x in [24,88]:inn.alpha_composite(hall.crop((176,0,240,64)),(x,0))
+for x in range(24,152,16):inn.alpha_composite(hall.crop((176+((x-24)//16%3)*16,0,192+((x-24)//16%3)*16,64)),(x,0))
 inn.alpha_composite(hall.crop((240,0,256,64)),(152,0))
-for x in [22,94]:inn.alpha_composite(component(forge,(154,24,215,74)),(x,6))
-# Original timber pillars close the two outer wall edges.
+# Actual timber from the facade. Roof pixels must never become wall pillars.
+beam=hall.crop((42,64,46,72))
 for y in range(64,136,8):
- for x in [16,156]:inn.alpha_composite(hall.crop((40,40,44,48)),(x,y))
+ for x in [16,156]:inn.alpha_composite(beam,(x,y))
 inn.save(OUT/'inn.png')
 # Straight, uninterrupted timber boundaries on the residence. No wing fragments.
 home=Image.open(OUT/'residence.png').convert('RGBA')
 for y in range(64,136,8):
- for x in [16,92]:home.alpha_composite(home.crop((x,40,x+4,48)),(x,y))
+ for x in [16,92]:home.alpha_composite(hall.crop((42,64,46,72)),(x,y))
 a=np.array(home);a[56:140,:16,3]=0;a[56:140,96:,3]=0;Image.fromarray(a).save(OUT/'residence.png')
 Image.open(ROOT/'art/source/watchtower-native.png').save(OUT/'tower.png')
 # Original directional grass: dark downward blades along a road's north edge,

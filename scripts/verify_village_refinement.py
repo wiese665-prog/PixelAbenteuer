@@ -5,7 +5,7 @@ import json
 ROOT=Path(__file__).resolve().parents[1];assets=ROOT/'app/src/main/assets';v=assets/'village'
 def rgba(p):return Image.open(p).convert('RGBA')
 # Every final tower pixel must be an exact reference color, with hard transparency.
-references=[v/'exterior.png',v/'guild/Walls_street(1).png',assets/'sprites/Exterior_house.png']
+references=[v/'exterior.png',v/'guild/Walls_street(1).png',assets/'sprites/Exterior_house.png',v/'guild/Exterior(1).png']
 allowed=set()
 for p in references:
  allowed.update(c[:3] for c in rgba(p).get_flattened_data() if c[3]>0)

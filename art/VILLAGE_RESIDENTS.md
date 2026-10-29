@@ -29,3 +29,7 @@ Resident state is saved by ID. Loading updates existing identities rather than c
 The last village/video corrections remain in place: northern herb house, new inn/tower, original chimney animations, removed market armor stand/scattered signs/awning, right-side information board, completed forest borders, native grass details and edges, centered spawn pad, corrected night overlay, additional interiors and animated doors. No sprite or map asset was reverted for the resident update.
 
 The APK workflow runs the actual portable Java resident model against exported map/furniture geometry. It checks uniqueness, a simulated hour of village/house/stair visits, stationary characters, actor/player collision, dialogue and restoration before compiling Android. BlueStacks play testing is still required for final visual assessment.
+
+## Shared labels
+
+All 17 residents, including the three original smithy actors, use the same Android cursive typeface and 13 logical pixel size for both name and purple title. Outdoor labels cancel the 1.10 world zoom, so their text and line spacing have the same screen size as indoor labels. All building names, including the watchtower and interior headings, share one serif italic drawing routine at 13 logical pixels and the same gold color.

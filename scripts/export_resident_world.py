@@ -27,7 +27,8 @@ for x,y in houses[1:]:circle(x-100,y+132,19);circle(x+101,y+125,16)
 roads=Image.new('L',(1600,1000));rd=ImageDraw.Draw(roads)
 for r in [(160,195,450,235),(386,195,434,932),(666,450,714,932),(180,450,1210,490),(180,820,930,860),(430,442,666,570),(0,446,190,494),(920,446,1599,494),(386,0,434,220),(992,385,1028,470)]:rd.rectangle(r,fill=1)
 for (x,y),dx in zip(houses,offset):rd.rectangle((x+dx-20,y+100,x+dx+20,840 if y>500 else 470),fill=1)
-rd.ellipse((385,199,435,231),fill=0)
+spawn_x,spawn_y=map(float,re.search(r"SPAWN_X=([\d.]+),SPAWN_Y=([\d.]+)",s).groups())
+rd.ellipse((spawn_x-25,spawn_y+8,spawn_x+25,spawn_y+40),fill=0)
 entries=[]
 def sample(room,im,minx,miny,maxx,maxy,road=None):
  step=2;w=(maxx-minx)//step+1;h=(maxy-miny)//step+1;pix=im.load();buf=bytes(1 if pix[minx+x*step,miny+y*step] else 0 for y in range(h) for x in range(w));entries.append((room,minx,miny,step,w,h,buf))

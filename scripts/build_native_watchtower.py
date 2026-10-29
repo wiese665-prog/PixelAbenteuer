@@ -11,20 +11,23 @@ out=Image.new('RGBA',(160,208))
 for y in range(96,208,16):
  for x in range(48,112,16):out.alpha_composite(street.crop((48+(x//16%2)*16,16,64+(x//16%2)*16,32)),(x,y))
  for x,sx in [(44,48),(112,76)]:out.alpha_composite(street.crop((sx,16,sx+4,32)),(x,y))
-# Complete original wooden lookout storey and original roof pieces.
-out.alpha_composite(piece(forge,(144,87,256,124)),(24,64))
-beam=forge.crop((151,88,155,104))
-for step in range(4):
- for x in [28+step*4,128-step*4]:out.alpha_composite(beam.crop((0,0,4,4)),(x,100+step*4))
-out.alpha_composite(piece(forge,(264,94,393,181)),(16,0))
-out.alpha_composite(piece(forge,(154,24,215,74)),(50,14))
+# Complete original timber storey and one continuous, native tiled roof.
+# The previous detached hip-roof crop contained cut ridge posts and mixed gables.
+out.alpha_composite(piece(forge,(144,87,256,120)),(24,64))
+roof=Image.new('RGBA',(128,64))
+roof.alpha_composite(Image.open(root/'app/src/main/assets/village/guild/Exterior(1).png').convert('RGBA').crop((160,0,176,64)),(0,0))
+hall=Image.open(root/'app/src/main/assets/village/guild/Exterior(1).png').convert('RGBA')
+for x in range(16,112,16):roof.alpha_composite(hall.crop((176+(x//16%3)*16,0,192+(x//16%3)*16,64)),(x,0))
+roof.alpha_composite(hall.crop((240,0,256,64)),(112,0))
+out.alpha_composite(roof,(16,8))
+# Matched wooden corbels copied whole from the lookout, no floating stair pixels.
 # Original blue-grey wall windows and original small arched door.
 for y in [120,152]:out.alpha_composite(ext.crop((24,100,40,120)),(72,y))
-for x in range(40,120,16):out.alpha_composite(ext.crop((24,124,40,128)),(x,204))
+for x in range(48,112,16):out.alpha_composite(street.crop((16,68,32,72)),(x,204))
 out.alpha_composite(ext.crop((100,96,124,128)),(68,176))
 a=np.array(out);a[:,:,3]=np.where(a[:,:,3]>=128,255,0);out=Image.fromarray(a)
 out.save(root/'art/source/watchtower-native.png')
 colors=sorted(set(map(tuple,a[a[:,:,3]>0,:3].tolist())))
 (root/'art/source/watchtower-palette.json').write_text(json.dumps(colors,indent=2)+'\n')
-(root/'art/WATCHTOWER.md').write_text('''# Native watchtower\n\nThe generated drafts were discarded after user feedback. The final `art/source/watchtower-native.png` is a 160x208 native sprite assembled from the original Exterior_house, exterior and Walls_street reference sheets. Original brick, timber, window, door and roof pixels are retained at 1:1 resolution. There is no image-generation illustration or color quantization in the final tower.\n\n`art/source/watchtower-palette.json` lists the exact opaque RGB colors copied from those sheets. Transparency is binary. The masonry pattern uses the source 16px tiles; native windows and the door retain their original size.\n''')
+(root/'art/WATCHTOWER.md').write_text('''# Native watchtower\n\nThe generated drafts were discarded after user feedback. The final `art/source/watchtower-native.png` is a 160x208 native sprite assembled from the original Exterior_house, Exterior(1), exterior and Walls_street reference sheets. Original brick, timber, window, door and roof pixels are retained at 1:1 resolution. There is no image-generation illustration or color quantization in the final tower.\n\n`art/source/watchtower-palette.json` lists the exact opaque RGB colors copied from those sheets. Transparency is binary. The masonry pattern uses the source 16px tiles; native windows and the door retain their original size. The roof is a single continuous red tile roof with closed end caps; there are no clipped ridge posts, mixed gables or loose diagonal pixels.\n''')
 print('Native tower',out.size,'original RGB colors',len(colors))

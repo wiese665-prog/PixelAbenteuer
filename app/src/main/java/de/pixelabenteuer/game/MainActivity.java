@@ -39,6 +39,9 @@ public class MainActivity extends Activity {
  class Game extends View {
   final int WORLD_W=1600,WORLD_H=1000;
   Canvas canvas;Paint paint=new Paint();Random random=new Random(42);
+  final Typeface residentTypeface=Typeface.create("cursive",Typeface.NORMAL);
+  final Typeface buildingTypeface=Typeface.create("serif",Typeface.BOLD_ITALIC);
+  static final float RESIDENT_LABEL_SIZE=13f,BUILDING_LABEL_SIZE=13f;
   ArrayList<Mob> mobs=new ArrayList<>();ArrayList<Decoration> decorations=new ArrayList<>();ArrayList<Drop> drops=new ArrayList<>();LinkedHashMap<String,Integer> inventory=new LinkedHashMap<>();HashMap<String,Bitmap> itemImages=new HashMap<>();
   HashMap<String,Item> definitions=new HashMap<>();HashMap<String,String> equipped=new HashMap<>();
   int nextGearId=1;
@@ -64,7 +67,7 @@ public class MainActivity extends Activity {
   String[] sellerStock={"Apple","Green Apple","Ham","Cheese","Mushroom","Healthpotion","Healthpotion large","Healpotion med"};
   String pickupNotice="";float noticeTime=0;
   HashMap<String,Bitmap> sprites=new HashMap<>();HashMap<String,Bitmap> characterSheets=new HashMap<>();
-  static final float SPAWN_X=410,SPAWN_Y=191;
+  static final float SPAWN_X=184,SPAWN_Y=191;
   float px=SPAWN_X,py=SPAWN_Y,joyX=0,joyY=0,elapsed=0,worldTime=0,attackAnim=0,hurtAnim=0,deathAnim=0,attackCooldown=0,playerHealthVisible=0;
   int hp=12,maxHp=12,kills=0,animalKills=0,playerDir=0,playerLevel=1,exp=0,attackPower=3,lastPlayerDamage=0;float playerDamageTime=0;float swordTimer=0;boolean sword=false;
   long previous=System.nanoTime();
@@ -398,7 +401,7 @@ public class MainActivity extends Activity {
     Bitmap sprite=villageArt.get(houseArt);
     if(sprite!=null)villageTile(houseDoorFrame(index)>0?"door"+index:houseArt,0,houseDoorFrame(index)*sprite.getHeight(),sprite.getWidth(),sprite.getHeight(),h[0]-sprite.getWidth()*.8f,h[1]+115-sprite.getHeight()*1.6f,sprite.getWidth()*1.6f,sprite.getHeight()*1.6f);
     if(index==1||index==4)villageTile("chimney_animation",0,((int)(elapsed*5)%6)*48,48,48,h[0]-144*.8f+17*1.6f,h[1]+115-128*1.6f+2*1.6f,48*1.6f,48*1.6f);
-    paint.setTextAlign(Paint.Align.CENTER);paint.setTextSize(13);fantasyName(villageNames[index],h[0],h[1]+105-(sprite==null?205:sprite.getHeight()*1.6f));paint.setTextAlign(Paint.Align.LEFT);
+    drawBuildingName(villageNames[index],h[0],h[1]+105-(sprite==null?205:sprite.getHeight()*1.6f));
    }
    // Six 48px cells: crop only the smoke above the embedded chimney/roof.
    if(index==0)villageTile("Smoke_animation",((int)(elapsed*5)%6)*48,0,32,28,h[0]-(index==0?65:78),h[1]-(index==0?162:106),45,39);
@@ -407,7 +410,9 @@ public class MainActivity extends Activity {
   void drawVillageProp(VillageProp p){
    int sy=p.sy+(p.frames>1?((int)(elapsed*6+p.x/70)%p.frames)*p.sh:0);
    canvas.save();if(!p.atlas.equals("shrine"))canvas.scale(1f,1f/CAMERA_GROUND_Y,p.x,p.y);
-   villageTile(p.atlas,p.sx,sy,p.sw,p.sh,p.x-p.w/2,p.y-p.h,p.w,p.h);canvas.restore();
+   villageTile(p.atlas,p.sx,sy,p.sw,p.sh,p.x-p.w/2,p.y-p.h,p.w,p.h);
+   if(p.atlas.equals("tower"))drawBuildingName("Wachturm",p.x,p.y-p.h-10);
+   canvas.restore();
   }
   boolean villageObstacle(float x,float y){
    for(int i=1;i<villageHouses.length;i++){float[] h=villageHouses[i];if(Math.abs(x-h[0]-villageDoorOffsets[i])<20&&y>h[1]+94)continue;if(x>h[0]-111&&x<h[0]+112&&y>h[1]+48&&y<h[1]+116)return true;}
@@ -461,10 +466,12 @@ public class MainActivity extends Activity {
    n.speak();if(n.merchant>=0)showMerchant(n.merchant);return true;
   }
   void drawNameTitle(String name,String title,float x,float y){
+   canvas.save();if(!indoors)canvas.scale(1f/1.10f,1f/1.10f,x,y);
+   boolean antialias=paint.isAntiAlias();paint.setAntiAlias(true);
    Paint.Align align=paint.getTextAlign();Typeface face=paint.getTypeface();float size=paint.getTextSize();int color=paint.getColor();
-   paint.setTextAlign(Paint.Align.CENTER);paint.setTypeface(Typeface.DEFAULT_BOLD);paint.setTextSize(12);paint.setColor(col("#fff0c8"));outlinedText(name,x,y);
-   paint.setTextSize(10);paint.setColor(col("#c28aff"));outlinedText(title,x,y+12);
-   paint.setTextAlign(align);paint.setTypeface(face);paint.setTextSize(size);paint.setColor(color);
+   paint.setTextAlign(Paint.Align.CENTER);paint.setTypeface(residentTypeface);paint.setTextSize(RESIDENT_LABEL_SIZE);paint.setColor(col("#fff0c8"));outlinedText(name,x,y);
+   paint.setColor(col("#c28aff"));outlinedText(title,x,y+15);
+   paint.setTextAlign(align);paint.setTypeface(face);paint.setTextSize(size);paint.setColor(color);paint.setAntiAlias(antialias);canvas.restore();
   }
   void drawResidentSpeech(VillageResidents.Resident n,float x,float y){
    if(n.speechTime<=0||n.speech.isEmpty())return;
@@ -593,7 +600,7 @@ public class MainActivity extends Activity {
    paint.setTextAlign(Paint.Align.CENTER);paint.setTextSize(12);paint.setColor(col("#fff2d5"));
    if(guild&&room<2){fantasyName("Treppe nach oben",l+592,t+230);}
    if(guild&&room>0){fantasyName("Treppe nach unten",l+80,t+230);}
-   paint.setTextSize(13);fantasyName(guild?"GILDE · "+guildFloorNames[room]:villageNames[interiorHouseIndex()],l+336,t+18);
+   drawBuildingName(guild?"Gilde · "+guildFloorNames[room]:villageNames[interiorHouseIndex()],l+336,t+18);
    if(!guild||room==0)fantasyName("Ausgang",l+336,t+344);
    paint.setTextAlign(Paint.Align.LEFT);
   }
@@ -725,7 +732,7 @@ public class MainActivity extends Activity {
    tile("Exterior_house",70,162,32,38,x-117,y+113,50,52); // crates
    tile("Exterior_house",116,160,34,34,x+97,y+66,55,55); // complete cart
    paint.setColor(col("#f5d795"));paint.setTextAlign(Paint.Align.CENTER);paint.setTextSize(10);
-   paint.setTextSize(20);fantasyName("Schmiede",x,y-150);paint.setTextAlign(Paint.Align.LEFT);
+   drawBuildingName(villageNames[0],x,y-150);paint.setTextAlign(Paint.Align.LEFT);
   }
   // Door anchors are shared by the automatic movement triggers and teleportation.
   final float DOOR_OUT_X=0f,DOOR_OUT_Y=102f;
@@ -835,7 +842,8 @@ public class MainActivity extends Activity {
    String indoorAction=hp<=0?"death":doorTimer>0?"walk":hurtAnim>0?"hurt":attackAnim>0&&sword?"attack":Math.abs(joyX)+Math.abs(joyY)>.08f?(sprintHeld?"run":"walk"):"idle";
    drawSprite(sword?"player_sword":"player_unarmed",indoorAction,playerDir,cx,cy,88.704f,88.704f,hp<=0?deathAnim:attackAnim>0?.4f-attackAnim:elapsed,hp<=0&&deathAnim>.8f);
    paint.setColor(col("#fff2d5"));paint.setTextSize(13);
-   canvas.drawText("SCHMIEDE  |  Ausgang unten mittig",l+221,t+345,paint);
+   drawBuildingName(villageNames[0],l+340,t+18);
+   canvas.drawText("Ausgang unten mittig",l+263,t+345,paint);
   }
   void loadSprites(){
    String[] kinds={"boar","fox","deer","black_grouse","orc1","orc2","orc3","player_sword","player_unarmed"};
@@ -1673,6 +1681,13 @@ public class MainActivity extends Activity {
    canvas.restore();
    paint.setColor(col("#f5e8cb"));paint.setTextSize(10);paint.setTextAlign(Paint.Align.CENTER);
    canvas.drawText("N",x+size/2,y+11,paint);paint.setTextAlign(Paint.Align.LEFT);
+  }
+  void drawBuildingName(String name,float x,float y){
+   canvas.save();if(!indoors)canvas.scale(1f/1.10f,1f/1.10f,x,y);
+   boolean antialias=paint.isAntiAlias();paint.setAntiAlias(true);
+   Paint.Align align=paint.getTextAlign();Typeface face=paint.getTypeface();float size=paint.getTextSize();int color=paint.getColor();
+   paint.setTextAlign(Paint.Align.CENTER);paint.setTypeface(buildingTypeface);paint.setTextSize(BUILDING_LABEL_SIZE);paint.setColor(col("#f5d795"));outlinedText(name,x,y);
+   paint.setTextAlign(align);paint.setTypeface(face);paint.setTextSize(size);paint.setColor(color);paint.setAntiAlias(antialias);canvas.restore();
   }
   void fantasyName(String value,float x,float y){
    Typeface old=paint.getTypeface();float oldSize=paint.getTextSize();
