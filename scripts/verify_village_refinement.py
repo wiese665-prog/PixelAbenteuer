@@ -4,16 +4,15 @@ from PIL import Image,ImageChops
 import json
 ROOT=Path(__file__).resolve().parents[1];assets=ROOT/'app/src/main/assets';v=assets/'village'
 def rgba(p):return Image.open(p).convert('RGBA')
-# Every final tower pixel must be an exact reference color, with hard transparency.
-references=[v/'exterior.png',v/'guild/Walls_street(1).png',assets/'sprites/Exterior_house.png',v/'guild/Exterior(1).png']
-allowed=set()
-for p in references:
- allowed.update(c[:3] for c in rgba(p).get_flattened_data() if c[3]>0)
-tower=rgba(v/'tower.png');assert tower.size==(160,208)
-colors={c[:3] for c in tower.get_flattened_data() if c[3]>0}
-assert colors<=allowed,colors-allowed
+# The user explicitly approved this tower image. Verify faithful proportional
+# nearest-neighbor preparation, rather than imposing the discarded native draft.
+approved=rgba(ROOT/'art/source/watchtower-approved.png')
+approved.putalpha(approved.getchannel('A').point(lambda a:255 if a>=128 else 0))
+approved=approved.crop(approved.getbbox());height=204;width=round(approved.width*height/approved.height)
+expected=Image.new('RGBA',(160,208));expected.alpha_composite(approved.resize((width,height),Image.Resampling.NEAREST),((160-width)//2,208-height))
+tower=rgba(v/'tower.png');assert tower.tobytes()==expected.tobytes()
 assert set(tower.getchannel('A').get_flattened_data())<={0,255}
-assert colors==set(map(tuple,json.loads((ROOT/'art/source/watchtower-palette.json').read_text())))
+assert tower.getbbox()[3]==208
 # All six houses have actual opening states and a matching closed final pose.
 for i in range(6):
  im=rgba(v/f'door{i}.png');assert im.height%6==0;h=im.height//6
@@ -44,4 +43,4 @@ for who in ['Citizen1','Citizen2','Fighter2']:
   assert min(counts)>0
   if action=='Idle':assert counts[3]==6
   else:assert counts==[6,6,6,6]
-print('Native tower palette, six animated doors, opaque paving, complete chimneys, 9 complete grass-detail variants and sparse NPC rows: passed.')
+print('Approved tower preparation, six animated doors, opaque paving, complete chimneys, 9 complete grass-detail variants and sparse NPC rows: passed.')

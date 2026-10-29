@@ -38,7 +38,7 @@ def isolate_hair(frame):
 
 
 def build():
-    for kind in ('braid','curl','bun','long'):
+    for kind in ('braid','curl','bun'):
         source = Image.open(ROOT / f'art/source/{kind}-hair.png').convert('RGBA')
         directions = []
         for facing in range(4):
@@ -106,7 +106,9 @@ def build():
                 path=ASSETS / f'char_a_{page}/4har/char_a_{page}_4har_{kind}_v{variant:02d}.png'
                 out.save(path)
                 assert set(out.getchannel('A').getdata())<={0,255}
-    print('Exported 112 sheets for braids, curls, bun and long hair, including walking and combat poses.')
+    import runpy
+    runpy.run_path(str(ROOT/'scripts/import_long_hair.py'),run_name='__main__')
+    print('Exported braids, curls, bun and the new long haircut.')
 
 
 if __name__ == '__main__':

@@ -470,7 +470,7 @@ public class MainActivity extends Activity {
    boolean antialias=paint.isAntiAlias();paint.setAntiAlias(true);
    Paint.Align align=paint.getTextAlign();Typeface face=paint.getTypeface();float size=paint.getTextSize();int color=paint.getColor();
    paint.setTextAlign(Paint.Align.CENTER);paint.setTypeface(residentTypeface);paint.setTextSize(RESIDENT_LABEL_SIZE);paint.setColor(col("#fff0c8"));outlinedText(name,x,y);
-   paint.setTypeface(Typeface.DEFAULT);paint.setColor(col("#c28aff"));outlinedText(title,x,y+15);
+   paint.setTypeface(Typeface.DEFAULT);paint.setTextSize(11.5f);paint.setColor(col("#c28aff"));outlinedText(title,x,y+14);
    paint.setTextAlign(align);paint.setTypeface(face);paint.setTextSize(size);paint.setColor(color);paint.setAntiAlias(antialias);canvas.restore();
   }
   void drawResidentSpeech(VillageResidents.Resident n,float x,float y){
@@ -1755,13 +1755,13 @@ public class MainActivity extends Activity {
    // Body, outfit, hands and equipment share the same armed idle pose.
    String weapon=combatStyle==1?"ax01":combatStyle==2?"mc01":"sw01";
    String shield=equipped.getOrDefault("Schild","").contains("Iron")?"sh03":"sh01";
-   boolean weaponBehind=facing==1||facing==3,shieldBehind=facing==1||facing==2;
+   boolean weaponBehind=facing==1,shieldBehind=facing==1||facing==2;
    if(weaponBehind)characterLayer("pONE2","6tla",weapon,1,facing,0,x,y,w,h);
    if(shieldBehind)characterLayer("pONE2","7tlb",shield,1,facing,0,x,y,w,h);
    characterLayer("pONE2","0bas","humn",skinColor,facing,0,x,y,w,h);
    characterLayer("pONE2","1out",equipped.containsKey("Brust")?"fstr":(characterGender==0?"boxr":"undi"),1,facing,0,x,y,w,h);
    String hair=hairType==2?"braid":hairType==3?"curl":hairType==4?"bun":hairType==5?"long":hairType==0?"bob1":"dap1";
-   if(hairType<2)characterLayer("pONE2","4har",hair,hairColor,facing,0,x,y,w,h);
+   if(hairType<2||hairType==5)characterLayer("pONE2","4har",hair,hairColor,facing,0,x,y,w,h);
    else {
     // Native p1 -> armed-idle head displacement, in source pixels. Preserve
     // the custom haircut while attaching it to the pONE2 head in each view.
@@ -1769,8 +1769,14 @@ public class MainActivity extends Activity {
     characterLayer("p1","4har",hair,hairColor,facing,0,x+dx*w/64f,y+dy*h/64f,w,h);
    }
    if(equipped.containsKey("Kopf"))characterLayer("pONE2","5hat","pfht",1,facing,0,x,y,w,h);
-   if(!weaponBehind)characterLayer("pONE2","6tla",weapon,1,facing,0,x,y,w,h);
-   if(!shieldBehind)characterLayer("pONE2","7tlb",shield,1,facing,0,x,y,w,h);
+   if(!weaponBehind&&facing!=3)characterLayer("pONE2","6tla",weapon,1,facing,0,x,y,w,h);
+   if(!shieldBehind){
+    // The near-side left shield shows its wooden face, aligned to the same
+    // native hand position; the old circle showed the blank reverse surface.
+    if(facing==3)characterLayer("pONE2","7tlb",shield,1,4,0,x-9*w/64f,y-6*h/64f,w,h);
+    else characterLayer("pONE2","7tlb",shield,1,facing,0,x,y,w,h);
+   }
+   if(facing==3)characterLayer("pONE2","6tla",weapon,1,facing,0,x,y,w,h);
   }
   void drawCharacter(float x,float y,float w,float h,int dir,String action,float time){
    boolean fighting=action.equals("attack")||action.equals("hurt")||action.equals("death");

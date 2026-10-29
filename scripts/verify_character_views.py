@@ -23,7 +23,7 @@ for layer,name in [('0bas','humn'),('1out','boxr'),('1out','undi'),('6tla','sw01
  assert all(frame(im,r).getbbox() for r in range(4)),(layer,name)
 
 poses=0
-for page in ['p1','pONE3']:
+for page in ['p1','pONE2','pONE3']:
  native=sheet(page,'4har','dap1')
  for variant in range(14):
   hair=sheet(page,'4har','long',variant)
@@ -34,9 +34,14 @@ for page in ['p1','pONE3']:
   for row in range(8):
    for col in range(8):
     h=frame(hair,row,col);assert h.getbbox();poses+=1
-    if row%4 in (2,3):rear_covered(frame(native,row,col),h,row%4)
+    if row%4 in (2,3):
+     scalp=frame(native,row,col)
+     if scalp.getbbox() is None:scalp=frame(native,row%4)
+     rear_covered(scalp,h,row%4)
   if page=='p1':
-   for facing,dx in [(2,-1),(3,1)]:
-    h=Image.new('RGBA',(64,64));h.alpha_composite(frame(hair,facing),(dx,1))
-    rear_covered(frame(sheet('pONE2','4har','dap1'),facing),h,facing)
+   for row in range(4,8):
+    shapes={frame(hair,row,c).crop(frame(hair,row,c).getbbox()).tobytes() for c in range(6)}
+    assert len(shapes)>1,('long hair does not animate',variant,row)
+  if page=='pONE2':
+   for facing in (2,3):rear_covered(frame(native,facing),frame(hair,facing),facing)
 print(f'Armed-idle equipment: all four views populated. Long hair: {poses} poses, native palettes, rear scalp covered in side stand/walk/combat and creator views.')

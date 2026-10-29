@@ -1,5 +1,5 @@
-# Native watchtower
+# User-approved watchtower
 
-The generated drafts were discarded after user feedback. The final `art/source/watchtower-native.png` is a 160x208 native sprite assembled from the original Exterior_house, Exterior(1), exterior and Walls_street reference sheets. Original brick, timber, window, door and roof pixels are retained at 1:1 resolution. There is no image-generation illustration or color quantization in the final tower.
+The user selected `art/source/watchtower-approved.png` on 29 October 2026 and explicitly authorized this exact version for the game. It replaces the prior native-parts draft. No further window, roof, silhouette or material redesign is applied.
 
-`art/source/watchtower-palette.json` lists the exact opaque RGB colors copied from those sheets. Transparency is binary. The masonry pattern uses the source 16px tiles; native windows and the door retain their original size. The roof is a single continuous red tile roof with closed end caps; there are no clipped ridge posts, mixed gables or loose diagonal pixels.
+`build_native_watchtower.py` removes transparent padding, preserves the visible aspect ratio, prepares the sprite at 88x204 using nearest-neighbor sampling, and centers it on the existing 160x208 game canvas. Alpha is binary. The village prop position, collision and camera treatment are retained. The asset check compares every output pixel to this approved-source transformation.

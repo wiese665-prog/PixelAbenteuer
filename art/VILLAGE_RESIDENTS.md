@@ -32,4 +32,4 @@ The APK workflow runs the actual portable Java resident model against exported m
 
 ## Shared labels
 
-All 17 residents, including the three original smithy actors, use the same Android cursive typeface and 13 logical pixel size for both name and purple title. Outdoor labels cancel the 1.10 world zoom, so their text and line spacing have the same screen size as indoor labels. All building names, including the watchtower and interior headings, share one serif italic drawing routine at 13 logical pixels and the same gold color.
+All 17 residents, including the three original smithy actors, use the same Android cursive typeface and 13 logical pixel size for names and 11.5 for straight purple titles. Outdoor labels cancel the 1.10 world zoom, so their text and line spacing have the same screen size as indoor labels. All building names, including the watchtower and interior headings, share one serif italic drawing routine at 13 logical pixels and the same gold color.
