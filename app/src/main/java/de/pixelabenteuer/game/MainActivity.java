@@ -58,6 +58,8 @@ public class MainActivity extends Activity {
   }
   String[] hotbar=new String[9];int selectedHotbar=-1;int copper=0,silver=0,gold=0,hoverSlot=-1;float hoverX=0,hoverY=0;
   Item inspectedGear=null;String characterName="Abenteurer";int armorStyle=0,characterGender=0;boolean sprintHeld=false;int attackSequence=0;boolean creatorOpen=false,calendarOpen=false;int hairType=0,hairColor=1,skinColor=1,eyeColor=0,combatStyle=0;boolean inventoryOpen=false,shopOpen=false,startScreen=true,pauseMenu=false,controlsOpen=false;float merchantX=515,merchantY=525;
+  int creatorFacing=0;
+  final int[] creatorDirections={0,3,1,2}; // front, right, back, left
   int activeMerchant=0; // 0 Orc-Händler, 1 Schmied, 2 Händlerin
   String[] shopStock={"Apple","Ham","Healthpotion","Healpotion med","Iron Sword","Silver Sword","Leather Armor","Iron Armor","Iron Helmet","Golden Sword"};
   String[] smithStock={"Wooden Sword [Common]","Wooden Sword [Legendär]","Iron Sword [Uncommon]","Iron Sword [Rare]","Silver Sword [Common]","Silver Sword [Legendär]","Golden Sword [Rare]","Golden Sword [Legendär]","Leather Armor [Rare]","Iron Armor [Rare]","Iron Helmet [Legendär]","Leather Boot [Uncommon]"};
@@ -1484,7 +1486,12 @@ public class MainActivity extends Activity {
    drawRect(col("#b59a68"),left+22,top+55,205,291);
    drawRect(col("#152d2b"),left+25,top+58,199,285);
    drawRect(col("#2c4b43"),left+31,top+64,187,271);
-   drawCharacter(left+124,top+202,170,225,0,"idle",elapsed);
+   // A 64x64 source cell uses uniform 4x nearest-neighbor scaling.
+   drawCharacter(left+124,top+182,256,256,creatorDirections[creatorFacing],"idle",elapsed);
+   drawCreatorTurnButton(left+44,top+284,"‹");
+   drawCreatorTurnButton(left+160,top+284,"›");
+   paint.setTextAlign(Paint.Align.CENTER);paint.setTypeface(Typeface.DEFAULT);paint.setColor(col("#f0d6a0"));paint.setTextSize(12);
+   canvas.drawText(new String[]{"Vorne","Rechts","Hinten","Links"}[creatorFacing],left+124,top+306,paint);
    paint.setColor(col("#f0d6a0"));paint.setTextSize(12);
    canvas.drawText("CHARAKTERVORSCHAU",left+124,top+332,paint);
    paint.setColor(col("#c7a977"));canvas.drawText("✦",left+124,top+78,paint);
@@ -1517,9 +1524,18 @@ public class MainActivity extends Activity {
    canvas.drawText("Abenteuer beginnen",left+394,top+381+beginOffset,paint);
    paint.setTextAlign(Paint.Align.LEFT);paint.setTypeface(Typeface.DEFAULT);
   }
+  void drawCreatorTurnButton(float x,float y,String arrow){
+   drawRect(col("#96794c"),x,y,44,34);drawRect(col("#20383a"),x+2,y+2,40,30);
+   paint.setTextAlign(Paint.Align.CENTER);paint.setTypeface(Typeface.DEFAULT_BOLD);paint.setTextSize(25);paint.setColor(col("#f3d48c"));canvas.drawText(arrow,x+22,y+25,paint);
+  }
+  void rotateCreator(int delta){creatorFacing=Math.floorMod(creatorFacing+delta,4);invalidate();}
   void creatorClick(float x,float y,float vw,float vh){
    float left=vw/2-285,top=vh/2-205;
    if(pressedCreatorButton)return;
+   if(y>=top+280&&y<=top+322){
+    if(x>=left+40&&x<=left+92){rotateCreator(-1);return;}
+    if(x>=left+156&&x<=left+208){rotateCreator(1);return;}
+   }
    if(x>=left+246&&x<=left+542&&y>=top+352&&y<=top+397){
     pressedCreatorButton=true;pressedCreatorTime=.35f;invalidate();return;
    }
@@ -2049,7 +2065,7 @@ public class MainActivity extends Activity {
   }
   void restart(){
    residentSystem.reset();
-   hairType=0;hairColor=1;skinColor=1;eyeColor=0;combatStyle=0;armorStyle=0;characterGender=0;characterName="Abenteurer";creatorOpen=false;calendarOpen=false;sprintHeld=false;attackSequence=0;
+   creatorFacing=0;hairType=0;hairColor=1;skinColor=1;eyeColor=0;combatStyle=0;armorStyle=0;characterGender=0;characterName="Abenteurer";creatorOpen=false;calendarOpen=false;sprintHeld=false;attackSequence=0;
    indoors=false;currentHouse=0;guildFloor=0;playerLevel=1;exp=0;attackPower=3;maxHp=12;hp=maxHp;maxMana=20;mana=20;worldTime=0;stockRefreshTimer=0;doorTimer=0;refreshMerchantStocks();equipped.clear();copper=silver=gold=0;java.util.Arrays.fill(hotbar,null);selectedHotbar=-1;playerDamageTime=0;px=SPAWN_X;py=SPAWN_Y;joyX=joyY=0;deathAnim=0;swordTimer=0;sword=false;attackAnim=0;playerHealthVisible=0;kills=animalKills=0;questTier=questProgress=nextQuestDay=0;questActive=false;mobs.clear();drops.clear();inventory.clear();inventoryOpen=false;shopOpen=false;pauseMenu=false;spawnMobs();
   }
   // Experimental fixed 2.5D camera: ground is foreshortened, sprites stay upright.
@@ -2309,7 +2325,12 @@ public class MainActivity extends Activity {
    if(hp<=0){if(key==KeyEvent.KEYCODE_ENTER){if(hasLoadableSave()){loadGame();if(hp<=0)newCharacterAfterDeath();}else newCharacterAfterDeath();}else if(key==KeyEvent.KEYCODE_N)newCharacterAfterDeath();return true;}
    if(key==KeyEvent.KEYCODE_K&&!creatorOpen&&!startScreen&&!pauseMenu&&hp>0){calendarOpen=!calendarOpen;inventoryOpen=false;shopOpen=false;joyX=joyY=0;return true;}
    if(calendarOpen){if(key==KeyEvent.KEYCODE_ESCAPE||key==KeyEvent.KEYCODE_BACK)calendarOpen=false;return true;}
-   if(creatorOpen){if(key==KeyEvent.KEYCODE_ENTER){creatorOpen=false;startScreen=false;pauseMenu=false;}return true;}
+   if(creatorOpen){
+    if(key==KeyEvent.KEYCODE_A||key==KeyEvent.KEYCODE_DPAD_LEFT)rotateCreator(-1);
+    else if(key==KeyEvent.KEYCODE_D||key==KeyEvent.KEYCODE_DPAD_RIGHT)rotateCreator(1);
+    else if(key==KeyEvent.KEYCODE_ENTER){creatorOpen=false;startScreen=false;pauseMenu=false;}
+    return true;
+   }
    if(startScreen||pauseMenu){if(key==KeyEvent.KEYCODE_ENTER){if(startScreen)creatorOpen=true;else pauseMenu=false;}return true;}
    switch(key){case KeyEvent.KEYCODE_A:case KeyEvent.KEYCODE_DPAD_LEFT:keyLeft=true;updateKeyboardMovement();break;
     case KeyEvent.KEYCODE_D:case KeyEvent.KEYCODE_DPAD_RIGHT:keyRight=true;updateKeyboardMovement();break;

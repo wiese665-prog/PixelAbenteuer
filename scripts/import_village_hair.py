@@ -58,14 +58,9 @@ def build():
                 for col in range(8):
                     native = template.crop((col*64,row*64,col*64+64,row*64+64))
                     x0,y0,x1,y1 = native.getbbox()
-                    if kind == 'long':
-                        # Keep the native scalp footprint in every pose. Long
-                        # strands alone leave holes when the head turns in attacks.
-                        for ny in range(y0,y1):
-                            for nx in range(x0,x1):
-                                pixel=native.getpixel((nx,ny))
-                                if pixel[3]>=128:
-                                    indexed.putpixel((col*64+nx,row*64+ny),closest(pixel[:3]))
+                    # Preserve the approved long-hair silhouette. Overlaying
+                    # the short native haircut underneath changes the fringe
+                    # and covers the face in side and combat frames.
                     if kind == 'braid':
                         w,h = ((16,20) if facing==0 else (16,21) if facing==1 else (15,20))
                         left = round((x0+x1-w)/2)
