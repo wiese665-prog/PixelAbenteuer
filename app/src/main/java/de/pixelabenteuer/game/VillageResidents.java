@@ -76,7 +76,7 @@ public final class VillageResidents {
   double d=Math.hypot(n.x-world.playerX(),n.y-world.playerY());if(d<(n.id.equals("aldric")?86:56)&&d<distance){best=n;distance=d;}
  }return best;}
  private boolean free(World w,Resident n,int floor,float x,float y,boolean actors){return !w.blocked(floor,x,y)&&(!actors||!occupied(floor,x,y,n,n.radius)&&!playerAt(w,floor,x,y,n.radius));}
- private int indoorCount(){int count=0;for(Resident n:people)if(n.mobile&&(n.floor>=0||n.transition>0))count++;return count;}
+ private int indoorCount(){int count=0;for(Resident n:people)if(n.mobile&&(n.floor>=0||n.transition>0||n.stage>=2))count++;return count;}
  public void update(float dt,World world){
   for(Resident n:people){
    n.anim+=dt;n.speechTime=Math.max(0,n.speechTime-dt);n.hold=Math.max(0,n.hold-dt);n.moving=false;
