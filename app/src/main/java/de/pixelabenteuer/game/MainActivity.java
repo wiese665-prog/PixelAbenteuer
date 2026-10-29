@@ -64,7 +64,7 @@ public class MainActivity extends Activity {
   final RangedCombat rangedCombat=new RangedCombat();
   float rangedWindup=0,manaRegen=0,pendingFx=0,pendingFy=0;int pendingRole=0,pendingDamage=0;
   final RangedCombat.World shotWorld=new RangedCombat.World(){
-   public boolean blocked(float x,float y){return x<0||y<0||x>WORLD_W||y>WORLD_H||outdoorTerrainBlocked(x,y);}
+   public boolean blocked(float x,float y){return x<0||y<0||x>WORLD_W||y>WORLD_H||outdoorTerrainBlocked(x,y)||towerFootBlocked(x,y,0);}
    public Iterable<Mob> targets(){return mobs;}
    public void hit(RangedCombat.Target target,int damage){damageMob((Mob)target,damage);}
   };
@@ -420,7 +420,7 @@ public class MainActivity extends Activity {
    }
    for(float[] f:new float[][]{{350,530},{960,430},{350,885},{960,850},{700,210}})
     addVillageProp("exterior",208,768,16,32,f[0],f[1],24,40,0,1);
-   fantasyProp("tower",1010,350,154,256,40);
+   fantasyProp("tower",1010,350,154,256,0); // footprint uses actual foot coordinates below
    fantasyProp("quests",900,535,43,49,10);
    addVillageProp("shrine",0,0,80,48,SPAWN_X,SPAWN_Y+38.4f,48,28.8f,0,1);
    for(float[] light:new float[][]{{790,790},{870,790},{1000,340}})addVillageProp("guild/Flags_animation",0,0,48,48,light[0],light[1],62,62,0,12);
@@ -511,7 +511,7 @@ public class MainActivity extends Activity {
   final VillageResidents residentSystem=new VillageResidents();
   final ArrayList<VillageResidents.Resident> guildResidents=residentSystem.people;
   final VillageResidents.World residentWorld=new VillageResidents.World(){
-   public boolean blocked(int room,float x,float y){return room==VillageResidents.OUTSIDE?(outdoorTerrainBlocked(x,y)||wellFootBlocked(x,y,7)):room>=0?guildBlocked(room,x,y):false;}
+   public boolean blocked(int room,float x,float y){return room==VillageResidents.OUTSIDE?(outdoorTerrainBlocked(x,y)||wellFootBlocked(x,y,7)||towerFootBlocked(x,y,7)):room>=0?guildBlocked(room,x,y):false;}
    public boolean road(float x,float y){return roadAt(x,y,0);}
    public int playerFloor(){return currentResidentRoom();}
    public float playerX(){return indoors&&currentHouse!=1?px-60:px;}
@@ -1001,7 +1001,8 @@ public class MainActivity extends Activity {
    float dx=x-610,dy=footY-510;float reach=17+radius;
    return dx*dx+dy*dy<reach*reach;
   }
-  boolean blocked(float x,float y){return outdoorTerrainBlocked(x,y)||wellFootBlocked(x,y+24,7)||residentSystem.occupied(VillageResidents.OUTSIDE,x,y+24,null,7);}
+  boolean towerFootBlocked(float x,float footY,float radius){return Math.abs(x-1010)<50+radius&&footY>320-radius&&footY<350+radius;}
+  boolean blocked(float x,float y){return outdoorTerrainBlocked(x,y)||wellFootBlocked(x,y+24,7)||towerFootBlocked(x,y+24,7)||residentSystem.occupied(VillageResidents.OUTSIDE,x,y+24,null,7);}
   final byte[] terrainCollisionCache=new byte[WORLD_W*WORLD_H];
   final MobNavigation mobNavigation=new MobNavigation(WORLD_W,WORLD_H);
   float mobPathCooldown=0;
@@ -2204,7 +2205,7 @@ public class MainActivity extends Activity {
      }
      if(clear){m.path.clear();m.pathIndex=0;m.pathTimer=.8f+random.nextFloat()*.35f;return;}
     }
-    m.path=mobNavigation.find(m.x,m.y,tx,ty,(x,y)->villageZone(x,y,28)||outdoorTerrainBlocked(x,y));
+    m.path=mobNavigation.find(m.x,m.y,tx,ty,(x,y)->villageZone(x,y,28)||outdoorTerrainBlocked(x,y)||towerFootBlocked(x,y+24,7));
     m.pathIndex=0;m.pathTimer=m.path.isEmpty()?1.3f:.9f+random.nextFloat()*.3f;
    }
 

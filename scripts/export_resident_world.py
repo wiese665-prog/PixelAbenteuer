@@ -23,7 +23,7 @@ for side in range(4):
    x,y=(40+lane*55 if side==0 else 1090+lane*120,90+i*62) if side<2 else (70+i*100,62+lane*34 if side==2 else 965+lane*30)
    if side<2 and abs(y-470)<88 or side==2 and abs(x-410)<82 or x>1560 or y>995:continue
    circle(x,y,17)
-circle(610,510,24);circle(1010,350,47);circle(900,535,17);circle(982,562,15);circle(984,612,15)
+circle(610,510,24);d.rectangle((953,313,1067,357),fill=1);circle(900,535,17);circle(982,562,15);circle(984,612,15)
 for x,y in houses[1:]:circle(x-100,y+132,19);circle(x+101,y+125,16)
 roads=Image.new('L',(1600,1000));rd=ImageDraw.Draw(roads)
 for r in [(160,195,450,235),(386,195,434,932),(666,450,714,932),(180,450,1210,490),(180,820,930,860),(430,442,666,570),(0,446,190,494),(920,446,1599,494),(386,0,434,220),(992,334,1028,470)]:rd.rectangle(r,fill=1)
