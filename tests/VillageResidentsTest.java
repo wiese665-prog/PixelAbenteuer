@@ -33,7 +33,8 @@ public final class VillageResidentsTest {
     VillageResidents.Resident a=system.people.get(i),b=system.people.get(j);if(a.floor==b.floor&&(a.mobile||b.mobile))require(Math.hypot(a.x-b.x,a.y-b.y)>=a.radius+b.radius+.8,"People clipped: "+a.name+" / "+b.name);
    }
   }
-  for(VillageResidents.Resident n:system.people)if(n.mobile){System.out.println(n.name+": visits="+n.completedVisits+", room mask="+n.visitedRooms+", location="+n.floor+" @ "+n.x+","+n.y);require(n.completedVisits>=n.visits.length,"No complete house cycle: "+n.name);for(VillageResidents.Visit v:n.visits)require((n.visitedRooms&(1<<v.room))!=0,"Missed assigned room "+v.room+": "+n.name);}
+  for(VillageResidents.Resident n:system.people)if(n.mobile)System.out.println(n.debug()+" visits="+n.completedVisits+" mask="+n.visitedRooms);
+  for(VillageResidents.Resident n:system.people)if(n.mobile){require(n.completedVisits>=n.visits.length,"No complete house cycle: "+n.name);for(VillageResidents.Visit v:n.visits)require((n.visitedRooms&(1<<v.room))!=0,"Missed assigned room "+v.room+": "+n.name);}
   VillageResidents.Resident lina=system.get("lina");int size=system.people.size();int f=lina.floor;float x=lina.x,y=lina.y;system.restore(lina.id,f,x,y,lina.visitIndex,world);require(size==system.people.size()&&system.get("lina")==lina,"Restore duplicated actor");
   for(VillageResidents.Resident n:system.people){n.speak();require(n.speechTime>0&&!n.speech.isEmpty(),"Missing speech "+n.name);String first=n.speech;n.speak();require(!first.equals(n.speech),"No phrase variation "+n.name);}
   system.reset();world.room=-1;world.px=550;world.py=470;

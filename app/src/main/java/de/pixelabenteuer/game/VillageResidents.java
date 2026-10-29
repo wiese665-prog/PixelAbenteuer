@@ -37,6 +37,7 @@ public final class VillageResidents {
   public int doorFrame(){if(transition<=0)return 0;float elapsed=1-transition;return elapsed<.5f?Math.min(3,(int)(elapsed/.125f)):transition>.32f?3:transition>.12f?4:5;}
   public boolean travelling(){return transition>0;}
   public boolean doorway(){return transition>0&&!stairs;}
+  public String debug(){return name+" room="+floor+" @ "+x+","+y+" stage="+stage+" goal="+goalX+","+goalY+" wait="+wait+" transition="+transition;}
  }
  public final ArrayList<Resident> people=new ArrayList<>();
  private final HashMap<String,Resident> byId=new HashMap<>();
@@ -91,7 +92,7 @@ public final class VillageResidents {
    }else if(n.stage==5){n.pause=10+(n.order%3)*3;n.stage=7;}
    else if(n.stage==7){exitRoom(n);}
    else if(n.stage==3){beginTransfer(n,0,336,312,true,false);}
-   else if(n.stage==9){beginTransfer(n,OUTSIDE,HOUSES[n.doorHouse][0]+DOORS[n.doorHouse],HOUSES[n.doorHouse][1]+132,false,false);}
+   else if(n.stage==9){beginTransfer(n,OUTSIDE,HOUSES[n.doorHouse][0]+DOORS[n.doorHouse],HOUSES[n.doorHouse][1]+164,false,false);}
   }
  }
  private void arrive(Resident n,World world){
