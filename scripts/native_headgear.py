@@ -17,23 +17,33 @@ def headgear(name,cap,facing):
  def rect(x0,y0,x1,y1,color):d.rectangle((cx+x0,top+y0,cx+x1,top+y1),fill=color)
  profile=facing in (2,3)
  if name=='hood':
+  # A tailored hood: low brow, loose rear crown and overlapping shoulder cowl.
   if profile:
-   poly([(-7,3),(-5,0),(-1,-1),(3,1),(6,4),(5,6),(2,7),(2,11),(4,13),(1,15),(-3,14),(-6,11),(-7,7)],O)
-   poly([(-6,4),(-4,1),(-1,0),(2,2),(4,4),(4,5),(1,6),(1,11),(2,13),(0,14),(-3,13),(-5,10),(-6,7)],GREEN[0])
-   poly([(-5,4),(-3,1),(-1,1),(1,3),(0,5),(-3,5)],GREEN[1])
-   line([(-4,9),(-3,11),(-1,12)],GREEN[1]);line([(0,5),(2,5),(3,4)],GREEN[2])
+   poly([(-8,3),(-6,0),(-2,-1),(2,0),(5,3),(6,5),(3,6),(2,9),(3,12),(5,14),(2,16),(-4,15),(-7,12),(-8,7)],O)
+   poly([(-7,3),(-5,1),(-2,0),(1,1),(4,3),(4,4),(1,5),(0,9),(1,12),(3,14),(1,15),(-3,14),(-6,11),(-7,7)],GREEN[0])
+   poly([(-6,3),(-4,1),(-1,1),(2,3),(1,4),(-3,5),(-5,7)],GREEN[1])
+   line([(-4,2),(-2,1),(0,2)],GREEN[2])
+   line([(-6,8),(-4,9),(-3,12),(0,14)],GREEN[1])
+   line([(-5,11),(-3,13),(-1,13)],GREEN[2])
+   line([(1,5),(3,5),(4,4)],GREEN[2])
   elif facing==1:
-   poly([(-7,4),(-5,0),(-1,-1),(4,1),(7,5),(6,11),(3,15),(-3,15),(-6,12)],O)
-   poly([(-6,4),(-4,1),(-1,0),(3,2),(6,5),(5,10),(2,14),(-2,14),(-5,11)],GREEN[0])
-   poly([(-4,3),(-2,1),(1,2),(2,4),(-1,6),(-4,5)],GREEN[1]);line([(-3,8),(-1,11),(1,12)],GREEN[1])
+   poly([(-7,3),(-5,0),(0,-1),(5,1),(7,4),(7,9),(5,12),(6,15),(2,16),(-3,16),(-7,14),(-5,11),(-7,8)],O)
+   poly([(-6,3),(-4,1),(0,0),(4,2),(6,4),(6,8),(3,12),(4,14),(1,15),(-3,15),(-5,13),(-4,10),(-6,7)],GREEN[0])
+   poly([(-5,3),(-2,1),(1,1),(3,3),(1,6),(-2,8),(-4,6)],GREEN[1])
+   line([(-3,2),(-1,1),(1,2)],GREEN[2])
+   line([(-3,9),(0,11),(2,9),(4,6)],O)
+   line([(-4,12),(-2,13),(2,14),(4,13)],GREEN[1])
+   line([(-3,12),(-1,12)],GREEN[2])
   else:
-   poly([(-7,4),(-5,1),(-1,-1),(3,0),(6,3),(7,7),(6,12),(3,15),(-3,15),(-6,12),(-7,8)],O)
-   poly([(-6,4),(-4,2),(-1,0),(2,1),(5,4),(6,7),(5,11),(2,14),(-2,14),(-5,11),(-6,8)],GREEN[0])
-   poly([(-4,3),(-1,1),(1,2),(2,4),(-2,4)],GREEN[1])
-   # Wide face opening follows the original brow/cheeks, without a circular ring.
-   poly([(-4,6),(3,6),(4,8),(3,12),(1,13),(-2,12),(-4,10)],(0,0,0,0))
-   line([(-5,6),(-3,5),(2,5),(4,6)],GREEN[1]);line([(-4,5),(-2,4),(0,4)],GREEN[2])
-   line([(-4,12),(-2,13),(1,14),(3,12)],GREEN[1])
+   poly([(-7,4),(-6,1),(-2,-1),(2,-1),(6,2),(7,5),(6,10),(5,12),(7,15),(3,16),(-3,16),(-7,14),(-5,11),(-7,8)],O)
+   poly([(-6,4),(-5,2),(-2,0),(2,0),(5,3),(6,5),(5,9),(3,12),(5,14),(2,15),(-2,15),(-5,13),(-4,10),(-6,7)],GREEN[0])
+   poly([(-5,3),(-2,1),(1,1),(3,3),(2,4),(-2,4),(-5,6)],GREEN[1])
+   line([(-3,2),(-1,1),(1,2)],GREEN[2])
+   poly([(-4,6),(-2,5),(2,5),(4,7),(3,11),(1,13),(-2,12),(-4,10)],(0,0,0,0))
+   line([(-5,6),(-3,4),(1,4),(4,6)],GREEN[1])
+   line([(-4,5),(-2,4)],GREEN[2])
+   line([(-4,12),(-1,14),(3,15)],GREEN[1])
+   line([(4,12),(1,14),(-3,15)],GREEN[2])
  elif name=='mgHt':
   # Tapered cloth cone; short folded tip, no horizontal black antenna.
   poly([(-6,4),(-4,0),(-3,-4),(-1,-7),(2,-8),(3,-7),(1,-5),(3,-2),(5,3),(6,5)],O)
@@ -85,6 +95,39 @@ def headgear(name,cap,facing):
   if facing==1:
    rect(-5,8,4,12,LEATHER[0]);line([(-4,8),(-3,10),(2,11)],LEATHER[1])
   elif profile:line([(-5,7),(-5,11),(-3,12)],LEATHER[0])
+ # Small material clusters: bevels, seams and folds rather than large flat fills.
+ if name=='mgHt':
+  poly([(-3,0),(-2,-3),(0,-5),(0,-2),(2,1),(1,3)],BLUE[1])
+  line([(-1,-4),(0,-3)],BLUE[2])
+  line([(2,-1),(3,2),(3,3)],BLUE[0])
+  line([(-5,5),(-2,5),(2,5)],BRASS[0])
+  rect(1,4,2,5,BRASS[2]);d.point((cx+2,top+4),fill=BRASS[0])
+  line([(-6,7),(-3,7),(0,8)],BLUE[0])
+  if facing==1:line([(-2,-2),(0,0),(1,3)],BLUE[2])
+ elif name=='irHl':
+  line([(-4,2),(-5,4),(-3,5)],STEEL[3])
+  line([(3,1),(4,3),(5,5)],STEEL[1])
+  line([(0,-1),(0,3),(1,5)],STEEL[2])
+  for x in (-5,4):d.point((cx+x,top+6),fill=STEEL[3])
+  if facing==1:
+   line([(-4,10),(3,10)],STEEL[2]);line([(-3,12),(2,12)],STEEL[1])
+  elif profile:
+   line([(-5,9),(-4,10),(-4,11)],STEEL[2]);d.point((cx-4,top+8),fill=STEEL[3])
+ elif name=='wdHl':
+  # Staggered plank ends and thin bevels interrupt the former box-like crown.
+  rect(-5,-1,-3,0,WOOD[0]);rect(2,-1,4,0,WOOD[1])
+  for x in (-5,-1,3):
+   line([(x,2),(x,4)],WOOD[0]);d.point((cx+x+1,top+1),fill=WOOD[2])
+  line([(-5,5),(5,5)],LEATHER[0])
+  for x in (-5,0,5):d.point((cx+x,top+6),fill=BRASS[1])
+  if facing==1:
+   line([(-5,9),(-4,11)],WOOD[2]);line([(0,8),(1,10)],WOOD[1]);line([(4,9),(4,12)],WOOD[1])
+ elif name=='leHl':
+  # Stitched panels and a raised edge with subdued leather highlights.
+  line([(-2,1),(-1,3),(0,5)],LEATHER[0]);line([(1,1),(2,3),(3,5)],LEATHER[2])
+  for x in (-4,-1,2,4):d.point((cx+x,top+6),fill=LEATHER[3])
+  if facing==1:
+   line([(-3,8),(-2,10),(1,11)],LEATHER[2]);d.point((cx+2,top+9),fill=LEATHER[3])
  if facing==3:
   # Mirror about the exact source head center, not the 64px cell center.
   mirrored=Image.new('RGBA',(64,64))

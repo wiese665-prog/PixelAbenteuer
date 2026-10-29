@@ -28,3 +28,7 @@ Alle Formen werden direkt in nativen Pixeln gezeichnet: eine Pixelreihe für Kan
 - `CharacterEquipmentTest`: 16 Gegenstände, drei Namens-/Seltenheitsvarianten, fünf Animationsseiten, vier Richtungen und leere Slots.
 - [Aktuelle Vergleichstafel](reviews/all-equipment-comparison.png) und [Bewegungsübersicht](reviews/all-equipment-animation.gif) sind Kompositionen der tatsächlichen Produktionslayer, keine Geräteaufnahmen.
 - Android-Build über GitHub Actions; neuer Gerätetest und FPS-Messung weiterhin offen.
+
+## Detailüberarbeitung
+
+Die Kapuze erhält eine neue Kontur mit flacher Stirn, lockerem hinterem Stoffvolumen und überlappendem Kragen. Holz bekommt versetzte Segmentenden, Maserung und Befestigungen; Leder abgesetzte Nähte und Panellichter; Eisen feinere Grat-, Wangen- und Nackenkanten. Beim Magierhut trennen zusätzliche native Farbcluster die gefaltete Kegelfläche, das Band mit Schnalle und die Krempe. Die Details sind in Vorlagenfarben auf dem unveränderten nativen Raster ausgeführt. Alle 1.600 Kopf-Frames und die bestehenden Klassen-/Ausrüstungsprüfungen wurden erneut geprüft.
