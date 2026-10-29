@@ -403,7 +403,6 @@ public class MainActivity extends Activity {
     Bitmap sprite=villageArt.get(houseArt);
     if(sprite!=null)villageTile(houseDoorFrame(index)>0?"door"+index:houseArt,0,houseDoorFrame(index)*sprite.getHeight(),sprite.getWidth(),sprite.getHeight(),h[0]-sprite.getWidth()*.8f,h[1]+115-sprite.getHeight()*1.6f,sprite.getWidth()*1.6f,sprite.getHeight()*1.6f);
     if(index==1||index==4)villageTile("chimney_animation",0,((int)(elapsed*5)%6)*48,48,48,h[0]-144*.8f+17*1.6f,h[1]+115-128*1.6f+2*1.6f,48*1.6f,48*1.6f);
-    drawBuildingName(villageNames[index],h[0],h[1]+105-(sprite==null?205:sprite.getHeight()*1.6f));
    }
    // Six 48px cells: crop only the smoke above the embedded chimney/roof.
    if(index==0)villageTile("Smoke_animation",((int)(elapsed*5)%6)*48,0,32,28,h[0]-(index==0?65:78),h[1]-(index==0?162:106),45,39);
@@ -413,7 +412,6 @@ public class MainActivity extends Activity {
    int sy=p.sy+(p.frames>1?((int)(elapsed*6+p.x/70)%p.frames)*p.sh:0);
    canvas.save();if(!p.atlas.equals("shrine"))canvas.scale(1f,1f/CAMERA_GROUND_Y,p.x,p.y);
    villageTile(p.atlas,p.sx,sy,p.sw,p.sh,p.x-p.w/2,p.y-p.h,p.w,p.h);
-   if(p.atlas.equals("tower"))drawBuildingName("Wachturm",p.x,p.y-p.h-10);
    canvas.restore();
   }
   boolean villageObstacle(float x,float y){
@@ -602,7 +600,6 @@ public class MainActivity extends Activity {
    paint.setTextAlign(Paint.Align.CENTER);paint.setTextSize(12);paint.setColor(col("#fff2d5"));
    if(guild&&room<2){fantasyName("Treppe nach oben",l+592,t+230);}
    if(guild&&room>0){fantasyName("Treppe nach unten",l+80,t+230);}
-   drawBuildingName(guild?"Gilde · "+guildFloorNames[room]:villageNames[interiorHouseIndex()],l+336,t+18);
    if(!guild||room==0)fantasyName("Ausgang",l+336,t+344);
    paint.setTextAlign(Paint.Align.LEFT);
   }
@@ -638,6 +635,7 @@ public class MainActivity extends Activity {
     float[] h=villageHouses[i];if(Math.abs(px-(h[0]+villageDoorOffsets[i]))<23&&py>h[1]+80&&py<h[1]+130)return i;
    }return -1;
   }
+  String enteredBuilding="";float buildingNameTime=0;
   float doorTimer=0,doorStartX=0,doorStartY=0;int doorHouse=-1;boolean doorEntering=false,doorSwitched=false;
   int doorFrame(){
    float elapsedDoor=.96f-doorTimer;
@@ -650,6 +648,7 @@ public class MainActivity extends Activity {
    if(!doorSwitched&&doorTimer<=.48f){
     doorSwitched=true;
     if(doorEntering){
+     enteredBuilding=villageNames[doorHouse];buildingNameTime=3.2f;
      indoors=true;currentHouse=doorHouse==0?1:doorHouse==5?GUILD_HOUSE:10+doorHouse;
      if(doorHouse==0){px=DOOR_IN_X;py=DOOR_IN_Y-31;}else{px=396;py=484;guildFloor=0;guildStairCooldown=.8f;}
     }else{
@@ -733,8 +732,6 @@ public class MainActivity extends Activity {
    // The loose props are separate cells on the bottom of the same atlas.
    tile("Exterior_house",70,162,32,38,x-117,y+113,50,52); // crates
    tile("Exterior_house",116,160,34,34,x+97,y+66,55,55); // complete cart
-   paint.setColor(col("#f5d795"));paint.setTextAlign(Paint.Align.CENTER);paint.setTextSize(10);
-   drawBuildingName(villageNames[0],x,y-150);paint.setTextAlign(Paint.Align.LEFT);
   }
   // Door anchors are shared by the automatic movement triggers and teleportation.
   final float DOOR_OUT_X=0f,DOOR_OUT_Y=102f;
@@ -844,7 +841,6 @@ public class MainActivity extends Activity {
    String indoorAction=hp<=0?"death":doorTimer>0?"walk":hurtAnim>0?"hurt":attackAnim>0&&sword?"attack":Math.abs(joyX)+Math.abs(joyY)>.08f?(sprintHeld?"run":"walk"):"idle";
    drawSprite(sword?"player_sword":"player_unarmed",indoorAction,playerDir,cx,cy,88.704f,88.704f,hp<=0?deathAnim:attackAnim>0?.4f-attackAnim:elapsed,hp<=0&&deathAnim>.8f);
    paint.setColor(col("#fff2d5"));paint.setTextSize(13);
-   drawBuildingName(villageNames[0],l+340,t+18);
    canvas.drawText("Ausgang unten mittig",l+263,t+345,paint);
   }
   void loadSprites(){
@@ -1456,7 +1452,7 @@ public class MainActivity extends Activity {
      Mob m=new Mob(o.getString("kind"),(float)o.getDouble("x"),(float)o.getDouble("y"));m.hp=o.getInt("hp");m.maxHp=o.getInt("maxHp");m.level=o.getInt("level");m.damage=o.getInt("damage");m.dead=o.getBoolean("dead");mobs.add(m);}
     drops.clear();org.json.JSONArray ground=root.getJSONArray("drops");for(int i=0;i<ground.length();i++){org.json.JSONObject o=ground.getJSONObject(i);drops.add(new Drop(o.getString("item"),(float)o.getDouble("x"),(float)o.getDouble("y"),0));}
     residentSystem.reset();org.json.JSONArray residentStates=root.optJSONArray("residents");if(residentStates!=null)for(int i=0;i<residentStates.length();i++){org.json.JSONObject state=residentStates.getJSONObject(i);residentSystem.restore(state.optString("id"),state.optInt("floor",-1),(float)state.optDouble("x"),(float)state.optDouble("y"),state.optInt("visit",0),residentWorld);}
-    doorTimer=0;doorHouse=-1;doorSwitched=false;
+    buildingNameTime=0;doorTimer=0;doorHouse=-1;doorSwitched=false;
     if(indoors&&(currentHouse==GUILD_HOUSE||currentHouse>=11&&currentHouse<=14)&&guildBlocked(furnishedRoom(),px-60,py-174)){px=396;py=484;}
     if(!indoors&&blocked(px,py)){px=550;py=470;}
     for(Mob m:mobs)if(!m.dead&&wildlifeBlocked(m.x,m.y))moveWildlifeOutside(m);
@@ -1698,12 +1694,16 @@ public class MainActivity extends Activity {
    paint.setColor(col("#f5e8cb"));paint.setTextSize(10);paint.setTextAlign(Paint.Align.CENTER);
    canvas.drawText("N",x+size/2,y+11,paint);paint.setTextAlign(Paint.Align.LEFT);
   }
-  void drawBuildingName(String name,float x,float y){
-   canvas.save();if(!indoors)canvas.scale(1f/1.10f,1f/1.10f,x,y);
-   boolean antialias=paint.isAntiAlias();paint.setAntiAlias(true);
-   Paint.Align align=paint.getTextAlign();Typeface face=paint.getTypeface();float size=paint.getTextSize();int color=paint.getColor();
-   paint.setTextAlign(Paint.Align.CENTER);paint.setTypeface(buildingTypeface);paint.setTextSize(BUILDING_LABEL_SIZE);paint.setColor(col("#f5d795"));outlinedText(name,x,y);
-   paint.setTextAlign(align);paint.setTypeface(face);paint.setTextSize(size);paint.setColor(color);paint.setAntiAlias(antialias);canvas.restore();
+  void drawEnteredBuilding(float vw,float vh){
+   if(!indoors||buildingNameTime<=0||startScreen||creatorOpen||pauseMenu)return;
+   float age=3.2f-buildingNameTime;
+   float fade=Math.min(1,Math.min(age/.55f,buildingNameTime/.8f));
+   paint.setTypeface(buildingTypeface);paint.setTextAlign(Paint.Align.CENTER);paint.setTextSize(32);paint.setAntiAlias(true);
+   int alpha=Math.round(255*Math.max(0,fade));
+   paint.setColor(Color.argb(alpha,245,215,149));
+   paint.setShadowLayer(3,0,2,Color.argb(alpha,0,0,0));
+   canvas.drawText(enteredBuilding,vw/2,Math.max(80,vh*.19f),paint);
+   paint.clearShadowLayer();paint.setAlpha(255);paint.setTypeface(Typeface.DEFAULT);paint.setTextAlign(Paint.Align.LEFT);paint.setAntiAlias(false);
   }
   void fantasyName(String value,float x,float y){
    Typeface old=paint.getTypeface();float oldSize=paint.getTextSize();
@@ -1880,6 +1880,7 @@ public class MainActivity extends Activity {
   }
   // Attack animation window; the next group can act immediately afterward.
   void update(float dt){
+   if(!pauseMenu&&!startScreen&&!creatorOpen)buildingNameTime=Math.max(0,buildingNameTime-dt);
    if(pressedControlsBack){pressedControlsTime-=dt;if(pressedControlsTime<=0f){pressedControlsBack=false;controlsOpen=false;}}
    if(pressedCreatorButton){pressedCreatorTime-=dt;if(pressedCreatorTime<=0f){pressedCreatorButton=false;creatorOpen=false;startScreen=false;pauseMenu=false;previous=System.nanoTime();}}
    gearTooltipTime=Math.max(0f,gearTooltipTime-dt);
@@ -2082,7 +2083,7 @@ public class MainActivity extends Activity {
   void restart(){
    residentSystem.reset();
    creatorFacing=0;hairType=0;hairColor=1;skinColor=1;eyeColor=0;combatStyle=0;armorStyle=0;characterGender=0;characterName="Abenteurer";creatorOpen=false;calendarOpen=false;sprintHeld=false;attackSequence=0;
-   indoors=false;currentHouse=0;guildFloor=0;playerLevel=1;exp=0;attackPower=3;maxHp=12;hp=maxHp;maxMana=20;mana=20;worldTime=0;stockRefreshTimer=0;doorTimer=0;refreshMerchantStocks();equipped.clear();copper=silver=gold=0;java.util.Arrays.fill(hotbar,null);selectedHotbar=-1;playerDamageTime=0;px=SPAWN_X;py=SPAWN_Y;joyX=joyY=0;deathAnim=0;swordTimer=0;sword=false;attackAnim=0;playerHealthVisible=0;kills=animalKills=0;questTier=questProgress=nextQuestDay=0;questActive=false;mobs.clear();drops.clear();inventory.clear();inventoryOpen=false;shopOpen=false;pauseMenu=false;spawnMobs();
+   indoors=false;currentHouse=0;guildFloor=0;playerLevel=1;exp=0;attackPower=3;maxHp=12;hp=maxHp;maxMana=20;mana=20;worldTime=0;stockRefreshTimer=0;buildingNameTime=0;doorTimer=0;refreshMerchantStocks();equipped.clear();copper=silver=gold=0;java.util.Arrays.fill(hotbar,null);selectedHotbar=-1;playerDamageTime=0;px=SPAWN_X;py=SPAWN_Y;joyX=joyY=0;deathAnim=0;swordTimer=0;sword=false;attackAnim=0;playerHealthVisible=0;kills=animalKills=0;questTier=questProgress=nextQuestDay=0;questActive=false;mobs.clear();drops.clear();inventory.clear();inventoryOpen=false;shopOpen=false;pauseMenu=false;spawnMobs();
   }
   // Experimental fixed 2.5D camera: ground is foreshortened, sprites stay upright.
   static final float CAMERA_GROUND_Y=0.82f;
@@ -2192,6 +2193,7 @@ public class MainActivity extends Activity {
     paint.setColor(Color.argb((int)(night*70),13,21,52));paint.setStyle(Paint.Style.FILL);
     c.drawRect(0,0,vw,vh,paint);
    }
+   drawEnteredBuilding(vw,vh);
    drawRect(col("#142b24"),0,0,vw,37);paint.setColor(Color.WHITE);paint.setTextSize(18);
    c.drawText("Lv. "+playerLevel+" EXP "+exp+"/"+expNeeded()+" DMG "+attackPower+" DEF "+armorValue(),12,25,paint);
    itemIcon("Golden Coin",vw-202,7,.85f);itemIcon("Silver Coin",vw-137,7,.85f);itemIcon("Copper Coin",vw-72,7,.85f);
