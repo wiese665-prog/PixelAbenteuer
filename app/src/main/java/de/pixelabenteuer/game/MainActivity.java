@@ -371,7 +371,7 @@ public class MainActivity extends Activity {
   boolean roadAt(float x,float y,float margin){
    if(Math.pow((x-SPAWN_X)/25,2)+Math.pow((y-(SPAWN_Y+24))/16,2)<1)return false;
    if((Math.abs(y-470)<24&&(x<190||x>920))||(Math.abs(x-410)<24&&y<220))return true;
-   if(Math.abs(x-1010)<18&&y>385&&y<470)return true;
+   if(Math.abs(x-1010)<18&&y>334&&y<470)return true;
    for(float[] r:villageRoads)if(x>=r[0]-margin&&x<=r[2]+margin&&y>=r[1]-margin&&y<=r[3]+margin)return true;
    for(int i=0;i<villageHouses.length;i++){float[] house=villageHouses[i];float doorX=house[0]+villageDoorOffsets[i];float bottom=house[1]+112;
     float target=house[1]>500?840:470;if(x>doorX-20-margin&&x<doorX+20+margin&&y>bottom-12-margin&&y<target+margin)return true;}
@@ -675,12 +675,18 @@ public class MainActivity extends Activity {
    guildFurniture(3,"Interior",163,81,26,44,528,164,2,42,16);
    guildFurniture(3,"Interior",84,36,26,38,516,288,1.6f,34,16);
    guildFurniture(3,"Interior_objects(2)",228,309,18,33,130,306,1.6f,18,10);
-   guildFurniture(4,"Interior_objects(2)",300,226,56,34,336,176,2,96,20);
-   guildFurniture(4,"Interior",117,176,39,35,156,286,1.6f,52,18);
-   guildFurniture(4,"Interior",117,176,39,35,516,286,1.6f,52,18);
-   guildFurniture(4,"Interior",51,0,23,39,132,168,2,36,16);
-   guildFurniture(4,"Interior",51,0,23,39,540,168,2,36,16);
-   guildFurniture(4,"Interior_objects(2)",228,309,18,33,616,300,1.6f,18,10);
+   // Inn: rear-left sleeping alcove, public bar and two seating groups.
+   guildFurniture(4,"Interior",51,0,23,39,86,168,2,36,16);
+   guildFurniture(4,"Interior",51,0,23,39,196,168,2,36,16);
+   guildFurniture(4,"Interior_objects(2)",268,100,46,58,292,180,1.2f,38,16);
+   guildFurniture(4,"inn_bar",0,0,96,44,164,248,1.6f,140,14);
+   guildFurniture(4,"Interior",117,176,39,35,424,260,1.6f,52,18);
+   guildFurniture(4,"Interior",117,176,39,35,548,302,1.6f,52,18);
+   guildFurniture(4,"Interior_objects(2)",228,309,18,33,616,184,1.6f,18,10);
+   guildFurniture(4,"Interior",0,242,14,28,380,280,1.6f,14,8);
+   guildFurniture(4,"Interior",0,242,14,28,470,280,1.6f,14,8);
+   guildFurniture(4,"Interior",0,242,14,28,506,322,1.6f,14,8);
+   guildFurniture(4,"Interior",0,242,14,28,590,322,1.6f,14,8);
    guildFurniture(5,"Interior",51,0,23,39,516,170,2,36,16);
    guildFurniture(5,"Interior",163,81,26,44,156,170,2,42,16);
    guildFurniture(5,"Interior",86,2,19,27,520,292,1.6f,26,16);
@@ -1865,12 +1871,7 @@ public class MainActivity extends Activity {
    Rect bounds=right<0?new Rect():new Rect(left,top,right+1,bottom+1);creatorShieldBounds.put(key,bounds);return bounds;
   }
   void drawCreatorLeftShield(String shield,float x,float y,float w,float h){
-   Rect nativePose=creatorShieldBounds(shield,3),angled=creatorShieldBounds(shield,0);
-   if(nativePose.isEmpty()||angled.isEmpty()){characterLayer("pONE2","7tlb",shield,1,3,0,x,y,w,h);return;}
-   // Keep the attachment center from the actual left-facing equipment pose.
-   // Only the displayed shield angle changes; the grip stays at the native hand.
-   float dx=nativePose.exactCenterX()-angled.exactCenterX(),dy=nativePose.exactCenterY()-angled.exactCenterY();
-   characterLayer("pONE2","7tlb",shield,1,0,0,x+dx*w/64f,y+dy*h/64f,w,h);
+   characterLayer("pONE2","7tlb",shield.equals("sh03")?"shL3":"shL1",1,3,0,x,y,w,h);
   }
   void drawCreatorCharacter(float x,float y,float w,float h,int facing){
    if(characterRole()>0){drawRangedCharacter(x,y,w,h,facing,"idle",0,true);return;}
@@ -1919,13 +1920,13 @@ public class MainActivity extends Activity {
     canvas.save();
     if(action.equals("hurt")){float shake=((int)(time*24)%2==0?-1:1)*w/64f;canvas.translate(shake,0);}
     else {canvas.translate(0,Math.min(3,(int)(time*10))*h/64f);if(time>=.24f)canvas.rotate(facing==3?-90:90,x,y+h*.18f);}
-    drawRangedCharacter(x,y,w,h,facing,"idle",0,preview);canvas.restore();return;
+    drawRangedCharacter(x,y,w,h,facing,action.equals("death")&&time>=.12f&&time<.24f?"crouch":"idle",0,preview);canvas.restore();return;
    }
    int role=characterRole();boolean attack=action.equals("attack"),fighting=attack||action.equals("hurt")||action.equals("death");
    boolean moving=action.equals("walk")||action.equals("run");
    String page=attack?(role==1?"pBOW":"pCAST"):fighting?"pONE3":"p1";
    int row=attack?facing:fighting?(action.equals("death")?4+facing:facing):moving?4+facing:facing;
-   int column=attack?Math.min(3,Math.max(0,(int)(time*10))):fighting?Math.min(3,Math.max(0,(int)(time*10))):moving?(int)(elapsed*(action.equals("run")?12:8))%6:0;
+   int column=action.equals("crouch")?1:attack?Math.min(3,Math.max(0,(int)(time*10))):fighting?Math.min(3,Math.max(0,(int)(time*10))):moving?(int)(elapsed*(action.equals("run")?12:8))%6:0;
    String hp=attack?"pONE2":page;int hr=attack?facing:row,hc=attack?0:column;
    String weapon=role==1?"bow1":"staf";
    if(role==1&&facing!=1)characterLayer(page,"6tla","quvr",1,row,column,x,y,w,h);
@@ -1963,7 +1964,7 @@ public class MainActivity extends Activity {
    if(!hatType().isEmpty())characterLayer(page,"5hat",hatType(),1,row,col,x,y,w,h);
    if(fighting){
     String weapon=combatStyle==1?"ax01":combatStyle==2?"mc01":"sw01";
-    if(equipped.containsKey("Schild"))characterLayer("pONE3","7tlb",equipped.getOrDefault("Schild","").contains("Iron")?"sh03":"sh01",1,row,col,x,y,w,h);
+    if(equipped.containsKey("Schild"))characterLayer("pONE3","7tlb",facing==3?(equipped.getOrDefault("Schild","").contains("Iron")?"shL3":"shL1"):(equipped.getOrDefault("Schild","").contains("Iron")?"sh03":"sh01"),1,row,col,x,y,w,h);
     characterLayer("pONE3","6tla",weapon,1,row,col,x,y,w,h);
    }
   }

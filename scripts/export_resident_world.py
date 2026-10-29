@@ -26,7 +26,7 @@ for side in range(4):
 circle(610,510,24);circle(1010,350,47);circle(900,535,17);circle(982,562,15);circle(984,612,15)
 for x,y in houses[1:]:circle(x-100,y+132,19);circle(x+101,y+125,16)
 roads=Image.new('L',(1600,1000));rd=ImageDraw.Draw(roads)
-for r in [(160,195,450,235),(386,195,434,932),(666,450,714,932),(180,450,1210,490),(180,820,930,860),(430,442,666,570),(0,446,190,494),(920,446,1599,494),(386,0,434,220),(992,385,1028,470)]:rd.rectangle(r,fill=1)
+for r in [(160,195,450,235),(386,195,434,932),(666,450,714,932),(180,450,1210,490),(180,820,930,860),(430,442,666,570),(0,446,190,494),(920,446,1599,494),(386,0,434,220),(992,334,1028,470)]:rd.rectangle(r,fill=1)
 for (x,y),dx in zip(houses,offset):rd.rectangle((x+dx-20,y+100,x+dx+20,840 if y>500 else 470),fill=1)
 spawn_x,spawn_y=map(float,re.search(r"SPAWN_X=([\d.]+),SPAWN_Y=([\d.]+)",s).groups())
 rd.ellipse((spawn_x-25,spawn_y+8,spawn_x+25,spawn_y+40),fill=0)

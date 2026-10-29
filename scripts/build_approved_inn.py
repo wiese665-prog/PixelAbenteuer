@@ -26,7 +26,7 @@ for y in range(h):
    candidates=[raw.getpixel((xx,yy))[:3] for xx,yy in neighbors if sum(c*k for c,k in zip(raw.getpixel((xx,yy))[:3],(.2126,.7152,.0722)))>=65]
    if candidates:rgb=candidates[0]
   sprite.putpixel((x,y),(*nearest(rgb),255))
-out=Image.new('RGBA',(200,144));out.alpha_composite(sprite,(0,144-h));out.save(A/'village/inn.png')
+out=Image.new('RGBA',(200,144));out.alpha_composite(sprite,(0,144-h));out=__import__('native_materials').polish_materials(out);out.save(A/'village/inn.png')
 # The actual approved wooden door leaves: open them without replacing the arch.
 # Six fully aligned frames: closed, opening, open, open, closing, closed.
 box=(89,111,110,139);door=out.crop(box);strip=Image.new('RGBA',(200,864))

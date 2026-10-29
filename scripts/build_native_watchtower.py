@@ -42,6 +42,7 @@ for y in range(h):
    if inside:r,g,b=min(inside,key=lambda p:p[0])[1]
   sprite.putpixel((x,y),(*nearest((r,g,b)),255))
 out=Image.new('RGBA',(160,208));out.alpha_composite(sprite,((160-w)//2,208-h))
+out=__import__('native_materials').polish_materials(out)
 out.save(root/'art/source/watchtower-native.png');out.save(A/'village/tower.png')
 colors=sorted({p[:3] for p in out.get_flattened_data() if p[3]})
 (root/'art/source/watchtower-palette.json').write_text(json.dumps(colors,separators=(',',':'))+'\n')

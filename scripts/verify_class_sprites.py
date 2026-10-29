@@ -42,6 +42,19 @@ for page in ('p1','pBOW','pCAST'):
    assert frame(body,row,col).crop((x-1,y-1,x+2,y+2)).getbbox(),('grip detached from hand',page,row,col)
 for name in ['Jagdbogen','Magierstab','Waldlaeuferwams','Waldlaeuferkapuze','Magierrobe','Magierhut']:
  im=Image.open(A/'class_items'/f'{name}.png').convert('RGBA');assert im.size==(32,32) and im.getbbox()
+# The left profile keeps its native attachment while actually narrowing the face.
+for page in ('pONE2','pONE3'):
+ for original,profile in [('sh01','shL1'),('sh03','shL3')]:
+  old=sheet(page,'7tlb',original);new=sheet(page,'7tlb',profile)
+  for row in (3,7):
+   for col in range(8):
+    a=frame(old,row,col);b=frame(new,row,col)
+    if not a.getbbox():continue
+    x,y,r,bb=a.getbbox();xx,yy,rr,bbb=b.getbbox()
+    assert rr-xx<r-x and yy==y and bbb==bb,('frontal shield reused',page,row,col)
+    assert abs((xx+rr)-(x+r))<=1,('shield grip shifted',page,row,col)
+    assert {p[:3] for p in b.get_flattened_data() if p[3]}<={p[:3] for p in a.get_flattened_data() if p[3]}
+bar=Image.open(A/'village/guild/inn_bar.png').convert('RGBA');assert bar.size==(96,44)
 # The approved inn must have a sharp alpha edge and only original native colors.
 inn=Image.open(A/'village/inn.png').convert('RGBA');assert inn.size==(200,144)
 assert set(inn.getchannel('A').get_flattened_data())<={0,255}

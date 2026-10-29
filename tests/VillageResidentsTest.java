@@ -19,6 +19,11 @@ public final class VillageResidentsTest {
   for(VillageResidents.Resident n:system.people){require(ids.add(n.id),"Duplicate ID");require(names.add(n.name),"Duplicate name");require(art.add(n.legacy?"legacy:"+n.id:n.kind!=null?n.kind:n.idle),"Duplicate appearance "+n.name);require(n.lines.length>=3&&!n.title.isEmpty(),"Missing dialogue/title "+n.name);if(n.mobile)mobile++;}
   require(mobile==4,"All four walking sprite families must roam");
   require(system.get("borin").title.equals("Schmied")&&system.get("maela").title.equals("Händlerin")&&system.get("grom").title.equals("Händler")&&system.get("tarek").title.equals("Abenteurer"),"Legacy titles");
+  world.room=4;world.px=156;world.py=255;
+  require(!world.blocked(4,156,255),"Inn counter approach blocked");
+  require(system.nearby(world)==system.get("edda"),"Innkeeper unreachable across counter");
+  require(!world.blocked(4,system.get("edda").x,system.get("edda").y),"Innkeeper inside counter");
+  world.room=99;world.px=1500;world.py=500;
   HashMap<String,float[]> fixed=new HashMap<>();for(VillageResidents.Resident n:system.people)if(!n.mobile)fixed.put(n.id,new float[]{n.floor,n.x,n.y});
   for(int tick=0;tick<36000;tick++){
    HashMap<String,float[]> previous=new HashMap<>();for(VillageResidents.Resident n:system.people)previous.put(n.id,new float[]{n.floor,n.x,n.y});

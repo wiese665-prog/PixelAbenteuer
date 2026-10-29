@@ -83,24 +83,52 @@ for page in ('p1','pONE2','pONE3','pBOW','pCAST'):
      d.line((cx-5+sway,hem,cx-2,hem),fill=opaque(GOLD));d.line((cx+1,hem,cx+5+sway,hem),fill=opaque(GOLD))
     else:
      d.line((cx-4,waist-3,cx+4,waist-3),fill=opaque(WOOD[0]),width=2)
+    if name=='robe':
+     d.line([(cx-3,y0+14),(cx-1,y0+18),(cx,waist-4)],fill=opaque(BLUE[2]))
+     d.line([(cx+3,y0+14),(cx+1,y0+18)],fill=opaque(BLUE[0]))
+     d.line([(cx-3,waist+2),(cx-2,hem-3)],fill=opaque(BLUE[2]))
+     d.line([(cx+2,waist+2),(cx+3,hem-2)],fill=opaque(BLUE[0]))
+     # Short broken gold stitching avoids a rigid rectangular outline.
+     d.point((cx-4+sway,hem),fill=opaque(BLUE[1]));d.point((cx+4+sway,hem),fill=opaque(BLUE[1]))
+    else:
+     d.line([(cx-3,y0+14),(cx-2,y0+18),(cx-3,waist-5)],fill=opaque(GREEN[0]))
+     d.line([(cx+1,y0+15),(cx+3,y0+19)],fill=opaque(GREEN[3]))
     d.rectangle((cx-1,waist-3,cx+1,waist-2),fill=opaque(GOLD))
-   # Fitted hood uses the native head mask; it never shifts the face opening.
-   q=poses['hood']
+   # Native crown shading supplies curved cloth folds instead of a flat cap.
+   q=poses['hood'];ref=[(24,24,24),(82,82,95),(124,137,137),(167,181,167),(220,220,203),(248,240,224)]
    for yy in range(y0,y1):
     for xx in range(x0,x1):
-     if cap.getpixel((xx,yy))[3]:q.putpixel((xx,yy),opaque(GREEN[0 if xx in (x0,x1-1) else 2 if xx<cx else 1]))
-   d=ImageDraw.Draw(q);d.line([(cx-4,y0+3),(cx-1,y0+1),(cx+3,y0+3)],fill=opaque(GREEN[3]))
-   # Broad brim and crooked pointed hat, with original blue/gold colors.
-   q=poses['mgHt'];d=ImageDraw.Draw(q);tip=-3 if facing in (0,2) else 3
-   d.polygon([(cx-8,y0+6),(cx-5,y0+2),(cx-3,y0-5),(cx+tip,y0-8),(cx+4,y0-4),(cx+6,y0+4),(cx+9,y0+6)],fill=opaque(BLUE[0]))
-   d.polygon([(cx-5,y0+5),(cx-3,y0-4),(cx+tip,y0-6),(cx+2,y0-3),(cx+4,y0+5)],fill=opaque(BLUE[2]))
-   d.line((cx-5,y0+4,cx+5,y0+4),fill=opaque(GOLD),width=2)
-   d.polygon([(cx-10,y0+6),(cx+9,y0+6),(cx+11,y0+8),(cx+4,y0+10),(cx-7,y0+9),(cx-11,y0+8)],fill=opaque(BLUE[0]))
-   d.line((cx-9,y0+7,cx+8,y0+7),fill=opaque(BLUE[2]))
-   # Back quiver with visible arrow fletching; follows the torso and shoulders.
-   q=poses['quvr'];d=ImageDraw.Draw(q);qx=cx+(-5 if facing in (0,3) else 5);qy=y0+15
-   d.line([(qx-2,qy+10),(qx+3,qy-3)],fill=opaque(WOOD[0]),width=5);d.line([(qx-2,qy+9),(qx+3,qy-3)],fill=opaque(WOOD[2]),width=3)
-   for off in (-1,1):d.line((qx+2+off,qy-2,qx+4+off,qy-8),fill=opaque(WOOD[3]));d.line((qx+2+off,qy-7,qx+5+off,qy-6),fill=opaque(LIGHT))
+     pixel=cap.getpixel((xx,yy))
+     if pixel[3]:
+      rank=min(range(6),key=lambda i:sum((a-b)**2 for a,b in zip(pixel[:3],ref[i])))
+      q.putpixel((xx,yy),opaque(GREEN[[0,0,1,1,2,3][rank]]))
+   d=ImageDraw.Draw(q)
+   # A dark folded opening frames, rather than fills, the original face.
+   if facing==0:
+    d.line([(cx-5,y0+8),(cx-4,y0+11),(cx-3,y0+13)],fill=opaque(GREEN[0]))
+    d.line([(cx+5,y0+8),(cx+4,y0+11),(cx+3,y0+13)],fill=opaque(GREEN[0]))
+   elif facing in (2,3):
+    edge=cx+(4 if facing==2 else -4)
+    d.line((edge,y0+7,edge,y0+10),fill=opaque(GREEN[0]))
+   # Compact bent crown, clustered cloth highlights and a foreshortened brim.
+   q=poses['mgHt'];d=ImageDraw.Draw(q);mirror=-1 if facing in (1,3) else 1
+   def hp(points):return [(cx+mirror*x,y0+y) for x,y in points]
+   d.polygon(hp([(-6,5),(-4,0),(-3,-4),(-6,-5),(-5,-7),(-1,-6),(2,-4),(4,0),(6,5)]),fill=opaque(BLUE[0]))
+   d.polygon(hp([(-4,4),(-2,0),(-2,-4),(0,-4),(2,-1),(3,4)]),fill=opaque(BLUE[1]))
+   d.polygon(hp([(-3,3),(-2,-2),(0,-3),(1,-1),(0,2)]),fill=opaque(BLUE[2]))
+   d.line(hp([(-4,4),(0,5),(4,4)]),fill=opaque(GOLD))
+   brim=7 if facing in (2,3) else 9
+   d.polygon([(cx-brim,y0+6),(cx-3,y0+5),(cx+brim-1,y0+6),(cx+brim,y0+7),(cx+3,y0+9),(cx-4,y0+8),(cx-brim,y0+7)],fill=opaque(BLUE[0]))
+   d.line([(cx-brim+2,y0+6),(cx-2,y0+6),(cx+brim-2,y0+7)],fill=opaque(BLUE[2]))
+   # Short shoulder-mounted quiver sits behind the torso, away from the bow.
+   q=poses['quvr'];d=ImageDraw.Draw(q)
+   qx=cx+(-4 if facing==2 else 4 if facing==3 else 3);qy=y0+14
+   d.polygon([(qx-2,qy),(qx+2,qy-1),(qx+1,qy+8),(qx-2,qy+9)],fill=opaque(WOOD[0]))
+   d.line((qx-1,qy+1,qx-1,qy+7),fill=opaque(WOOD[2]))
+   d.line((qx-2,qy,qx+2,qy-1),fill=opaque(WOOD[3]))
+   for off in (-1,1):
+    d.line((qx+off,qy,qx+off+1,qy-4),fill=opaque(WOOD[2]))
+    d.line((qx+off,qy-4,qx+off+1,qy-3),fill=opaque(LIGHT))
    # Find the actual hand in each native pose; no shared arbitrary sprite offset.
    sign=-1 if facing in (1,3) else 1
    tx=cx+sign*(9 if ranged else 7);ty=y0+(18 if ranged else 19)
@@ -111,21 +139,24 @@ for page in ('p1','pONE2','pONE3','pBOW','pCAST'):
    grips[page].append([tx,ty])
    q=poses['bow1'];d=ImageDraw.Draw(q)
    if facing in (2,3):
-    points=[(tx-sign*4,ty-10),(tx-sign,ty-7),(tx,ty),(tx-sign,ty+7),(tx-sign*4,ty+10)]
+    points=[(tx-sign*4,ty-8),(tx-sign,ty-5),(tx,ty),(tx-sign,ty+5),(tx-sign*4,ty+8)]
     pull=tx-sign*(6 if ranged and col%4==1 else 1)
     d.line(points,fill=opaque(WOOD[0]),width=3);d.line(points,fill=opaque(WOOD[2]),width=1)
-    d.line([(tx-sign*4,ty-10),(pull,ty),(tx-sign*4,ty+10)],fill=opaque(LIGHT))
+    d.line([(tx-sign*4,ty-8),(pull,ty),(tx-sign*4,ty+8)],fill=opaque(LIGHT))
     if ranged and col%4 in (0,1):
      d.line((pull,ty,tx+sign*7,ty),fill=opaque(WOOD[3]));d.point((tx+sign*8,ty),fill=opaque(ICE))
    else:
     d.line([(tx-7,ty-8),(tx-2,ty-5),(tx,ty),(tx-2,ty+5),(tx-7,ty+8)],fill=opaque(WOOD[0]),width=3)
     d.line([(tx-7,ty-8),(tx-2,ty-5),(tx,ty),(tx-2,ty+5),(tx-7,ty+8)],fill=opaque(WOOD[2]))
     d.line([(tx-7,ty-8),(tx-(8 if ranged and col%4==1 else 6),ty),(tx-7,ty+8)],fill=opaque(LIGHT))
-   q=poses['staf'];d=ImageDraw.Draw(q);sx=tx;sy=ty-16
-   d.line((sx,sy+3,sx,ty+10),fill=opaque(WOOD[0]),width=3);d.line((sx-1,sy+4,sx-1,ty+9),fill=opaque(WOOD[2]))
-   d.polygon([(sx,sy-2),(sx+3,sy+1),(sx+2,sy+5),(sx-2,sy+5),(sx-3,sy+1)],fill=opaque(BLUE[2]))
-   d.polygon([(sx,sy-1),(sx+1,sy+1),(sx,sy+4),(sx-2,sy+1)],fill=opaque(ICE))
-   if ranged and col%4 in (1,2):d.point((sx,sy),fill=opaque(LIGHT));d.point((sx-5,sy+1),fill=opaque(ICE));d.point((sx+5,sy+2),fill=opaque(ICE))
+   q=poses['staf'];d=ImageDraw.Draw(q);sx=tx;sy=ty-14;crystalx=sx+sign*4
+   d.line([(sx,ty+8),(sx,sy+6),(crystalx,sy+2)],fill=opaque(WOOD[0]),width=3)
+   d.line([(sx-1,ty+7),(sx-1,sy+6),(crystalx-1,sy+2)],fill=opaque(WOOD[2]))
+   d.polygon([(crystalx,sy-2),(crystalx+2,sy),(crystalx+1,sy+3),(crystalx-1,sy+3),(crystalx-2,sy)],fill=opaque(BLUE[2]))
+   d.line((crystalx-1,sy,crystalx,sy+2),fill=opaque(ICE))
+   d.point((crystalx,sy-1),fill=opaque(LIGHT))
+   if ranged and col%4 in (1,2):
+    d.point((crystalx-sign*3,sy-3),fill=opaque(ICE));d.point((crystalx+sign*3,sy+2),fill=opaque(ICE))
    for name,im in poses.items():sheets[name].alpha_composite(im,(col*64,row*64))
  for name,im in sheets.items():save(im,page,'1out' if name in ('rngr','robe') else '5hat' if name in ('hood','mgHt') else '6tla',name)
 # Native-scale, transparent inventory icons rendered from actual production layers.

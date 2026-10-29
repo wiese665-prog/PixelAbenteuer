@@ -94,7 +94,7 @@ for room in range(3,7):
  for x in range(0,336,16):
   if not 144<=x<192:im.alpha_composite(walls.crop((16,120,32,128)),(x,168))
  if room==3:im.alpha_composite(interior.crop((12,280,102,359)),(123,76))
- if room==4:im.alpha_composite(interior.crop((32,240,112,272)),(128,70))
+ if room==4:im.alpha_composite(interior.crop((32,240,112,272)),(38,74))
  if room==5:im.alpha_composite(interior.crop((126,297,178,359)),(142,76))
  im.save(PACK/f'floor{room}.png')
 print('Imported tower, straight residence, unadorned bakery, four grass edges, 6 animated houses and 4 room shells.')
