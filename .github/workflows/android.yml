@@ -41,6 +41,7 @@ jobs:
           python3 scripts/verify_village_refinement.py
           python3 scripts/verify_character_views.py
           python3 scripts/verify_class_sprites.py
+          python3 scripts/verify_equipment_materials.py
       - name: Simulate unique village residents
         run: |
           python3 scripts/export_resident_world.py /tmp/pixel-resident-world.bin
@@ -68,6 +69,11 @@ jobs:
           javac -encoding UTF-8 -d /tmp/pixel-geometry-tests app/src/main/java/de/pixelabenteuer/game/CharacterPose.java app/src/main/java/de/pixelabenteuer/game/VillageSafety.java app/src/main/java/de/pixelabenteuer/game/VisibilityProbe.java tests/CharacterGeometryTest.java tests/VisibilityProbeTest.java
           java -cp /tmp/pixel-geometry-tests de.pixelabenteuer.game.CharacterGeometryTest
           java -cp /tmp/pixel-geometry-tests de.pixelabenteuer.game.VisibilityProbeTest
+      - name: Verify equipped materials and rarity resolution
+        run: |
+          mkdir -p /tmp/pixel-equipment-tests
+          javac -encoding UTF-8 -d /tmp/pixel-equipment-tests app/src/main/java/de/pixelabenteuer/game/CharacterEquipment.java tests/CharacterEquipmentTest.java
+          java -cp /tmp/pixel-equipment-tests de.pixelabenteuer.game.CharacterEquipmentTest
       - name: Build APK
         run: |
           echo "sdk.dir=$ANDROID_HOME" > local.properties

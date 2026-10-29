@@ -8,7 +8,8 @@ records=[]
 for page in ('p1','pONE2','pONE3'):
  for layer in ('1out','5hat'):
   for p in sorted((C/f'char_a_{page}'/layer).glob('*.png')):
-   if any(f'_{n}_' in p.name for n in ('rngr','robe','hood','mgHt')):continue
+   native_name=p.stem.split(f'_{layer}_')[1].split('_v')[0]
+   if native_name not in ('boxr','undi','fstr','pfpn','pfht','pnty'):continue
    im=Image.open(p).convert('RGBA');counts=Counter(px[:3] for px in im.get_flattened_data() if px[3]);boxes=[];valid=0
    for row in range(im.height//64):
     for col in range(im.width//64):

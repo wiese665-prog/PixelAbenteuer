@@ -59,7 +59,7 @@ Die ersten Aufnahmen der Charaktererstellung zeigen den Vergleich besonders deut
 5. Alle fünf Seiten `p1`, `pONE2`, `pONE3`, `pBOW`, `pCAST` und vier Richtungen wurden erneuert; die passenden vier Inventarsymbole ebenfalls.
 6. Körper, Waffen, Spielwerte, Klassenfunktionen und bestehende Rüstungen bleiben erhalten. Die Änderungen betreffen die neu angelegten Kleidungs- und Hutlayer.
 
-Die alten Rüstungsgegenstände Wooden/Leather/Iron Armor verwenden derzeit alle `fstr v01` am Körper; unterschiedliche Inventarbilder bedeuten also noch keine unterschiedlichen getragenen Rüstungsmodelle. Das ist ein bestehender Befund, keine in diesem Auftrag heimlich geänderte Zuordnung. Die neuen Sets haben bereits eigene Outfitnamen.
+Bei dieser ersten Analyse verwendeten Wooden/Leather/Iron Armor alle `fstr v01` am Körper. Dieser Befund wurde in der anschließenden vollständigen Ausrüstungsüberarbeitung behoben: [Prüfung aller Rüstungen](ALL_EQUIPMENT_REVIEW.md). Sie haben jetzt eigene Materiallayer; Helme, Stiefel und Gürtelgegenstände ebenfalls.
 
 ## Prüfung und Grenzen
 

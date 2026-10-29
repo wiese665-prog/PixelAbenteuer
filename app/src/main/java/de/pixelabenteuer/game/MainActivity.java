@@ -72,13 +72,11 @@ public class MainActivity extends Activity {
   String classTitle(){int role=characterRole();return role==1?"Bogenschuetze":role==2?"Magier":"Abenteurer";}
   String outfitType(){
    if(creatorOpen&&characterRole()>0)return characterRole()==1?"rngr":"robe";
-   String name=baseEquipmentName(equipped.getOrDefault("Brust",""));
-   return name.equals("Magierrobe")?"robe":name.equals("Waldlaeuferwams")?"rngr":equipped.containsKey("Brust")?"fstr":characterGender==0?"boxr":"undi";
+   return CharacterEquipment.outfit(equipped.get("Brust"),characterGender);
   }
   String hatType(){
    if(creatorOpen&&characterRole()>0)return characterRole()==1?"hood":"mgHt";
-   String name=baseEquipmentName(equipped.getOrDefault("Kopf",""));
-   return name.equals("Magierhut")||name.equals("Wizard Hat")?"mgHt":name.equals("Waldlaeuferkapuze")?"hood":name.isEmpty()?"":"pfht";
+   return CharacterEquipment.hat(equipped.get("Kopf"));
   }
   void beginAdventure(){
    if(equipped.isEmpty()&&inventory.isEmpty()&&combatStyle>=3){
@@ -1105,6 +1103,9 @@ public class MainActivity extends Activity {
     while(pages.hasNext()){String page=pages.next();org.json.JSONArray cells=root.getJSONArray(page);int[] coords=new int[128];
      for(int i=0;i<64;i++){org.json.JSONArray point=cells.getJSONArray(i);coords[i*2]=point.getInt(0);coords[i*2+1]=point.getInt(1);}classGrips.put(page,coords);}
    }catch(Exception e){android.util.Log.e("PixelClasses","Missing hand attachment data",e);}
+   for(String name:new String[]{"Wooden Armor","Leather Armor","Iron Armor","Leather Helmet","Iron Helmet","Helm","Leather Boot","Iron Boot","Belt","Bag"}){
+    try(InputStream in=getAssets().open("equipment_items/"+name+".png")){itemImages.put(name,BitmapFactory.decodeStream(in));}catch(Exception e){android.util.Log.e("PixelEquipment","Missing "+name,e);}
+   }
    Bitmap mageHat=itemImages.get("Magierhut");if(mageHat!=null)itemImages.put("Wizard Hat",mageHat);
    setManaBonuses();
    defineEquipmentVariants();
@@ -1865,6 +1866,13 @@ public class MainActivity extends Activity {
    paint.setColor(Color.WHITE);paint.setAlpha(255);paint.setColorFilter(null);paint.setFilterBitmap(false);
    canvas.drawBitmap(b,new Rect(left,top,left+cell,top+cell),new RectF(x-w/2,y-h/2,x+w/2,y+h/2),paint);
   }
+  void drawEquipmentDetails(String page,int row,int col,float x,float y,float w,float h){
+   // Layered per source pose, shared by creator, interior and outside rendering.
+   String boots=CharacterEquipment.boots(equipped.get("Fuesse"));
+   if(!boots.isEmpty())characterLayer(page,"8feet",boots,1,row,col,x,y,w,h);
+   String belt=CharacterEquipment.belt(equipped.get("Guertel"));
+   if(!belt.isEmpty())characterLayer(page,"9belt",belt,1,row,col,x,y,w,h);
+  }
   void drawCreatorLeftShield(String shield,float x,float y,float w,float h){
    characterLayer("pONE2","7tlb",shield,1,3,0,x,y,w,h);
   }
@@ -1879,6 +1887,7 @@ public class MainActivity extends Activity {
    if(hairType==5&&facing!=1)characterLayer("pONE2","4har","longback",hairColor,facing,0,x,y,w,h);
    characterLayer("pONE2","0bas","humn",skinColor,facing,0,x,y,w,h);
    characterLayer("pONE2","1out",outfitType(),1,facing,0,x,y,w,h);
+   drawEquipmentDetails("pONE2",facing,0,x,y,w,h);
    if(hairType==5&&facing==1)characterLayer("pONE2","4har","longback",hairColor,facing,0,x,y,w,h);
    String hair=hairType==2?"braid":hairType==3?"curl":hairType==4?"bun":hairType==5?"long":hairType==0?"bob1":"dap1";
    if(hairType<2||hairType==5)characterLayer("pONE2","4har",hair,hairColor,facing,0,x,y,w,h);
@@ -1927,8 +1936,9 @@ public class MainActivity extends Activity {
    if(facing==1)characterLayer(page,"6tla",weapon,1,row,column,x,y,w,h);
    if(hairType==5&&facing!=1)characterLayer(hp,"4har","longback",hairColor,hr,hc,x,y,w,h);
    characterLayer(page,"0bas","humn",skinColor,row,column,x,y,w,h);
-   String outfit=outfitType();boolean nativeOutfit=!outfit.equals("robe")&&!outfit.equals("rngr");
+   String outfit=outfitType();boolean nativeOutfit=outfit.equals("fstr")||outfit.equals("boxr")||outfit.equals("undi");
    characterLayer(attack&&nativeOutfit?hp:page,"1out",outfit,1,attack&&nativeOutfit?hr:row,attack&&nativeOutfit?hc:column,x,y,w,h);
+   drawEquipmentDetails(page,row,column,x,y,w,h);
    if(role==1&&facing==1)characterLayer(page,"6tla","quvr",1,row,column,x,y,w,h);
    if(hairType==5&&facing==1)characterLayer(hp,"4har","longback",hairColor,hr,hc,x,y,w,h);
    String hair=hairType==2?"braid":hairType==3?"curl":hairType==4?"bun":hairType==5?"long":hairType==0?"bob1":"dap1";
@@ -1952,6 +1962,7 @@ public class MainActivity extends Activity {
    if(hairType==5&&facing!=1)characterLayer(page,"4har","longback",hairColor,row,col,x,y,w,h);
    characterLayer(page,"0bas","humn",skinColor,row,col,x,y,w,h);
    characterLayer(page,"1out",outfitType(),1,row,col,x,y,w,h);
+   drawEquipmentDetails(page,row,col,x,y,w,h);
    if(hairType==5&&facing==1)characterLayer(page,"4har","longback",hairColor,row,col,x,y,w,h);
    characterLayer(page,"4har",hairType==2?"braid":hairType==3?"curl":hairType==4?"bun":hairType==5?"long":hairType==0?"bob1":"dap1",hairColor,row,col,x,y,w,h);
    if(!hatType().isEmpty())characterLayer(page,"5hat",hatType(),1,row,col,x,y,w,h);
@@ -2322,7 +2333,7 @@ public class MainActivity extends Activity {
   void preparePlayerLayer(String action,int dir,float time,float size){
    CharacterPose.Frame frame=CharacterPose.frame(characterRole(),creatorOpen,CharacterPose.facing(dir),action,time,elapsed,attackSequence);
    int reaction=action.equals("hurt")?((int)(time*24)%2):action.equals("death")?Math.min(3,(int)(time*10)):0;
-   String key=frame.page+":"+frame.row+":"+frame.col+":"+size+":"+characterRole()+":"+creatorOpen+":"+skinColor+":"+hairType+":"+hairColor+":"+outfitType()+":"+hatType()+":"+combatStyle+":"+equipped.get("Schild")+":"+action+":"+reaction;
+   String key=frame.page+":"+frame.row+":"+frame.col+":"+size+":"+characterRole()+":"+creatorOpen+":"+skinColor+":"+hairType+":"+hairColor+":"+outfitType()+":"+hatType()+":"+equipped.get("Fuesse")+":"+equipped.get("Guertel")+":"+combatStyle+":"+equipped.get("Schild")+":"+action+":"+reaction;
    if(key.equals(playerLayerKey)){playerLayerReady=true;return;}
    float center=CharacterPose.centerY(96,bodyFoot(frame),size);Canvas previousCanvas=canvas;canvas=playerLayerCanvas;
    canvas.drawColor(Color.TRANSPARENT,PorterDuff.Mode.CLEAR);
