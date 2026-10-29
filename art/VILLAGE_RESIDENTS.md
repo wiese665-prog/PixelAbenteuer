@@ -38,7 +38,7 @@ All 17 residents, including the three original smithy actors, use the same Andro
 
 Long hair uses the unshifted native bob crown masks with all six native color indices, and separate animated length sheets. Lengths render behind the torso in front/side views and over the back when facing away. This avoids scalp patches, arbitrary head-box fitting and incorrect shoulder occlusion.
 
-The left creator shield uses the original oblique shield frame, placed away from the visible hand and arm; the weapon remains in front.
+The left creator shield uses the original oblique shield frame. Its attachment center is aligned to the opaque bounds of the original left-facing shield pose, calculated and cached separately for wooden and metal shields. The native hand is redrawn over the rim; the weapon remains in front.
 
 Wildlife no longer starts A* searches for ordinary roaming, flock following or fleeing. Hostile pursuit shares one search slot every 120ms and a 240-node expansion cap. Static navigation cells and fine terrain collision results are cached independently from residents.
 

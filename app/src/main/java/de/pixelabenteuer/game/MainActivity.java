@@ -1775,6 +1775,22 @@ public class MainActivity extends Activity {
    paint.setColor(Color.WHITE);paint.setAlpha(255);paint.setColorFilter(null);paint.setFilterBitmap(false);
    canvas.drawBitmap(b,new Rect(left,top,left+cell,top+cell),new RectF(x-w/2,y-h/2,x+w/2,y+h/2),paint);
   }
+  final HashMap<String,Rect> creatorShieldBounds=new HashMap<>();
+  Rect creatorShieldBounds(String shield,int row){
+   String key=shield+":"+row;Rect cached=creatorShieldBounds.get(key);if(cached!=null)return cached;
+   Bitmap b=characterSheet("pONE2","7tlb",shield,1);if(b==null)return new Rect();
+   int cell=b.getWidth()/8,left=cell,top=cell,right=-1,bottom=-1;
+   for(int yy=0;yy<cell;yy++)for(int xx=0;xx<cell;xx++)if(Color.alpha(b.getPixel(xx,row*cell+yy))>=128){left=Math.min(left,xx);top=Math.min(top,yy);right=Math.max(right,xx);bottom=Math.max(bottom,yy);}
+   Rect bounds=right<0?new Rect():new Rect(left,top,right+1,bottom+1);creatorShieldBounds.put(key,bounds);return bounds;
+  }
+  void drawCreatorLeftShield(String shield,float x,float y,float w,float h){
+   Rect nativePose=creatorShieldBounds(shield,3),angled=creatorShieldBounds(shield,0);
+   if(nativePose.isEmpty()||angled.isEmpty()){characterLayer("pONE2","7tlb",shield,1,3,0,x,y,w,h);return;}
+   // Keep the attachment center from the actual left-facing equipment pose.
+   // Only the displayed shield angle changes; the grip stays at the native hand.
+   float dx=nativePose.exactCenterX()-angled.exactCenterX(),dy=nativePose.exactCenterY()-angled.exactCenterY();
+   characterLayer("pONE2","7tlb",shield,1,0,0,x+dx*w/64f,y+dy*h/64f,w,h);
+  }
   void drawCreatorCharacter(float x,float y,float w,float h,int facing){
    // Body, outfit, hands and equipment share the same armed idle pose.
    String weapon=combatStyle==1?"ax01":combatStyle==2?"mc01":"sw01";
@@ -1797,8 +1813,8 @@ public class MainActivity extends Activity {
    if(equipped.containsKey("Kopf"))characterLayer("pONE2","5hat","pfht",1,facing,0,x,y,w,h);
    if(!weaponBehind&&facing!=3)characterLayer("pONE2","6tla",weapon,1,facing,0,x,y,w,h);
    if(!shieldBehind){
-    // Left view uses the native oblique shield, lowered below the visible arm.
-    if(facing==3)characterLayer("pONE2","7tlb",shield,1,0,0,x-6*w/64f,y+2*h/64f,w,h);
+    // The oblique shield is anchored to the native left-facing grip.
+    if(facing==3)drawCreatorLeftShield(shield,x,y,w,h);
     else characterLayer("pONE2","7tlb",shield,1,facing,0,x,y,w,h);
    }
    if(facing==3){
