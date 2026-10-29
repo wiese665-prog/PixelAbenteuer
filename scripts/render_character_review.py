@@ -41,10 +41,10 @@ for tick in range(24):
 frames[0].save(OUT/'character-animations.gif',save_all=True,append_images=frames[1:],duration=125,loop=0,optimize=True)
 # Left shield comparison uses native left arm overlay and each real weapon.
 out=Image.new('RGB',(768,384),'#455160')
-for ri,shield in enumerate(('shL1','shL3')):
+for ri,shield in enumerate(('shP1','shP3')):
  for ci,weapon in enumerate(('sw01','ax01','mc01')):
   im=Image.new('RGBA',(64,64));im.alpha_composite(cell('pONE2','4har','longback',3));im.alpha_composite(cell('pONE2','0bas','humn',3));im.alpha_composite(cell('pONE2','1out','boxr',3));im.alpha_composite(cell('pONE2','4har','long',3));im.alpha_composite(cell('pONE2','7tlb',shield,3))
-  im.alpha_composite(cell('pONE2','0bas','humn',3).crop((22,29,30,35)),(22,29));im.alpha_composite(cell('pONE2','6tla',weapon,3))
+  im.alpha_composite(cell('pONE2','0bas','humn',3).crop((23,29,26,32)),(23,29));im.alpha_composite(cell('pONE2','6tla',weapon,3))
   im=im.resize((192,192),Image.Resampling.NEAREST);out.paste(im,(ci*256,ri*192),im)
 out.save(OUT/'left-shields.png')
 print('Actual layer review: four directions, walk/attack/hit/fall, grip overlays and six left shield/weapon combinations.')

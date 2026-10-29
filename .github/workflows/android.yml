@@ -62,6 +62,12 @@ jobs:
           mkdir -p /tmp/pixel-ranged-tests
           javac -encoding UTF-8 -d /tmp/pixel-ranged-tests app/src/main/java/de/pixelabenteuer/game/RangedCombat.java tests/RangedCombatTest.java
           java -cp /tmp/pixel-ranged-tests de.pixelabenteuer.game.RangedCombatTest
+      - name: Verify feet, village safety and object visibility
+        run: |
+          mkdir -p /tmp/pixel-geometry-tests
+          javac -encoding UTF-8 -d /tmp/pixel-geometry-tests app/src/main/java/de/pixelabenteuer/game/CharacterPose.java app/src/main/java/de/pixelabenteuer/game/VillageSafety.java app/src/main/java/de/pixelabenteuer/game/VisibilityProbe.java tests/CharacterGeometryTest.java tests/VisibilityProbeTest.java
+          java -cp /tmp/pixel-geometry-tests de.pixelabenteuer.game.CharacterGeometryTest
+          java -cp /tmp/pixel-geometry-tests de.pixelabenteuer.game.VisibilityProbeTest
       - name: Build APK
         run: |
           echo "sdk.dir=$ANDROID_HOME" > local.properties

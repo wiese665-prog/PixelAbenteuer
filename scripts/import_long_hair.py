@@ -29,25 +29,30 @@ def pose(cap,facing,phase):
    shade=min(range(6),key=lambda i:sum((a-b)**2 for a,b in zip(pixel[:3],ref[i])))
    if y>=y1-3 and shade==0:shade=2
    put(front,x,y,shade)
- # A smooth tapered lock, with a visible bound nape and no sawtooth hem.
+ # The bound tail curves behind the shoulder, away from the forearm.
  tx=cx if facing in (0,1) else x0+1 if facing==2 else x1-2
+ rear=-1 if facing==2 else 1
  for v in range(11,27):
-  center=tx+(phase if v>=19 else 0)
-  half=(3 if v<19 else 2 if v<24 else 1 if v<26 else 0) if facing in (0,1) else (2 if v<23 else 1 if v<26 else 0)
+  bend=(0 if v<15 else 1 if v<20 else 2 if v<24 else 1 if v<26 else 0)
+  center=tx+(rear*bend if facing in (2,3) else (1 if v>=18 else 0))+(phase if v>=20 else 0)
+  half=(3 if v<18 else 2 if v<23 else 1 if v<26 else 0) if facing in (0,1) else (2 if v<20 else 1 if v<25 else 0)
   for dx in range(-half,half+1):
-   shade=1 if abs(dx)==half else 4 if dx==-1 and v<22 else 3 if dx<=0 else 2
+   shade=1 if abs(dx)==half else 4 if dx==-1 and v<20 else 3 if dx<=0 else 2
    put(back,center+dx,y0+v,shade)
-   if facing in (2,3) and v<18:
-    put(front,center+dx,y0+v,shade)
- # A compact dark tie with a tiny knot remains visible over the crown layer.
+   # Only the nape seam belongs in front of the body. The long tail never
+   # paints a rectangular strip across the visible forearm.
+   if facing in (2,3) and v<=14 and dx*rear>=0:put(front,center+dx,y0+v,shade)
  if facing==1:
   for dx in range(-3,4):put(front,cx+dx,y0+12,1)
   put(front,cx,y0+11,4);put(front,cx+1,y0+12,3)
+ elif facing in (2,3):
+  put(front,tx+rear,y0+12,1);put(front,tx+rear,y0+13,1);put(front,tx,y0+12,3)
  if facing==0:
   for side in (-1,1):
-   for v in range(10,17):
-    x=cx+side*(6 if v<14 else 5)
-    put(front,x,y0+v,2);put(front,x-side,y0+v,3)
+   for v in range(10,15+(side==1)):
+    x=cx+side*(6 if v<13 else 5)
+    put(front,x,y0+v,2)
+    if v<14:put(front,x-side,y0+v,3)
  return front,back
 
 for page in ['p1','pONE2','pONE3']:

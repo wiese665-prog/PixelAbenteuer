@@ -354,7 +354,7 @@ public class MainActivity extends Activity {
   final HashMap<String,Bitmap> buildingSprites=new HashMap<>();
   boolean indoors=false;int currentHouse=0;
   final float forgeX=550,forgeY=300,homeX=300,homeY=500;
-  boolean safeZone(float x,float y){return villageZone(x,y,0);}
+  boolean safeZone(float x,float y){return VillageSafety.protectedArea(x,y);}
   // World coordinates shared by rendering, collision, paths and wildlife guards.
   final float[][] villageHouses={{550,300},{270,320},{830,300},{270,690},{550,690},{830,690}};
   final float[] villageDoorOffsets={0,64,0,0,64,0};
@@ -371,7 +371,7 @@ public class MainActivity extends Activity {
   boolean roadAt(float x,float y,float margin){
    if(Math.pow((x-SPAWN_X)/25,2)+Math.pow((y-(SPAWN_Y+24))/16,2)<1)return false;
    if((Math.abs(y-470)<24&&(x<190||x>920))||(Math.abs(x-410)<24&&y<220))return true;
-   if(Math.abs(x-1010)<18&&y>334&&y<470)return true;
+   if(Math.abs(x-VillageSafety.TOWER_X)<18&&y>VillageSafety.TOWER_Y-16&&y<470)return true;
    for(float[] r:villageRoads)if(x>=r[0]-margin&&x<=r[2]+margin&&y>=r[1]-margin&&y<=r[3]+margin)return true;
    for(int i=0;i<villageHouses.length;i++){float[] house=villageHouses[i];float doorX=house[0]+villageDoorOffsets[i];float bottom=house[1]+112;
     float target=house[1]>500?840:470;if(x>doorX-20-margin&&x<doorX+20+margin&&y>bottom-12-margin&&y<target+margin)return true;}
@@ -383,6 +383,7 @@ public class MainActivity extends Activity {
    canvas.drawBitmap(b,new Rect(sx,sy,sx+sw,sy+sh),new RectF(x,y,x+w,y+h),paint);
   }
   void addVillageProp(String atlas,int sx,int sy,int sw,int sh,float x,float y,float w,float h,float radius,int frames){
+   if(atlas.equals("Trees_animation")&&VillageSafety.treeClearance(x,y))return;
    villageProps.add(new VillageProp(atlas,sx,sy,sw,sh,x,y,w,h,radius,frames));
   }
   void loadVillage(){
@@ -420,7 +421,7 @@ public class MainActivity extends Activity {
    }
    for(float[] f:new float[][]{{350,530},{960,430},{350,885},{960,850},{700,210}})
     addVillageProp("exterior",208,768,16,32,f[0],f[1],24,40,0,1);
-   fantasyProp("tower",1010,350,154,256,0); // footprint uses actual foot coordinates below
+   fantasyProp("tower",VillageSafety.TOWER_X,VillageSafety.TOWER_Y,154,256,0); // footprint uses actual foot coordinates below
    fantasyProp("quests",900,535,43,49,10);
    addVillageProp("shrine",0,0,80,48,SPAWN_X,SPAWN_Y+38.4f,48,28.8f,0,1);
    for(float[] light:new float[][]{{790,790},{870,790},{1000,340}})addVillageProp("guild/Flags_animation",0,0,48,48,light[0],light[1],62,62,0,12);
@@ -482,16 +483,16 @@ public class MainActivity extends Activity {
    for(VillageProp p:villageProps)if(p.radius>0&&Math.abs(x-p.x)<p.radius+7&&Math.abs(y-p.y)<p.radius+7&&Math.hypot(x-p.x,y-p.y)<p.radius+7)return true;
    return false;
   }
-  boolean wildlifeBlocked(float x,float y){return villageZone(x,y,28)||blocked(x,y);}
+  boolean wildlifeBlocked(float x,float y){return VillageSafety.wildlifeExcluded(x,y)||blocked(x,y);}
   void moveWildlifeOutside(Mob m){
    // Old saves can contain animals inside the newly built village.
    for(int i=0;i<1200;i++){float x=1060+(i*83%490),y=48+(i*61%880);
     if(!wildlifeBlocked(x,y)&&!mobFootBlocked(x,y,m,20)){m.x=x;m.y=y;m.path.clear();m.pathIndex=0;m.pathTimer=0;return;}}
   }
   void drawVillageBirds(){
-   if(Math.abs(px-1266)>700||Math.abs(py-560)>500)return;
+   if(Math.abs(px-1426)>700||Math.abs(py-560)>500)return;
    for(int i=0;i<3;i++){
-    float x=1220+i*46,y=550+(i%2)*18;
+    float x=1380+i*46,y=640+(i%2)*18;
     int frame=AmbientMotion.frame(elapsed,x,y,20,7,10,15);
     villageTile("bird_jump_animation",frame*32,(i%3)*32,32,32,x-16,y-24,32,32);
    }
@@ -515,7 +516,7 @@ public class MainActivity extends Activity {
    public boolean road(float x,float y){return roadAt(x,y,0);}
    public int playerFloor(){return currentResidentRoom();}
    public float playerX(){return indoors&&currentHouse!=1?px-60:px;}
-   public float playerY(){return !indoors?py+24:currentHouse==1?py:py-174;}
+   public float playerY(){return !indoors?py+CharacterPose.FOOT_OFFSET:currentHouse==1?py:py-174;}
   };
   int currentResidentRoom(){return !indoors?VillageResidents.OUTSIDE:currentHouse==1?VillageResidents.SMITHY:furnishedRoom();}
   boolean roomObstacle(int room,float x,float y){return guildBlocked(room,x,y)||residentSystem.occupied(room,x,y,null,7);}
@@ -658,9 +659,10 @@ public class MainActivity extends Activity {
    entries.add(new WorldEntry(py-174,()->{
     float x=l+px-60,y=t+py-174;groundShadow(x,y,8,2.5f);
     String action=doorTimer>0?"walk":Math.abs(joyX)+Math.abs(joyY)>.08f?(sprintHeld?"run":"walk"):"idle";
-    drawSprite(sword?"player_sword":"player_unarmed",action,playerDir,x,y-16.6f,88.704f,88.704f,elapsed,false);
+    preparePlayerLayer(action,playerDir,elapsed,88.704f);drawPreparedPlayer(x,y,false,false);
    }));
    Collections.sort(entries,(a,b)->Float.compare(a.depth,b.depth));for(WorldEntry e:entries)e.draw.run();
+   if(hp>0)for(GuildFurniture p:guildFurniture)if(p.floor==room&&p.y>py-174&&masksPlayer(villageArt.get(p.atlas),p.sx,p.sy,p.sw,p.sh,p.x-p.sw*p.scale/2,p.y-p.sh*p.scale,p.sw*p.scale,p.sh*p.scale,px-60,py-174,false)){drawPreparedPlayer(l+px-60,t+py-174,false,true);break;}
    paint.setTextAlign(Paint.Align.CENTER);paint.setTextSize(12);paint.setColor(col("#fff2d5"));
    if(guild&&room<2){fantasyName("Treppe nach oben",l+592,t+230);}
    if(guild&&room>0){fantasyName("Treppe nach unten",l+80,t+230);}
@@ -909,7 +911,7 @@ public class MainActivity extends Activity {
    paint.setTextAlign(Paint.Align.LEFT);paint.setTypeface(Typeface.DEFAULT);
    float cx=l+340+(px-400),cy=t+176+(py-350);
    String indoorAction=hp<=0?"death":doorTimer>0?"walk":hurtAnim>0?"hurt":attackAnim>0&&sword?"attack":Math.abs(joyX)+Math.abs(joyY)>.08f?(sprintHeld?"run":"walk"):"idle";
-   drawSprite(sword?"player_sword":"player_unarmed",indoorAction,playerDir,cx,cy,88.704f,88.704f,hp<=0?deathAnim:hurtAnim>0?.32f-hurtAnim:attackAnim>0?.4f-attackAnim:elapsed,hp<=0&&deathAnim>.8f);
+   preparePlayerLayer(indoorAction,playerDir,hp<=0?deathAnim:hurtAnim>0?.32f-hurtAnim:attackAnim>0?.4f-attackAnim:elapsed,88.704f);drawPreparedPlayer(cx,cy,false,false);
    paint.setColor(col("#fff2d5"));paint.setTextSize(13);
    canvas.drawText("Ausgang unten mittig",l+263,t+345,paint);
   }
@@ -955,7 +957,7 @@ public class MainActivity extends Activity {
    }
   }
   boolean decorationSpaceFree(float x,float y,float w,float h,float houseRadius){
-   if(villageZone(x,y,70)||roadAt(x,y,60))return false;
+   if(VillageSafety.area(x,y,70)||roadAt(x,y,60))return false;
    if(Math.hypot(x-SPAWN_X,y-SPAWN_Y)<145f)return false;
    if(Math.hypot(x-merchantX,y-merchantY)<85f)return false;
    float left=x-w/2f,right=x+w/2f,top=y-h*.8f,bottom=top+h;
@@ -1001,8 +1003,8 @@ public class MainActivity extends Activity {
    float dx=x-610,dy=footY-510;float reach=17+radius;
    return dx*dx+dy*dy<reach*reach;
   }
-  boolean towerFootBlocked(float x,float footY,float radius){return Math.abs(x-1010)<50+radius&&footY>320-radius&&footY<350+radius;}
-  boolean blocked(float x,float y){return outdoorTerrainBlocked(x,y)||wellFootBlocked(x,y+24,7)||towerFootBlocked(x,y+24,7)||residentSystem.occupied(VillageResidents.OUTSIDE,x,y+24,null,7);}
+  boolean towerFootBlocked(float x,float footY,float radius){return Math.abs(x-VillageSafety.TOWER_X)<50+radius&&footY>VillageSafety.TOWER_Y-30-radius&&footY<VillageSafety.TOWER_Y+radius;}
+  boolean blocked(float x,float y){return outdoorTerrainBlocked(x,y)||wellFootBlocked(x,y+CharacterPose.FOOT_OFFSET,7)||towerFootBlocked(x,y+CharacterPose.FOOT_OFFSET,7)||residentSystem.occupied(VillageResidents.OUTSIDE,x,y+CharacterPose.FOOT_OFFSET,null,7);}
   final byte[] terrainCollisionCache=new byte[WORLD_W*WORLD_H];
   final MobNavigation mobNavigation=new MobNavigation(WORLD_W,WORLD_H);
   float mobPathCooldown=0;
@@ -1863,22 +1865,14 @@ public class MainActivity extends Activity {
    paint.setColor(Color.WHITE);paint.setAlpha(255);paint.setColorFilter(null);paint.setFilterBitmap(false);
    canvas.drawBitmap(b,new Rect(left,top,left+cell,top+cell),new RectF(x-w/2,y-h/2,x+w/2,y+h/2),paint);
   }
-  final HashMap<String,Rect> creatorShieldBounds=new HashMap<>();
-  Rect creatorShieldBounds(String shield,int row){
-   String key=shield+":"+row;Rect cached=creatorShieldBounds.get(key);if(cached!=null)return cached;
-   Bitmap b=characterSheet("pONE2","7tlb",shield,1);if(b==null)return new Rect();
-   int cell=b.getWidth()/8,left=cell,top=cell,right=-1,bottom=-1;
-   for(int yy=0;yy<cell;yy++)for(int xx=0;xx<cell;xx++)if(Color.alpha(b.getPixel(xx,row*cell+yy))>=128){left=Math.min(left,xx);top=Math.min(top,yy);right=Math.max(right,xx);bottom=Math.max(bottom,yy);}
-   Rect bounds=right<0?new Rect():new Rect(left,top,right+1,bottom+1);creatorShieldBounds.put(key,bounds);return bounds;
-  }
   void drawCreatorLeftShield(String shield,float x,float y,float w,float h){
-   characterLayer("pONE2","7tlb",shield.equals("sh03")?"shL3":"shL1",1,3,0,x,y,w,h);
+   characterLayer("pONE2","7tlb",shield,1,3,0,x,y,w,h);
   }
   void drawCreatorCharacter(float x,float y,float w,float h,int facing){
    if(characterRole()>0){drawRangedCharacter(x,y,w,h,facing,"idle",0,true);return;}
    // Body, outfit, hands and equipment share the same armed idle pose.
    String weapon=combatStyle==1?"ax01":combatStyle==2?"mc01":"sw01";
-   String shield=equipped.getOrDefault("Schild","").contains("Iron")?"sh03":"sh01";
+   String shield=CharacterPose.shield(equipped.getOrDefault("Schild","").contains("Iron"),facing);
    boolean weaponBehind=facing==1,shieldBehind=facing==1||facing==2;
    if(weaponBehind)characterLayer("pONE2","6tla",weapon,1,facing,0,x,y,w,h);
    if(shieldBehind)characterLayer("pONE2","7tlb",shield,1,facing,0,x,y,w,h);
@@ -1904,7 +1898,7 @@ public class MainActivity extends Activity {
    if(facing==3){
     // Native shield-side hand is in front of the rim, never hidden by it.
     Bitmap body=characterSheet("pONE2","0bas","humn",skinColor);
-    if(body!=null)canvas.drawBitmap(body,new Rect(22,3*64+29,30,3*64+35),new RectF(x-w/2+22*w/64f,y-h/2+29*h/64f,x-w/2+30*w/64f,y-h/2+35*h/64f),paint);
+    if(body!=null)canvas.drawBitmap(body,new Rect(23,3*64+29,26,3*64+32),new RectF(x-w/2+23*w/64f,y-h/2+29*h/64f,x-w/2+26*w/64f,y-h/2+32*h/64f),paint);
     characterLayer("pONE2","6tla",weapon,1,facing,0,x,y,w,h);
    }
   }
@@ -1925,9 +1919,8 @@ public class MainActivity extends Activity {
    }
    int role=characterRole();boolean attack=action.equals("attack"),fighting=attack||action.equals("hurt")||action.equals("death");
    boolean moving=action.equals("walk")||action.equals("run");
-   String page=attack?(role==1?"pBOW":"pCAST"):fighting?"pONE3":"p1";
-   int row=attack?facing:fighting?(action.equals("death")?4+facing:facing):moving?4+facing:facing;
-   int column=action.equals("crouch")?1:attack?Math.min(3,Math.max(0,(int)(time*10))):fighting?Math.min(3,Math.max(0,(int)(time*10))):moving?(int)(elapsed*(action.equals("run")?12:8))%6:0;
+   CharacterPose.Frame pose=CharacterPose.frame(role,preview,facing,action,time,elapsed,attackSequence);
+   String page=pose.page;int row=pose.row,column=pose.col;
    String hp=attack?"pONE2":page;int hr=attack?facing:row,hc=attack?0:column;
    String weapon=role==1?"bow1":"staf";
    if(role==1&&facing!=1)characterLayer(page,"6tla","quvr",1,row,column,x,y,w,h);
@@ -1944,19 +1937,18 @@ public class MainActivity extends Activity {
    if(facing!=1){characterLayer(page,"6tla",weapon,1,row,column,x,y,w,h);drawRangedGrip(page,row,column,x,y,w,h);}
   }
   void drawCharacter(float x,float y,float w,float h,int dir,String action,float time){
-   if(characterRole()>0){int facing=dir==0?0:dir==1?1:dir==2?3:2;drawRangedCharacter(x,y,w,h,facing,action,time,creatorOpen);return;}
+   if(characterRole()>0){int facing=CharacterPose.facing(dir);drawRangedCharacter(x,y,w,h,facing,action,time,creatorOpen);return;}
    boolean fighting=action.equals("attack")||action.equals("hurt")||action.equals("death");
-   String page=fighting?"pONE3":"p1";
+
    // Mana Seed p1: rows 0-3 = stand/push/pull/jump; rows 4-7 = walk.
    // Sprint uses walk frames 3 and 6 (zero-based columns 2 and 5), not columns 6/7.
    // Each group contains the four facing directions; never use push frames for walking.
    // Sprite-sheet direction order differs from the game's front/back/left/right order.
    // Mana Seed: row 0 front, row 1 back, row 2 right, row 3 left.
-   int facing=dir==0?0:dir==1?1:dir==2?3:2;
+   int facing=CharacterPose.facing(dir);
    if(creatorOpen&&!fighting){drawCreatorCharacter(x,y,w,h,facing);return;}
-   boolean moving=action.equals("walk")||action.equals("run");
-   int row=fighting?(action.equals("attack")?(attackSequence%2)*4+facing:action.equals("hurt")?facing:4+facing):(moving?4+facing:facing);
-   int col=fighting?Math.min(3,Math.max(0,(int)(time*10))):(moving?(action.equals("run")?((int)(elapsed*12)%6):(int)(elapsed*8)%6):0);
+   CharacterPose.Frame pose=CharacterPose.frame(0,false,facing,action,time,elapsed,attackSequence);
+   String page=pose.page;int row=pose.row,col=pose.col;
    if(hairType==5&&facing!=1)characterLayer(page,"4har","longback",hairColor,row,col,x,y,w,h);
    characterLayer(page,"0bas","humn",skinColor,row,col,x,y,w,h);
    characterLayer(page,"1out",outfitType(),1,row,col,x,y,w,h);
@@ -1965,7 +1957,7 @@ public class MainActivity extends Activity {
    if(!hatType().isEmpty())characterLayer(page,"5hat",hatType(),1,row,col,x,y,w,h);
    if(fighting){
     String weapon=combatStyle==1?"ax01":combatStyle==2?"mc01":"sw01";
-    if(equipped.containsKey("Schild"))characterLayer("pONE3","7tlb",facing==3?(equipped.getOrDefault("Schild","").contains("Iron")?"shL3":"shL1"):(equipped.getOrDefault("Schild","").contains("Iron")?"sh03":"sh01"),1,row,col,x,y,w,h);
+    if(equipped.containsKey("Schild"))characterLayer("pONE3","7tlb",CharacterPose.shield(equipped.getOrDefault("Schild","").contains("Iron"),facing),1,row,col,x,y,w,h);
     characterLayer("pONE3","6tla",weapon,1,row,col,x,y,w,h);
    }
   }
@@ -2205,7 +2197,7 @@ public class MainActivity extends Activity {
      }
      if(clear){m.path.clear();m.pathIndex=0;m.pathTimer=.8f+random.nextFloat()*.35f;return;}
     }
-    m.path=mobNavigation.find(m.x,m.y,tx,ty,(x,y)->villageZone(x,y,28)||outdoorTerrainBlocked(x,y)||towerFootBlocked(x,y+24,7));
+    m.path=mobNavigation.find(m.x,m.y,tx,ty,(x,y)->VillageSafety.wildlifeExcluded(x,y)||outdoorTerrainBlocked(x,y)||towerFootBlocked(x,y+CharacterPose.FOOT_OFFSET,7));
     m.pathIndex=0;m.pathTimer=m.path.isEmpty()?1.3f:.9f+random.nextFloat()*.3f;
    }
 
@@ -2313,11 +2305,66 @@ public class MainActivity extends Activity {
     if(m.healthVisible>0&&(!m.dead||m.deathTimer<1f))healthBar(m.x,m.y-size*.65f-12,42,m.hp,m.maxHp);
     damageText(m.x,m.y-size*.65f-35,m.lastDamage,m.damageNumberTime);
   }
+  final Bitmap playerLayer=Bitmap.createBitmap(128,128,Bitmap.Config.ARGB_8888);
+  final Canvas playerLayerCanvas=new Canvas(playerLayer);
+  final Paint visibilityPaint=new Paint();
+  final ColorFilter playerVisibilityTint=new PorterDuffColorFilter(0xffe1b86d,PorterDuff.Mode.SRC_IN);
+  final HashMap<Bitmap,VisibilityProbe.Alpha> visibilityMasks=new HashMap<>();
+  final VisibilityProbe.Alpha playerAlpha=(x,y)->Color.alpha(playerLayer.getPixel(x,y));
+  final HashMap<String,Integer> bodyFootCache=new HashMap<>();
+  boolean playerLayerReady=false;String playerLayerKey="";
+  int bodyFoot(CharacterPose.Frame frame){
+   String key=frame.page+":"+frame.row+":"+frame.col+":"+skinColor;Integer cached=bodyFootCache.get(key);if(cached!=null)return cached;
+   Bitmap b=characterSheet(frame.page,"0bas","humn",skinColor);int bottom=44;
+   if(b!=null)outer:for(int y=63;y>=0;y--)for(int x=0;x<64;x++)if(Color.alpha(b.getPixel(frame.col*64+x,frame.row*64+y))>=128){bottom=y+1;break outer;}
+   bodyFootCache.put(key,bottom);return bottom;
+  }
+  void preparePlayerLayer(String action,int dir,float time,float size){
+   CharacterPose.Frame frame=CharacterPose.frame(characterRole(),creatorOpen,CharacterPose.facing(dir),action,time,elapsed,attackSequence);
+   int reaction=action.equals("hurt")?((int)(time*24)%2):action.equals("death")?Math.min(3,(int)(time*10)):0;
+   String key=frame.page+":"+frame.row+":"+frame.col+":"+size+":"+characterRole()+":"+creatorOpen+":"+skinColor+":"+hairType+":"+hairColor+":"+outfitType()+":"+hatType()+":"+combatStyle+":"+equipped.get("Schild")+":"+action+":"+reaction;
+   if(key.equals(playerLayerKey)){playerLayerReady=true;return;}
+   float center=CharacterPose.centerY(96,bodyFoot(frame),size);Canvas previousCanvas=canvas;canvas=playerLayerCanvas;
+   canvas.drawColor(Color.TRANSPARENT,PorterDuff.Mode.CLEAR);
+   drawSprite(sword?"player_sword":"player_unarmed",action,dir,64,center,size,size,time,false);
+   canvas=previousCanvas;playerLayerReady=true;playerLayerKey=key;
+  }
+  void drawPreparedPlayer(float x,float footY,boolean projected,boolean silhouette){
+   if(!playerLayerReady)return;canvas.save();if(projected)canvas.scale(1,1/CAMERA_GROUND_Y,x,footY);
+   visibilityPaint.reset();visibilityPaint.setFilterBitmap(false);
+   if(silhouette){visibilityPaint.setColorFilter(playerVisibilityTint);visibilityPaint.setAlpha(110);}
+   canvas.drawBitmap(playerLayer,x-64,footY-96,visibilityPaint);canvas.restore();
+  }
+  boolean masksPlayer(Bitmap image,int sx,int sy,int sw,int sh,float left,float top,float width,float height,float x,float footY,boolean projected){
+   if(image==null||!playerLayerReady)return false;
+   VisibilityProbe.Alpha alpha=visibilityMasks.get(image);if(alpha==null){alpha=(ix,iy)->Color.alpha(image.getPixel(ix,iy));visibilityMasks.put(image,alpha);}
+   return VisibilityProbe.masked(alpha,image.getWidth(),image.getHeight(),playerAlpha,sx,sy,sw,sh,left,top,width,height,x,footY,projected?CAMERA_GROUND_Y:1);
+  }
+
+  boolean playerBehindWorldObject(){
+   float footY=py+CharacterPose.FOOT_OFFSET;
+   for(int i=0;i<villageHouses.length;i++){
+    float[] h=villageHouses[i];float base=h[1]+112;if(base<=footY)continue;
+    if(i==0){if(masksPlayer(buildingSprites.get("Exterior_house"),0,0,145,163,h[0]-116,base-252/CAMERA_GROUND_Y,232,261/CAMERA_GROUND_Y,px,footY,true))return true;continue;}
+    String name=i==5?"guildhall":i==2?"inn":i==4?"bakery":i==3?"residence":"cottage";Bitmap b=villageArt.get(name);if(b==null)continue;
+    int frame=houseDoorFrame(i);Bitmap art=frame>0?villageArt.get("door"+i):b;
+    if(masksPlayer(art,0,frame*b.getHeight(),b.getWidth(),b.getHeight(),h[0]-b.getWidth()*.8f,base+(3-b.getHeight()*1.6f)/CAMERA_GROUND_Y,b.getWidth()*1.6f,b.getHeight()*1.6f/CAMERA_GROUND_Y,px,footY,true))return true;
+   }
+   for(VillageProp p:villageProps)if(p.y>footY&&Math.abs(p.x-px)<p.w/2+32){
+    int frame=p.frames>1?(p.atlas.equals("Trees_animation")?AmbientMotion.frame(elapsed,p.x,p.y,p.frames,6,12,16):(int)(elapsed*6+p.x/70)%p.frames):0;
+    float projection=p.atlas.equals("shrine")?1:CAMERA_GROUND_Y;
+    if(masksPlayer(villageArt.get(p.atlas),p.sx,p.sy+frame*p.sh,p.sw,p.sh,p.x-p.w/2,p.y-p.h/projection,p.w,p.h/projection,px,footY,true))return true;
+   }
+   for(Decoration d:decorations){float base=d.y+d.h*.2f;if(d.image!=null&&base>footY&&masksPlayer(d.image,0,0,d.image.getWidth(),d.image.getHeight(),d.x-d.w/2,base-d.h/CAMERA_GROUND_Y,d.w,d.h/CAMERA_GROUND_Y,px,footY,true))return true;}
+   return false;
+  }
   void drawPlayerWorld(){
+   if(indoors){playerLayerReady=false;return;}
    String playerKind=sword?"player_sword":"player_unarmed";
    String playerAction=hp<=0?"death":doorTimer>0?"walk":hurtAnim>0?"hurt":attackAnim>0&&sword?"attack":Math.abs(joyX)+Math.abs(joyY)>.08f?(sprintHeld?"run":"walk"):"idle";
-   if(hp>0)groundShadow(px,py+24,13.3f,4.2f);
-   if(hp>0||characterRole()>0)billboard(playerKind,playerAction,characterRole()>0&&attackAnim>0&&hp>0&&hurtAnim<=0?attackDir:playerDir,px,py,80.64f,80.64f,hp<=0?deathAnim:hurtAnim>0?.32f-hurtAnim:attackAnim>0?.4f-attackAnim:elapsed,hp<=0&&deathAnim>.8f);
+   if(hp>0)groundShadow(px,py+CharacterPose.FOOT_OFFSET,13.3f,4.2f);
+   playerLayerReady=false;
+   if(hp>0||characterRole()>0){preparePlayerLayer(playerAction,characterRole()>0&&attackAnim>0&&hp>0&&hurtAnim<=0?attackDir:playerDir,hp<=0?deathAnim:hurtAnim>0?.32f-hurtAnim:attackAnim>0?.4f-attackAnim:elapsed,CharacterPose.WORLD_SIZE);drawPreparedPlayer(px,py+CharacterPose.FOOT_OFFSET,true,false);}
    if(playerHealthVisible>0)healthBar(px,py-56,52,hp,maxHp);
    damageText(px,py-66,lastPlayerDamage,playerDamageTime);
 
@@ -2348,10 +2395,11 @@ public class MainActivity extends Activity {
     paint.setColor(Color.WHITE);paint.setColorFilter(null);paint.setAlpha(255);canvas.save();canvas.scale(1f,1f/CAMERA_GROUND_Y,d.x,d.y+d.h*.2f);canvas.drawBitmap(d.image,null,new RectF(d.x-d.w/2,d.y-d.h*.8f,d.x+d.w/2,d.y+d.h*.2f),paint);canvas.restore();}));
    for(VillageResidents.Resident n:guildResidents)if(n.floor==VillageResidents.OUTSIDE)world.add(new WorldEntry(n.y,()->drawGuildResident(n,0,0,true)));
    for(Mob m:mobs)world.add(new WorldEntry(m.y+18,()->drawMobWorld(m,vw,vh)));
-   world.add(new WorldEntry(py+24,()->drawPlayerWorld()));
+   world.add(new WorldEntry(py+CharacterPose.FOOT_OFFSET,()->drawPlayerWorld()));
    if(!indoors)for(RangedCombat.Shot shot:rangedCombat.shots)world.add(new WorldEntry(shot.y+8,()->drawProjectile(shot)));
    Collections.sort(world,(a,b)->Float.compare(a.depth,b.depth));
    for(WorldEntry entry:world)entry.draw.run();
+   if(!indoors&&hp>0&&playerBehindWorldObject())drawPreparedPlayer(px,py+CharacterPose.FOOT_OFFSET,true,true);
 
    Drop nearby=nearestDrop();
    if(nearby!=null&&!inventoryOpen){drawRect(col("#182923"),px-87,py-78,174,25);paint.setColor(col("#fff0c5"));paint.setTextSize(13);paint.setTextAlign(Paint.Align.CENTER);

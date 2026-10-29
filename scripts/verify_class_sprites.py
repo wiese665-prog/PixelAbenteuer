@@ -44,9 +44,9 @@ for name in ['Jagdbogen','Magierstab','Waldlaeuferwams','Waldlaeuferkapuze','Mag
  im=Image.open(A/'class_items'/f'{name}.png').convert('RGBA');assert im.size==(32,32) and im.getbbox()
 # The left profile keeps its native attachment while actually narrowing the face.
 for page in ('pONE2','pONE3'):
- for original,profile in [('sh01','shL1'),('sh03','shL3')]:
+ for original,profile in [('sh01','shP1'),('sh03','shP3')]:
   old=sheet(page,'7tlb',original);new=sheet(page,'7tlb',profile)
-  for row in (3,7):
+  for row in (2,3,6,7):
    for col in range(8):
     a=frame(old,row,col);b=frame(new,row,col)
     if not a.getbbox():continue

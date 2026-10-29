@@ -19,8 +19,8 @@ public final class VillageResidentsTest {
   for(VillageResidents.Resident n:system.people){require(ids.add(n.id),"Duplicate ID");require(names.add(n.name),"Duplicate name");require(art.add(n.legacy?"legacy:"+n.id:n.kind!=null?n.kind:n.idle),"Duplicate appearance "+n.name);require(n.lines.length>=3&&!n.title.isEmpty(),"Missing dialogue/title "+n.name);if(n.mobile)mobile++;}
   require(mobile==4,"All four walking sprite families must roam");
   require(system.get("borin").title.equals("Schmied")&&system.get("maela").title.equals("Händlerin")&&system.get("grom").title.equals("Händler")&&system.get("tarek").title.equals("Abenteurer"),"Legacy titles");
-  require(!world.blocked(-1,1010,366)&&world.road(1010,366),"Tower approach blocked or disconnected");
-  require(world.blocked(-1,1010,340),"Tower base lacks collision");
+  require(!world.blocked(-1,1110,366)&&world.road(1110,366),"Tower approach blocked or disconnected");
+  require(world.blocked(-1,1110,340),"Tower base lacks collision");
   world.room=4;world.px=156;world.py=255;
   require(!world.blocked(4,156,255),"Inn counter approach blocked");
   require(system.nearby(world)==system.get("edda"),"Innkeeper unreachable across counter");
