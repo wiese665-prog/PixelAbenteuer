@@ -10,7 +10,11 @@ approved=rgba(ROOT/'art/source/watchtower-approved.png')
 approved.putalpha(approved.getchannel('A').point(lambda a:255 if a>=128 else 0))
 approved=approved.crop(approved.getbbox());height=204;width=round(approved.width*height/approved.height)
 expected=Image.new('RGBA',(160,208));expected.alpha_composite(approved.resize((width,height),Image.Resampling.NEAREST),((160-width)//2,208-height))
-tower=rgba(v/'tower.png');assert tower.tobytes()==expected.tobytes()
+tower=rgba(v/'tower.png');assert tower.getchannel('A').tobytes()==expected.getchannel('A').tobytes()
+allowed=set()
+for p in [assets/'sprites/Exterior_house.png',v/'exterior.png',v/'guild/Exterior(1).png']:
+ allowed.update(c[:3] for c in rgba(p).get_flattened_data() if c[3] and .2126*c[0]+.7152*c[1]+.0722*c[2]>=38)
+assert {c[:3] for c in tower.get_flattened_data() if c[3]}<=allowed
 assert set(tower.getchannel('A').get_flattened_data())<={0,255}
 assert tower.getbbox()[3]==208
 # All six houses have actual opening states and a matching closed final pose.

@@ -1,5 +1,5 @@
-# User-approved watchtower
+# Watchtower
 
-The user selected `art/source/watchtower-approved.png` on 29 October 2026 and explicitly authorized this exact version for the game. It replaces the prior native-parts draft. No further window, roof, silhouette or material redesign is applied.
+The approved `watchtower-approved.png` supplies the silhouette and architecture. The follow-up correction keeps that silhouette and the visible aspect ratio while matching every opaque pixel to the original Exterior_house, exterior and Exterior(1) material palette. Nearly black outer-edge pixels borrow material color from the adjacent roof, timber or masonry before palette matching. No black sticker outline is retained.
 
-`build_native_watchtower.py` removes transparent padding, preserves the visible aspect ratio, prepares the sprite at 88x204 using nearest-neighbor sampling, and centers it on the existing 160x208 game canvas. Alpha is binary. The village prop position, collision and camera treatment are retained. The asset check compares every output pixel to this approved-source transformation.
+The sprite uses nearest-neighbor sampling at 88x204 on the existing 160x208 canvas with binary transparency. Tests verify its exact alpha silhouette and that every opaque color belongs to the original native palette.

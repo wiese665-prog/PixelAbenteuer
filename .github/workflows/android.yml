@@ -46,6 +46,11 @@ jobs:
           mkdir -p /tmp/pixel-resident-tests
           javac -encoding UTF-8 -d /tmp/pixel-resident-tests app/src/main/java/de/pixelabenteuer/game/VillageResidents.java tests/VillageResidentsTest.java
           java -cp /tmp/pixel-resident-tests de.pixelabenteuer.game.VillageResidentsTest /tmp/pixel-resident-world.bin
+      - name: Verify bounded mob navigation
+        run: |
+          mkdir -p /tmp/pixel-navigation-tests
+          javac -encoding UTF-8 -d /tmp/pixel-navigation-tests app/src/main/java/de/pixelabenteuer/game/MobNavigation.java tests/MobNavigationTest.java
+          java -cp /tmp/pixel-navigation-tests de.pixelabenteuer.game.MobNavigationTest
       - name: Build APK
         run: |
           echo "sdk.dir=$ANDROID_HOME" > local.properties

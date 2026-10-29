@@ -934,7 +934,17 @@ public class MainActivity extends Activity {
    return false;
   }
   boolean blocked(float x,float y){return outdoorTerrainBlocked(x,y)||residentSystem.occupied(VillageResidents.OUTSIDE,x,y+24,null,7);}
+  final byte[] terrainCollisionCache=new byte[WORLD_W*WORLD_H];
+  final MobNavigation mobNavigation=new MobNavigation(WORLD_W,WORLD_H);
+  float mobPathCooldown=0;
   boolean outdoorTerrainBlocked(float x,float y){
+   if(x<18||y<18||x>WORLD_W-18||y>WORLD_H-18)return true;
+   int ix=(int)x,iy=(int)y,index=iy*WORLD_W+ix;byte cached=terrainCollisionCache[index];
+   if(cached!=0)return cached==2;
+   boolean result=uncachedOutdoorTerrainBlocked(ix+.5f,iy+.5f);
+   terrainCollisionCache[index]=(byte)(result?2:1);return result;
+  }
+  boolean uncachedOutdoorTerrainBlocked(float x,float y){
    if(x<18||y<18||x>WORLD_W-18||y>WORLD_H-18)return true;
    for(Decoration d:decorations)if(d.solid&&Math.abs(d.x-x)<d.w*.5f+12f&&Math.abs(d.y-y)<d.h+14f&&collides(d,x,y))return true;
    if(villageObstacle(x,y))return true;
@@ -1758,8 +1768,10 @@ public class MainActivity extends Activity {
    boolean weaponBehind=facing==1,shieldBehind=facing==1||facing==2;
    if(weaponBehind)characterLayer("pONE2","6tla",weapon,1,facing,0,x,y,w,h);
    if(shieldBehind)characterLayer("pONE2","7tlb",shield,1,facing,0,x,y,w,h);
+   if(hairType==5&&facing!=1)characterLayer("pONE2","4har","longback",hairColor,facing,0,x,y,w,h);
    characterLayer("pONE2","0bas","humn",skinColor,facing,0,x,y,w,h);
    characterLayer("pONE2","1out",equipped.containsKey("Brust")?"fstr":(characterGender==0?"boxr":"undi"),1,facing,0,x,y,w,h);
+   if(hairType==5&&facing==1)characterLayer("pONE2","4har","longback",hairColor,facing,0,x,y,w,h);
    String hair=hairType==2?"braid":hairType==3?"curl":hairType==4?"bun":hairType==5?"long":hairType==0?"bob1":"dap1";
    if(hairType<2||hairType==5)characterLayer("pONE2","4har",hair,hairColor,facing,0,x,y,w,h);
    else {
@@ -1771,12 +1783,16 @@ public class MainActivity extends Activity {
    if(equipped.containsKey("Kopf"))characterLayer("pONE2","5hat","pfht",1,facing,0,x,y,w,h);
    if(!weaponBehind&&facing!=3)characterLayer("pONE2","6tla",weapon,1,facing,0,x,y,w,h);
    if(!shieldBehind){
-    // The near-side left shield shows its wooden face, aligned to the same
-    // native hand position; the old circle showed the blank reverse surface.
-    if(facing==3)characterLayer("pONE2","7tlb",shield,1,4,0,x-9*w/64f,y-6*h/64f,w,h);
+    // Left view uses the native oblique shield, lowered below the visible arm.
+    if(facing==3)characterLayer("pONE2","7tlb",shield,1,0,0,x-6*w/64f,y+2*h/64f,w,h);
     else characterLayer("pONE2","7tlb",shield,1,facing,0,x,y,w,h);
    }
-   if(facing==3)characterLayer("pONE2","6tla",weapon,1,facing,0,x,y,w,h);
+   if(facing==3){
+    // Native shield-side hand is in front of the rim, never hidden by it.
+    Bitmap body=characterSheet("pONE2","0bas","humn",skinColor);
+    if(body!=null)canvas.drawBitmap(body,new Rect(22,3*64+29,30,3*64+35),new RectF(x-w/2+22*w/64f,y-h/2+29*h/64f,x-w/2+30*w/64f,y-h/2+35*h/64f),paint);
+    characterLayer("pONE2","6tla",weapon,1,facing,0,x,y,w,h);
+   }
   }
   void drawCharacter(float x,float y,float w,float h,int dir,String action,float time){
    boolean fighting=action.equals("attack")||action.equals("hurt")||action.equals("death");
@@ -1791,8 +1807,10 @@ public class MainActivity extends Activity {
    boolean moving=action.equals("walk")||action.equals("run");
    int row=fighting?(action.equals("attack")?(attackSequence%2)*4+facing:action.equals("hurt")?facing:4+facing):(moving?4+facing:facing);
    int col=fighting?Math.min(3,Math.max(0,(int)(time*10))):(moving?(action.equals("run")?((int)(elapsed*12)%6):(int)(elapsed*8)%6):0);
+   if(hairType==5&&facing!=1)characterLayer(page,"4har","longback",hairColor,row,col,x,y,w,h);
    characterLayer(page,"0bas","humn",skinColor,row,col,x,y,w,h);
    characterLayer(page,"1out",equipped.containsKey("Brust")?"fstr":(characterGender==0?"boxr":"undi"),1,row,col,x,y,w,h);
+   if(hairType==5&&facing==1)characterLayer(page,"4har","longback",hairColor,row,col,x,y,w,h);
    characterLayer(page,"4har",hairType==2?"braid":hairType==3?"curl":hairType==4?"bun":hairType==5?"long":hairType==0?"bob1":"dap1",hairColor,row,col,x,y,w,h);
    if(equipped.containsKey("Kopf"))characterLayer(page,"5hat","pfht",1,row,col,x,y,w,h);
    if(fighting){
@@ -1956,7 +1974,8 @@ public class MainActivity extends Activity {
       attackingOrcs.add(candidate);
     }
    }
-   int pathSearchBudget=2; // Never start dozens of expensive A* searches in one frame.
+   mobPathCooldown=Math.max(0,mobPathCooldown-dt);
+   int pathSearchBudget=mobPathCooldown<=0?1:0; // At most one search every 120ms, shared by all mobs.
    for(Mob m:mobs){
     if(m.dead){m.deathTimer+=dt;continue;}
     if(wildlifeBlocked(m.x,m.y))moveWildlifeOutside(m);
@@ -1993,15 +2012,29 @@ public class MainActivity extends Activity {
      }
      vx=m.vx;vy=m.vy;action=Math.abs(vx)+Math.abs(vy)<1?"idle":"walk";
     }
-    if(Math.abs(vx)+Math.abs(vy)>1){m.pathTimer-=dt;float tx=m.hostile()&&distance<285?px:m.x+vx*1.8f,ty=m.hostile()&&distance<285?py:m.y+vy*1.8f;if(m.pathTimer<=0){if(distance<430f){if(pathSearchBudget>0){pathSearchBudget--;planMobPath(m,tx,ty);}else m.pathTimer=.12f+random.nextFloat()*.12f;}else{m.path.clear();m.pathIndex=0;m.pathTimer=1.5f+random.nextFloat();}}while(m.pathIndex<m.path.size()&&Math.hypot(m.x-m.path.get(m.pathIndex)[0],m.y-m.path.get(m.pathIndex)[1])<10)m.pathIndex++;if(m.pathIndex<m.path.size()){float[] wp=m.path.get(m.pathIndex);float dx=wp[0]-m.x,dy=wp[1]-m.y,len=(float)Math.hypot(dx,dy);if(len>0){float speed=m.hostile()?75f:Math.max(35f,(float)Math.hypot(vx,vy));vx=dx/len*speed;vy=dy/len*speed;}}}
-     if(wildlifeBlocked(m.x+vx*dt,m.y+vy*dt)){vx=0;vy=0;m.vx=0;m.vy=0;}
+    if(Math.abs(vx)+Math.abs(vy)>1){
+     boolean pursuit=m.hostile()&&distance<(m.kind.equals("boar")?135:285)&&!safeZone(px,py);
+     if(!pursuit){m.path.clear();m.pathIndex=0;}
+     else {
+      m.pathTimer-=dt;
+      if(m.pathTimer<=0){
+       if(pathSearchBudget>0){pathSearchBudget--;mobPathCooldown=.12f;planMobPath(m,px,py);}
+       else m.pathTimer=.16f+random.nextFloat()*.12f;
+      }
+      while(m.pathIndex<m.path.size()&&Math.hypot(m.x-m.path.get(m.pathIndex)[0],m.y-m.path.get(m.pathIndex)[1])<10)m.pathIndex++;
+      if(m.pathIndex<m.path.size()){
+       float[] wp=m.path.get(m.pathIndex);float dx=wp[0]-m.x,dy=wp[1]-m.y,len=(float)Math.hypot(dx,dy);
+       if(len>0){vx=dx/len*75;vy=dy/len*75;}
+      }
+     }
+    }
     if(Math.abs(vx)+Math.abs(vy)>1){
      float mobRadius=mobFootRadius(m),playerSeparation=mobRadius+12f;
      float step=dt/3f;
      for(int sub=0;sub<3;sub++){
       float nx=m.x+vx*step,ny=m.y+vy*step;
-      if(!wildlifeBlocked(nx,m.y)&&!mobFootBlocked(nx,m.y,m,mobRadius)&&Math.hypot(nx-px,m.y-py)>playerSeparation&&(!m.hostile()||!safeZone(nx,m.y)))m.x=nx;else {m.decision=0;m.pathTimer=0;}
-      if(!wildlifeBlocked(m.x,ny)&&!mobFootBlocked(m.x,ny,m,mobRadius)&&Math.hypot(m.x-px,ny-py)>playerSeparation&&(!m.hostile()||!safeZone(m.x,ny)))m.y=ny;else {m.decision=0;m.pathTimer=0;}
+      if(!wildlifeBlocked(nx,m.y)&&!mobFootBlocked(nx,m.y,m,mobRadius)&&Math.hypot(nx-px,m.y-py)>playerSeparation&&(!m.hostile()||!safeZone(nx,m.y)))m.x=nx;else {m.decision=0;m.pathTimer=Math.max(m.pathTimer,.35f);}
+      if(!wildlifeBlocked(m.x,ny)&&!mobFootBlocked(m.x,ny,m,mobRadius)&&Math.hypot(m.x-px,ny-py)>playerSeparation&&(!m.hostile()||!safeZone(m.x,ny)))m.y=ny;else {m.decision=0;m.pathTimer=Math.max(m.pathTimer,.35f);}
      }
      m.dir=direction(vx,vy);
     }
@@ -2021,33 +2054,10 @@ public class MainActivity extends Activity {
      }
      if(clear){m.path.clear();m.pathIndex=0;m.pathTimer=.8f+random.nextFloat()*.35f;return;}
     }
-    final int cell=24,cols=(WORLD_W+cell-1)/cell,rows=(WORLD_H+cell-1)/cell,total=cols*rows;
-    int sx=Math.max(0,Math.min(cols-1,(int)(m.x/cell))),sy=Math.max(0,Math.min(rows-1,(int)(m.y/cell)));
-    int gx=Math.max(0,Math.min(cols-1,(int)(tx/cell))),gy=Math.max(0,Math.min(rows-1,(int)(ty/cell)));
-    int start=sy*cols+sx,goal=gy*cols+gx;
-    float[] cost=new float[total];java.util.Arrays.fill(cost,Float.POSITIVE_INFINITY);
-    int[] parent=new int[total];java.util.Arrays.fill(parent,-1);
-    boolean[] closed=new boolean[total];java.util.PriorityQueue<int[]> open=new java.util.PriorityQueue<>((a,b)->Integer.compare(a[1],b[1]));
-    cost[start]=0;open.add(new int[]{start,0});int reached=start,best=Math.abs(sx-gx)+Math.abs(sy-gy),expanded=0;
-    int[] ox={1,-1,0,0,1,1,-1,-1},oy={0,0,1,-1,1,-1,1,-1};
-    while(!open.isEmpty()&&expanded++<1400){
-     int node=open.poll()[0];if(closed[node])continue;closed[node]=true;
-     int cx=node%cols,cy=node/cols,dist=Math.abs(cx-gx)+Math.abs(cy-gy);
-     if(dist<best){best=dist;reached=node;}if(node==goal){reached=node;break;}
-     for(int d=0;d<8;d++){
-      int nx=cx+ox[d],ny=cy+oy[d];if(nx<0||ny<0||nx>=cols||ny>=rows)continue;
-      float wx=nx*cell+cell/2f,wy=ny*cell+cell/2f;
-      if(wildlifeBlocked(wx,wy))continue;
-      if(d>=4&&(wildlifeBlocked((cx+ox[d])*cell+cell/2f,cy*cell+cell/2f)||wildlifeBlocked(cx*cell+cell/2f,(cy+oy[d])*cell+cell/2f)))continue;
-      int next=ny*cols+nx;float ng=cost[node]+(d>=4?1.4142f:1f);
-      if(ng>=cost[next])continue;cost[next]=ng;parent[next]=node;
-      open.add(new int[]{next,(int)(ng*10+10*Math.hypot(nx-gx,ny-gy))});
-     }
-    }
-    java.util.ArrayList<float[]> route=new java.util.ArrayList<>();int n=reached;
-    while(n!=start&&n>=0&&route.size()<100){route.add(0,new float[]{(n%cols)*cell+cell/2f,(n/cols)*cell+cell/2f});n=parent[n];}
-    m.path=route;m.pathIndex=0;m.pathTimer=.7f+random.nextFloat()*.4f;
+    m.path=mobNavigation.find(m.x,m.y,tx,ty,(x,y)->villageZone(x,y,28)||outdoorTerrainBlocked(x,y));
+    m.pathIndex=0;m.pathTimer=m.path.isEmpty()?1.3f:.9f+random.nextFloat()*.3f;
    }
+
    int direction(float vx,float vy){return Math.abs(vx)>Math.abs(vy)?(vx<0?2:3):(vy<0?1:0);}
   void attack(){
    if(hp<=0||attackCooldown>0||inventoryOpen||shopOpen||pauseMenu||startScreen||creatorOpen||indoors)return;
