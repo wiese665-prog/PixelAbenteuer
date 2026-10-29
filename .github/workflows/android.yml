@@ -51,6 +51,11 @@ jobs:
           mkdir -p /tmp/pixel-navigation-tests
           javac -encoding UTF-8 -d /tmp/pixel-navigation-tests app/src/main/java/de/pixelabenteuer/game/MobNavigation.java tests/MobNavigationTest.java
           java -cp /tmp/pixel-navigation-tests de.pixelabenteuer.game.MobNavigationTest
+      - name: Verify intermittent ambient animation
+        run: |
+          mkdir -p /tmp/pixel-ambient-tests
+          javac -encoding UTF-8 -d /tmp/pixel-ambient-tests app/src/main/java/de/pixelabenteuer/game/AmbientMotion.java tests/AmbientMotionTest.java
+          java -cp /tmp/pixel-ambient-tests de.pixelabenteuer.game.AmbientMotionTest
       - name: Build APK
         run: |
           echo "sdk.dir=$ANDROID_HOME" > local.properties

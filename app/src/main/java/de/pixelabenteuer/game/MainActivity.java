@@ -220,18 +220,31 @@ public class MainActivity extends Activity {
    }
   }
   Game(){super(MainActivity.this);setFocusable(true);setFocusableInTouchMode(true);paint.setFilterBitmap(false);loadSprites();loadBuildings();loadVillage();loadGuild();loadOtherRooms();loadClouds();loadItems();loadDecorations();spawnMobs();masterMusicVolume=getContext().getSharedPreferences("pixel_settings",MODE_PRIVATE).getFloat("music_volume",0.05f);startMusic();initHitSounds();}
+  static final int MAX_ANIMALS=10,MAX_ORCS=6;
+  void trimWildlifePopulation(){
+   ArrayList<Mob> sorted=new ArrayList<>(mobs);
+   Collections.sort(sorted,(a,b)->Double.compare((a.x-px)*(a.x-px)+(a.y-py)*(a.y-py),(b.x-px)*(b.x-px)+(b.y-py)*(b.y-py)));
+   int animals=0,orcs=0;
+   for(Mob m:sorted){
+    if(m.dead){if(m.deathTimer>2.5f)mobs.remove(m);continue;}
+    boolean keep=m.kind.startsWith("orc")?++orcs<=MAX_ORCS:++animals<=MAX_ANIMALS;
+    if(!keep)mobs.remove(m);
+   }
+   for(Mob m:mobs)if(m.leader!=null&&!mobs.contains(m.leader))m.leader=null;
+  }
   void spawnMobs(){
+   trimWildlifePopulation();
    String[] types={"boar","deer","orc1","orc2","orc3","fox","black_grouse"};
    int animals=0,orcs=0;
    for(Mob m:mobs)if(!m.dead){if(m.kind.startsWith("orc"))orcs++;else animals++;}
-   for(int attempts=0;attempts<1400&&(animals<28||orcs<18);attempts++){
+   for(int attempts=0;attempts<1400&&(animals<MAX_ANIMALS||orcs<MAX_ORCS);attempts++){
     String kind=types[random.nextInt(types.length)];
     boolean orc=kind.startsWith("orc");
-    if((orc&&orcs>=18)||(!orc&&animals>=28))continue;
+    if((orc&&orcs>=MAX_ORCS)||(!orc&&animals>=MAX_ANIMALS))continue;
     float x=orc?380+random.nextInt(1100):80+random.nextInt(1440),y=80+random.nextInt(840);
     if(wildlifeBlocked(x,y)||Math.hypot(x-merchantX,y-merchantY)<110)continue;
-    int available=(orc?18-orcs:28-animals);
-    int groupSize=(kind.equals("boar")||kind.equals("deer")||orc)?Math.min(available,3+random.nextInt(2)):1;
+    int available=(orc?MAX_ORCS-orcs:MAX_ANIMALS-animals);
+    int groupSize=(kind.equals("boar")||kind.equals("deer")||orc)?Math.min(available,2):1;
     Mob alpha=new Mob(kind,x,y);
     if((orc||kind.equals("boar"))&&groupSize>1){alpha.alpha=true;alpha.maxHp=Math.round(alpha.maxHp*1.7f);alpha.hp=alpha.maxHp;alpha.damage+=2;}
     mobs.add(alpha);if(orc)orcs++;else animals++;
@@ -347,7 +360,7 @@ public class MainActivity extends Activity {
     addVillageProp("Trees_animation",new int[]{0,192,352}[kind],0,kind==2?88:64,80,tx,ty,104,130,0,13);
    }
    // Atlas crops are measured from the supplied exterior sheet.
-   addVillageProp("exterior",48,496,40,40,610,525,56,56,17,1); // well
+   addVillageProp("exterior",48,496,40,40,610,525,56,56,0,1); // well: separate collision in actual foot coordinates
    for(int i=1;i<villageHouses.length;i++){
     float[] h=villageHouses[i];
     addVillageProp("exterior",112,464,32,40,h[0]-100,h[1]+132,38,48,12,1);
@@ -359,7 +372,7 @@ public class MainActivity extends Activity {
    for(float[] f:new float[][]{{350,530},{960,430},{350,885},{960,850},{700,210}})
     addVillageProp("exterior",208,768,16,32,f[0],f[1],24,40,0,1);
    fantasyProp("tower",1010,350,154,256,40);
-   fantasyProp("quests",730,530,43,49,10);
+   fantasyProp("quests",900,535,43,49,10);
    addVillageProp("shrine",0,0,80,48,SPAWN_X,SPAWN_Y+38.4f,48,28.8f,0,1);
    for(float[] light:new float[][]{{790,790},{870,790},{1000,340}})addVillageProp("guild/Flags_animation",0,0,48,48,light[0],light[1],62,62,0,12);
    addVillageProp("guild/Attacked_Manequin2_without_shadow",0,0,32,32,982,562,51.2f,51.2f,8,1);
@@ -409,14 +422,15 @@ public class MainActivity extends Activity {
    canvas.restore();
   }
   void drawVillageProp(VillageProp p){
-   int sy=p.sy+(p.frames>1?((int)(elapsed*6+p.x/70)%p.frames)*p.sh:0);
+   int frame=p.frames>1?(p.atlas.equals("Trees_animation")?AmbientMotion.frame(elapsed,p.x,p.y,p.frames,6,12,16):(int)(elapsed*6+p.x/70)%p.frames):0;
+   int sy=p.sy+frame*p.sh;
    canvas.save();if(!p.atlas.equals("shrine"))canvas.scale(1f,1f/CAMERA_GROUND_Y,p.x,p.y);
    villageTile(p.atlas,p.sx,sy,p.sw,p.sh,p.x-p.w/2,p.y-p.h,p.w,p.h);
    canvas.restore();
   }
   boolean villageObstacle(float x,float y){
    for(int i=1;i<villageHouses.length;i++){float[] h=villageHouses[i];if(Math.abs(x-h[0]-villageDoorOffsets[i])<20&&y>h[1]+94)continue;if(x>h[0]-111&&x<h[0]+112&&y>h[1]+48&&y<h[1]+116)return true;}
-   for(VillageProp p:villageProps)if(p.radius>0&&Math.hypot(x-p.x,y-p.y)<p.radius+7)return true;
+   for(VillageProp p:villageProps)if(p.radius>0&&Math.abs(x-p.x)<p.radius+7&&Math.abs(y-p.y)<p.radius+7&&Math.hypot(x-p.x,y-p.y)<p.radius+7)return true;
    return false;
   }
   boolean wildlifeBlocked(float x,float y){return villageZone(x,y,28)||blocked(x,y);}
@@ -426,9 +440,10 @@ public class MainActivity extends Activity {
     if(!wildlifeBlocked(x,y)&&!mobFootBlocked(x,y,m,20)){m.x=x;m.y=y;m.path.clear();m.pathIndex=0;m.pathTimer=0;return;}}
   }
   void drawVillageBirds(){
-   int frame=(int)(elapsed*7)%20;
+   if(Math.abs(px-1266)>700||Math.abs(py-560)>500)return;
    for(int i=0;i<3;i++){
     float x=1220+i*46,y=550+(i%2)*18;
+    int frame=AmbientMotion.frame(elapsed,x,y,20,7,10,15);
     villageTile("bird_jump_animation",frame*32,(i%3)*32,32,32,x-16,y-24,32,32);
    }
   }
@@ -447,7 +462,7 @@ public class MainActivity extends Activity {
   final VillageResidents residentSystem=new VillageResidents();
   final ArrayList<VillageResidents.Resident> guildResidents=residentSystem.people;
   final VillageResidents.World residentWorld=new VillageResidents.World(){
-   public boolean blocked(int room,float x,float y){return room==VillageResidents.OUTSIDE?outdoorTerrainBlocked(x,y):room>=0?guildBlocked(room,x,y):false;}
+   public boolean blocked(int room,float x,float y){return room==VillageResidents.OUTSIDE?(outdoorTerrainBlocked(x,y)||wellFootBlocked(x,y,7)):room>=0?guildBlocked(room,x,y):false;}
    public boolean road(float x,float y){return roadAt(x,y,0);}
    public int playerFloor(){return currentResidentRoom();}
    public float playerX(){return indoors&&currentHouse!=1?px-60:px;}
@@ -856,9 +871,7 @@ public class MainActivity extends Activity {
    try(InputStream in=getAssets().open("sprites/"+filename)){return BitmapFactory.decodeStream(in);}catch(Exception ignored){return null;}
   }
   void loadDecorations(){
-   ArrayList<Bitmap> rocks=new ArrayList<>(),rockMasks=new ArrayList<>(),ruins=new ArrayList<>(),plants=new ArrayList<>();
-   String[] ruinTypes={"Blue-gray_ruins","Brown-gray_ruins","Brown_ruins","Sand_ruins"};
-   for(String type:ruinTypes)for(int i=1;i<=5;i++){Bitmap b=asset(type+i+".png");if(b!=null)ruins.add(b);}
+   ArrayList<Bitmap> rocks=new ArrayList<>(),rockMasks=new ArrayList<>(),plants=new ArrayList<>();
    for(int type=1;type<=6;type++)for(int i=1;i<=5;i++){Bitmap b=asset("Rock"+type+"_"+i+".png");if(b!=null){rocks.add(b);Bitmap mask=asset("Rock"+type+"_"+i+"_no_shadow.png");rockMasks.add(mask==null?b:mask);}}
    try{
     String[] filenames=getAssets().list("sprites");
@@ -871,13 +884,7 @@ public class MainActivity extends Activity {
    }catch(Exception ignored){}
    java.util.Random terrainRandom=new java.util.Random(91827L);
    // Reject intersecting decoration rectangles; keep house, entrance and spawn clear.
-   for(int i=0,tries=0;i<4&&tries<200;tries++){
-    float x=100+terrainRandom.nextInt(1400),y=80+terrainRandom.nextInt(820);
-    if(!decorationSpaceFree(x,y,94,90,230f))continue;
-    Bitmap b=ruins.isEmpty()?null:ruins.get(i%ruins.size());
-    decorations.add(new Decoration(b,b,x,y,94,90,true));i++;
-   }
-   for(int i=0,tries=0;i<85&&tries<1600;tries++){
+   for(int i=0,tries=0;i<18&&tries<800;tries++){
     float x=60+terrainRandom.nextInt(1480),y=65+terrainRandom.nextInt(870);
     float w=20+(i%3)*4,h=19+(i%4)*4;
     if(!decorationSpaceFree(x,y,w,h,210f))continue;
@@ -897,6 +904,8 @@ public class MainActivity extends Activity {
    if(Math.hypot(x-SPAWN_X,y-SPAWN_Y)<145f)return false;
    if(Math.hypot(x-merchantX,y-merchantY)<85f)return false;
    float left=x-w/2f,right=x+w/2f,top=y-h*.8f,bottom=top+h;
+   // Check the complete visible footprint, including the road-clearance border.
+   for(float xx=left-12;xx<=right+12;xx+=8)for(float yy=top-12;yy<=bottom+12;yy+=8)if(roadAt(xx,yy,16))return false;
    for(Decoration d:decorations){
     float dl=d.x-d.w/2f,dt=d.y-d.h*.8f;
     if(left<dl+d.w+12&&right>dl-12&&top<dt+d.h+12&&bottom>dt-12)return false;
@@ -933,7 +942,11 @@ public class MainActivity extends Activity {
    }
    return false;
   }
-  boolean blocked(float x,float y){return outdoorTerrainBlocked(x,y)||residentSystem.occupied(VillageResidents.OUTSIDE,x,y+24,null,7);}
+  boolean wellFootBlocked(float x,float footY,float radius){
+   float dx=x-610,dy=footY-510;float reach=17+radius;
+   return dx*dx+dy*dy<reach*reach;
+  }
+  boolean blocked(float x,float y){return outdoorTerrainBlocked(x,y)||wellFootBlocked(x,y+24,7)||residentSystem.occupied(VillageResidents.OUTSIDE,x,y+24,null,7);}
   final byte[] terrainCollisionCache=new byte[WORLD_W*WORLD_H];
   final MobNavigation mobNavigation=new MobNavigation(WORLD_W,WORLD_H);
   float mobPathCooldown=0;
@@ -1465,6 +1478,7 @@ public class MainActivity extends Activity {
     buildingNameTime=0;doorTimer=0;doorHouse=-1;doorSwitched=false;
     if(indoors&&(currentHouse==GUILD_HOUSE||currentHouse>=11&&currentHouse<=14)&&guildBlocked(furnishedRoom(),px-60,py-174)){px=396;py=484;}
     if(!indoors&&blocked(px,py)){px=550;py=470;}
+    trimWildlifePopulation();
     for(Mob m:mobs)if(!m.dead&&wildlifeBlocked(m.x,m.y))moveWildlifeOutside(m);
     startScreen=false;pauseMenu=false;inventoryOpen=false;shopOpen=false;calendarOpen=false;joyX=joyY=0;previous=System.nanoTime();
     pickupNotice="Spielstand geladen";noticeTime=3f;
@@ -1828,7 +1842,7 @@ public class MainActivity extends Activity {
    if(b==null)b=sprites.get(kind+"_idle_"+direction);
    if(b==null){drawRect(kind.startsWith("orc")?col("#71994b"):kind.startsWith("player")?col("#4775a0"):col("#b98d62"),x-w/2,y-h/2,w,h);return;}
    int frameWidth=b.getHeight();int count=Math.max(1,b.getWidth()/Math.max(1,frameWidth));
-   int frame=freeze?count-1:((int)(Math.max(0,time)*8))%count;
+   int frame=freeze?count-1:kind.equals("black_grouse")&&action.equals("idle")?AmbientMotion.frame(elapsed,x,y,count,8,10,15):((int)(Math.max(0,time)*8))%count;
    paint.setColor(Color.WHITE);paint.setColorFilter(null);paint.setAlpha(255);paint.setStyle(Paint.Style.FILL);paint.setFilterBitmap(false);
    canvas.drawBitmap(b,new Rect(frame*frameWidth,0,(frame+1)*frameWidth,b.getHeight()),new RectF(x-w/2,y-h/2,x+w/2,y+h/2),paint);
   }

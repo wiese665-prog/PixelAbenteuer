@@ -41,3 +41,9 @@ Long hair uses the unshifted native bob crown masks with all six native color in
 The left creator shield uses the original oblique shield frame, placed away from the visible hand and arm; the weapon remains in front.
 
 Wildlife no longer starts A* searches for ordinary roaming, flock following or fleeing. Hostile pursuit shares one search slot every 120ms and a 240-node expansion cap. Static navigation cells and fine terrain collision results are cached independently from residents.
+
+## Ambient activity and map density
+
+Trees and birds use deterministic independent animation phases with long idle periods. Idle wild grouse also pause their animation; movement/escape animations remain active. Population limits are ten animals and six orcs, groups at most two, enforced both at spawn and when loading older saves.
+
+Ruin placements are removed. Rock placements are reduced from 85 to 18 and every decoration footprint, including a 12px border, is checked against paths. The noticeboard is moved to (900,535). The well has an independent ground-foot collider centered at (610,510); player checks use py+24 and resident checks use their native foot coordinates.
