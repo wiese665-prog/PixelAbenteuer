@@ -9,7 +9,8 @@ for args in re.findall(r'guildFurniture\((\d+,"[^"]+",[^;]+)\);',s):
  a=args.split(',');objects.append((int(a[0]),[float(v.rstrip('f')) for v in a[2:]]))
 world=Image.new('L',(1600,1000));d=ImageDraw.Draw(world)
 for i,(x,y) in enumerate(houses[1:],1):
- d.rectangle((x-111,y+48,x+111,y+116),fill=1);d.rectangle((x+offset[i]-19,y+95,x+offset[i]+19,y+116),fill=0)
+ half=132 if i==2 else 111
+ d.rectangle((x-half,y+48,x+half,y+116),fill=1);d.rectangle((x+offset[i]-19,y+95,x+offset[i]+19,y+116),fill=0)
 forge=Image.open(ROOT/'app/src/main/assets/sprites/Exterior_house.png').convert('RGBA').crop((0,0,145,163));alpha=forge.getchannel('A').resize((232,261),Image.Resampling.NEAREST).point(lambda a:1 if a>48 else 0).filter(ImageFilter.MaxFilter(15));world.paste(alpha,(434,160),alpha.point(lambda a:255 if a else 0));d=ImageDraw.Draw(world);d.rectangle((527,379,573,450),fill=0)
 for (sx,sy,sw,sh),(x,y,w,h) in [((70,162,32,38),(433,413,50,52)),((116,160,34,34),(647,366,55,55))]:
  im=Image.open(ROOT/'app/src/main/assets/sprites/Exterior_house.png').convert('RGBA').crop((sx,sy,sx+sw,sy+sh)).getchannel('A').resize((w,h),Image.Resampling.NEAREST).point(lambda a:1 if a>48 else 0).filter(ImageFilter.MaxFilter(15));world.paste(im,(x,y),im.point(lambda a:255 if a else 0))

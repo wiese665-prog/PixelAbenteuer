@@ -40,6 +40,7 @@ jobs:
           python3 scripts/verify_guild_layout.py
           python3 scripts/verify_village_refinement.py
           python3 scripts/verify_character_views.py
+          python3 scripts/verify_class_sprites.py
       - name: Simulate unique village residents
         run: |
           python3 scripts/export_resident_world.py /tmp/pixel-resident-world.bin
@@ -56,6 +57,11 @@ jobs:
           mkdir -p /tmp/pixel-ambient-tests
           javac -encoding UTF-8 -d /tmp/pixel-ambient-tests app/src/main/java/de/pixelabenteuer/game/AmbientMotion.java tests/AmbientMotionTest.java
           java -cp /tmp/pixel-ambient-tests de.pixelabenteuer.game.AmbientMotionTest
+      - name: Verify archer and mage combat
+        run: |
+          mkdir -p /tmp/pixel-ranged-tests
+          javac -encoding UTF-8 -d /tmp/pixel-ranged-tests app/src/main/java/de/pixelabenteuer/game/RangedCombat.java tests/RangedCombatTest.java
+          java -cp /tmp/pixel-ranged-tests de.pixelabenteuer.game.RangedCombatTest
       - name: Build APK
         run: |
           echo "sdk.dir=$ANDROID_HOME" > local.properties

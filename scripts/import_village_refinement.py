@@ -115,3 +115,8 @@ for n,box in enumerate(boxes):
  im=ext.crop(box);assert im.width<=32 and im.height<=32
  details.alpha_composite(im,(n*32+(32-im.width)//2,32-im.height))
 details.save(OUT/'grass_details.png')
+
+# Keep the approved replacement and its own aligned door strip on regeneration.
+if (ROOT/"art/source/inn-approved.png").exists():
+ import runpy
+ runpy.run_path(str(ROOT/"scripts/build_approved_inn.py"))

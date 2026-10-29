@@ -21,9 +21,10 @@ public class MainActivity extends Activity {
  @Override protected void onResume(){super.onResume();if(gameView!=null)gameView.resumeMusic();}
  @Override protected void onDestroy(){if(gameView!=null)gameView.releaseMusic();super.onDestroy();}
  Game gameView;
- class Mob {
+ class Mob implements RangedCombat.Target {
   String kind,action="idle";float x,y,vx,vy,anim=0,decision=0,attackTimer=0,hurtTimer=0,deathTimer=0,healthVisible=0;int hp,maxHp,level,damage,dir=0;boolean dead=false,alpha=false;Mob leader=null;float pathTimer=0;int pathIndex=0;java.util.ArrayList<float[]> path=new java.util.ArrayList<>();float damageNumberTime=0;int lastDamage=0;
   Mob(String k,float xx,float yy) {kind=k;x=xx;y=yy;level=1+(int)(Math.random()*(k.startsWith("orc")?6:4));int baseHp=k.equals("orc3")?12:k.equals("orc2")?9:k.equals("orc1")?7:k.equals("boar")?8:k.equals("deer")?5:k.equals("fox")?4:2;maxHp=baseHp+(level-1)*(k.equals("boar")||k.startsWith("orc")?3:2);hp=maxHp;damage=(k.equals("orc3")?3:k.equals("orc2")?2:k.equals("orc1")?1:0)+(level-1)/3;}
+  public float shotX(){return x;}public float shotY(){return y;}public float shotRadius(){return kind.startsWith("orc")?15:kind.equals("deer")?13:10;}public boolean shotAlive(){return !dead;}
   boolean hostile(){return kind.startsWith("orc")||kind.equals("boar");}
  }
  class Decoration {
@@ -58,7 +59,55 @@ public class MainActivity extends Activity {
   }
   String[] hotbar=new String[9];int selectedHotbar=-1;int copper=0,silver=0,gold=0,hoverSlot=-1;float hoverX=0,hoverY=0;
   Item inspectedGear=null;String characterName="Abenteurer";int armorStyle=0,characterGender=0;boolean sprintHeld=false;int attackSequence=0;boolean creatorOpen=false,calendarOpen=false;int hairType=0,hairColor=1,skinColor=1,eyeColor=0,combatStyle=0;boolean inventoryOpen=false,shopOpen=false,startScreen=true,pauseMenu=false,controlsOpen=false;float merchantX=515,merchantY=525;
-  int creatorFacing=0;
+  int creatorFacing=0,attackDir=0;
+  final HashMap<String,int[]> classGrips=new HashMap<>();
+  final RangedCombat rangedCombat=new RangedCombat();
+  float rangedWindup=0,manaRegen=0,pendingFx=0,pendingFy=0;int pendingRole=0,pendingDamage=0;
+  final RangedCombat.World shotWorld=new RangedCombat.World(){
+   public boolean blocked(float x,float y){return x<0||y<0||x>WORLD_W||y>WORLD_H||outdoorTerrainBlocked(x,y);}
+   public Iterable<Mob> targets(){return mobs;}
+   public void hit(RangedCombat.Target target,int damage){damageMob((Mob)target,damage);}
+  };
+  int characterRole(){return creatorOpen?(combatStyle==3?RangedCombat.ARCHER:combatStyle==4?RangedCombat.MAGE:0):RangedCombat.role(equipped.get("Waffe"));}
+  String classTitle(){int role=characterRole();return role==1?"Bogenschuetze":role==2?"Magier":"Abenteurer";}
+  String outfitType(){
+   if(creatorOpen&&characterRole()>0)return characterRole()==1?"rngr":"robe";
+   String name=baseEquipmentName(equipped.getOrDefault("Brust",""));
+   return name.equals("Magierrobe")?"robe":name.equals("Waldlaeuferwams")?"rngr":equipped.containsKey("Brust")?"fstr":characterGender==0?"boxr":"undi";
+  }
+  String hatType(){
+   if(creatorOpen&&characterRole()>0)return characterRole()==1?"hood":"mgHt";
+   String name=baseEquipmentName(equipped.getOrDefault("Kopf",""));
+   return name.equals("Magierhut")||name.equals("Wizard Hat")?"mgHt":name.equals("Waldlaeuferkapuze")?"hood":name.isEmpty()?"":"pfht";
+  }
+  void beginAdventure(){
+   if(equipped.isEmpty()&&inventory.isEmpty()&&combatStyle>=3){
+    String[] kit=combatStyle==3?new String[]{"Jagdbogen","Waldlaeuferwams","Waldlaeuferkapuze"}:new String[]{"Magierstab","Magierrobe","Magierhut"};
+    for(String name:kit){Item item=definitions.get(name);equipped.put(item.slot,name);}recalcStats();hp=maxHp;mana=maxMana;
+   }
+   creatorOpen=false;startScreen=false;pauseMenu=false;previous=System.nanoTime();
+  }
+  void clearRanged(){rangedCombat.clear();rangedWindup=0;pendingRole=0;}
+  void updateRanged(float dt){
+   if(hp<=0){clearRanged();return;}
+   manaRegen+=dt;if(manaRegen>=.5f){int amount=(int)(manaRegen/.5f);manaRegen-=amount*.5f;mana=Math.min(maxMana,mana+amount);}
+   if(indoors||doorTimer>0){clearRanged();return;}
+   if(pendingRole>0){
+    if(hurtAnim>0||characterRole()!=pendingRole){pendingRole=0;rangedWindup=0;}
+    else {rangedWindup-=dt;if(rangedWindup<=0){rangedCombat.launch(pendingRole,px+pendingFx*14,py+pendingFy*14,pendingFx,pendingFy,pendingDamage);pendingRole=0;}}
+   }
+   rangedCombat.update(dt,shotWorld);
+  }
+  void drawProjectile(RangedCombat.Shot shot){
+    if(shot.kind==RangedCombat.MAGE){
+     drawRect(col("#1e2b41"),shot.x-4,shot.y-4,8,8);drawRect(col("#6982a6"),shot.x-3,shot.y-3,6,6);drawRect(col("#94c1df"),shot.x-2,shot.y-2,4,4);drawRect(col(((int)(elapsed*10)&1)==0?"#c7c4a2":"#94c1df"),shot.x-1,shot.y-1,2,2);
+    }else{
+     float n=(float)Math.hypot(shot.vx,shot.vy),dx=shot.vx/n,dy=shot.vy/n;
+     paint.setColor(col("#be865f"));paint.setStrokeWidth(2);canvas.drawLine(shot.x-dx*9,shot.y-dy*9,shot.x+dx*3,shot.y+dy*3,paint);
+     drawRect(col("#94c1df"),shot.x+dx*4-1,shot.y+dy*4-1,3,3);drawRect(col("#c7c4a2"),shot.x-dx*8-1,shot.y-dy*8-1,3,3);paint.setStrokeWidth(1);
+    }
+  }
+
   final int[] creatorDirections={0,3,1,2}; // front, right, back, left
   int activeMerchant=0; // 0 Orc-Händler, 1 Schmied, 2 Händlerin
   String[] shopStock={"Apple","Ham","Healthpotion","Healpotion med","Iron Sword","Silver Sword","Leather Armor","Iron Armor","Iron Helmet","Golden Sword"};
@@ -429,7 +478,7 @@ public class MainActivity extends Activity {
    canvas.restore();
   }
   boolean villageObstacle(float x,float y){
-   for(int i=1;i<villageHouses.length;i++){float[] h=villageHouses[i];if(Math.abs(x-h[0]-villageDoorOffsets[i])<20&&y>h[1]+94)continue;if(x>h[0]-111&&x<h[0]+112&&y>h[1]+48&&y<h[1]+116)return true;}
+   for(int i=1;i<villageHouses.length;i++){float[] h=villageHouses[i];if(Math.abs(x-h[0]-villageDoorOffsets[i])<20&&y>h[1]+94)continue;float half=i==2?132:111;if(x>h[0]-half&&x<h[0]+half+1&&y>h[1]+48&&y<h[1]+116)return true;}
    for(VillageProp p:villageProps)if(p.radius>0&&Math.abs(x-p.x)<p.radius+7&&Math.abs(y-p.y)<p.radius+7&&Math.hypot(x-p.x,y-p.y)<p.radius+7)return true;
    return false;
   }
@@ -854,7 +903,7 @@ public class MainActivity extends Activity {
    paint.setTextAlign(Paint.Align.LEFT);paint.setTypeface(Typeface.DEFAULT);
    float cx=l+340+(px-400),cy=t+176+(py-350);
    String indoorAction=hp<=0?"death":doorTimer>0?"walk":hurtAnim>0?"hurt":attackAnim>0&&sword?"attack":Math.abs(joyX)+Math.abs(joyY)>.08f?(sprintHeld?"run":"walk"):"idle";
-   drawSprite(sword?"player_sword":"player_unarmed",indoorAction,playerDir,cx,cy,88.704f,88.704f,hp<=0?deathAnim:attackAnim>0?.4f-attackAnim:elapsed,hp<=0&&deathAnim>.8f);
+   drawSprite(sword?"player_sword":"player_unarmed",indoorAction,playerDir,cx,cy,88.704f,88.704f,hp<=0?deathAnim:hurtAnim>0?.32f-hurtAnim:attackAnim>0?.4f-attackAnim:elapsed,hp<=0&&deathAnim>.8f);
    paint.setColor(col("#fff2d5"));paint.setTextSize(13);
    canvas.drawText("Ausgang unten mittig",l+263,t+345,paint);
   }
@@ -1031,6 +1080,23 @@ public class MainActivity extends Activity {
    define("Healthpotion","Uncommon","",0,0,0,10);
    define("Healpotion med","Rare","",0,0,0,20);
    define("Healthpotion large","Super Rare","",0,0,0,40);
+   define("Jagdbogen","Uncommon","Waffe",4,0,0,0);
+   define("Magierstab","Uncommon","Waffe",5,0,0,0);
+   define("Waldlaeuferwams","Uncommon","Brust",0,3,4,0);
+   define("Waldlaeuferkapuze","Uncommon","Kopf",0,1,2,0);
+   define("Magierrobe","Uncommon","Brust",0,2,3,0);definitions.get("Magierrobe").mana=16;
+   define("Magierhut","Uncommon","Kopf",0,1,2,0);definitions.get("Magierhut").mana=12;
+   for(String name:new String[]{"Jagdbogen","Magierstab","Waldlaeuferwams","Waldlaeuferkapuze","Magierrobe","Magierhut"}){
+    try(InputStream in=getAssets().open("class_items/"+name+".png")){itemImages.put(name,BitmapFactory.decodeStream(in));}catch(Exception e){android.util.Log.e("PixelClasses","Missing "+name,e);}
+   }
+   try(InputStream in=getAssets().open("class_items/grips.json")){
+    ByteArrayOutputStream bytes=new ByteArrayOutputStream();byte[] buffer=new byte[4096];int length;
+    while((length=in.read(buffer))!=-1)bytes.write(buffer,0,length);
+    org.json.JSONObject root=new org.json.JSONObject(bytes.toString("UTF-8"));java.util.Iterator<String> pages=root.keys();
+    while(pages.hasNext()){String page=pages.next();org.json.JSONArray cells=root.getJSONArray(page);int[] coords=new int[128];
+     for(int i=0;i<64;i++){org.json.JSONArray point=cells.getJSONArray(i);coords[i*2]=point.getInt(0);coords[i*2+1]=point.getInt(1);}classGrips.put(page,coords);}
+   }catch(Exception e){android.util.Log.e("PixelClasses","Missing hand attachment data",e);}
+   Bitmap mageHat=itemImages.get("Magierhut");if(mageHat!=null)itemImages.put("Wizard Hat",mageHat);
    setManaBonuses();
    defineEquipmentVariants();
    refreshMerchantStocks();
@@ -1110,7 +1176,14 @@ public class MainActivity extends Activity {
    for(int i=0;i<4&&i<orcPool.size();i++)offer.add(orcPool.get(i));
    for(int i=0;i<6&&i<orcGear.size();i++)offer.add(uniqueGear(orcGear.get(i)));
    shopStock=offer.toArray(new String[0]);
+   ensureClassStock();
    stockRotation++;
+  }
+  void ensureClassStock(){
+   // Both new classes remain available in old saves without rerolling stock.
+   if(smithStock.length>=2){smithStock[smithStock.length-2]="Jagdbogen";smithStock[smithStock.length-1]="Magierstab";}
+   sellerStock=new String[]{"Apple","Green Apple","Ham","Cheese","Mushroom","Healthpotion","Healthpotion large","Healpotion med","Waldlaeuferwams","Waldlaeuferkapuze","Magierrobe","Magierhut"};
+   if(shopStock.length>=2){shopStock[shopStock.length-2]="Jagdbogen";shopStock[shopStock.length-1]="Magierstab";}
   }
   String[] activeStock(){return activeMerchant==1?smithStock:activeMerchant==2?sellerStock:shopStock;}
   String merchantTitle(){return activeMerchant==1?"Borin":activeMerchant==2?"Maela":"Grom";}
@@ -1200,14 +1273,22 @@ public class MainActivity extends Activity {
   }
   void equip(String name){
    Item item=definitions.get(name);if(item==null||!item.equipment()||inventory.getOrDefault(name,0)<=0)return;
+   if(item.slot.equals("Schild")&&characterRole()>0){pickupNotice="Bogen und Stab brauchen beide Haende";noticeTime=2;return;}
    String old=equipped.get(item.slot);if(name.equals(old))return;
+   String offhand=item.slot.equals("Waffe")&&RangedCombat.role(name)>0?equipped.get("Schild"):null;
+   int bagSlots=inventory.size()-(inventory.get(name)==1?1:0)+(old!=null&&!inventory.containsKey(old)?1:0)+(offhand!=null&&!inventory.containsKey(offhand)?1:0);
+   if(bagSlots>24){pickupNotice="Platz fuer abgelegte Ausruestung schaffen";noticeTime=2;return;}
+   if(item.slot.equals("Waffe")&&RangedCombat.role(name)>0){String shield=equipped.remove("Schild");if(shield!=null)inventory.put(shield,inventory.getOrDefault(shield,0)+1);}
+   pendingRole=0;rangedWindup=0;
    inventory.put(name,inventory.get(name)-1);if(inventory.get(name)<=0)inventory.remove(name);
    if(old!=null)inventory.put(old,inventory.getOrDefault(old,0)+1);
    equipped.put(item.slot,name);cleanupHotbar();recalcStats();hoverSlot=-1;
    pickupNotice=name+" angelegt";noticeTime=2f;
   }
   void unequip(String slot){
-   String old=equipped.remove(slot);if(old==null)return;
+   String old=equipped.get(slot);if(old==null)return;
+   if(!inventory.containsKey(old)&&inventory.size()>=24){pickupNotice="Inventar voll (24 Plaetze)";noticeTime=2;return;}
+   equipped.remove(slot);pendingRole=0;rangedWindup=0;
    inventory.put(old,inventory.getOrDefault(old,0)+1);recalcStats();
    pickupNotice=old+" ausgezogen";noticeTime=2f;
   }
@@ -1304,14 +1385,14 @@ public class MainActivity extends Activity {
   void drawInventory(float vw,float vh){
    float left=invLeft(vw),top=invTop(vh);
    panel(left,top,750,402);drawRect(col("#c6a66c"),left+10,top+56,730,2);drawRect(col("#8c754d"),left+304,top+67,2,300);
-   fantasyHeading("Abenteurer  /  Inventar",left+18,top+30,23);
+   fantasyHeading(classTitle()+"  /  Inventar",left+18,top+30,23);
    paint.setTextSize(11);paint.setColor(col("#9fc2c0"));canvas.drawText("Hotbar anklicken: Platz waehlen / leeren  |  Item anklicken: zuweisen",left+18,top+48,paint);
    panel(left+14,top+65,285,313);
    fantasyHeading("Charakter",left+28,top+87,16);
    drawRect(col("#1b302e"),left+85,top+143,132,152);
    drawRect(col("#32564a"),left+89,top+147,124,144);
    drawSprite(sword?"player_sword":"player_unarmed","idle",0,left+151,top+217,150,165,elapsed,false);
-   paint.setTextSize(12);paint.setTypeface(Typeface.DEFAULT_BOLD);paint.setColor(col("#f2deb6"));canvas.drawText("ABENTEURER  -  Lv. "+playerLevel,left+75,top+316,paint);paint.setTypeface(Typeface.DEFAULT);
+   paint.setTextSize(12);paint.setTypeface(Typeface.DEFAULT_BOLD);paint.setColor(col("#f2deb6"));canvas.drawText(classTitle().toUpperCase(java.util.Locale.GERMAN)+"  -  Lv. "+playerLevel,left+75,top+316,paint);paint.setTypeface(Typeface.DEFAULT);
    String[] slots={"Kopf","Waffe","Brust","Fuesse","Guertel"};
    float[][] positions={{left+129,top+97},{left+21,top+155},{left+222,top+155},{left+21,top+246},{left+222,top+246}};
    for(int i=0;i<slots.length;i++){
@@ -1459,7 +1540,7 @@ public class MainActivity extends Activity {
     if(json==null){pickupNotice="Kein Spielstand";noticeTime=3f;return;}
     org.json.JSONObject root=new org.json.JSONObject(json);
     if(!root.has("inventory")||!root.has("equipped")||!root.has("hotbar")||!root.has("mobs")||!root.has("drops"))throw new org.json.JSONException("Incomplete save");
-    characterName=root.optString("characterName","Abenteurer");armorStyle=0;characterGender=root.optInt("characterGender",0);hairType=root.optInt("hairType",0);if(root.optInt("hairCatalog",0)<2&&hairType==2)hairType=1;hairType=Math.max(0,Math.min(5,hairType));hairColor=root.optInt("hairColor",1);skinColor=root.optInt("skinColor",1);eyeColor=root.optInt("eyeColor",0);combatStyle=root.optInt("combatStyle",0);creatorOpen=false;
+    characterName=root.optString("characterName","Abenteurer");armorStyle=0;characterGender=root.optInt("characterGender",0);hairType=root.optInt("hairType",0);if(root.optInt("hairCatalog",0)<2&&hairType==2)hairType=1;hairType=Math.max(0,Math.min(5,hairType));hairColor=root.optInt("hairColor",1);skinColor=root.optInt("skinColor",1);eyeColor=root.optInt("eyeColor",0);combatStyle=Math.max(0,Math.min(4,root.optInt("combatStyle",0)));creatorOpen=false;
     px=(float)root.getDouble("px");py=(float)root.getDouble("py");
     if(!Float.isFinite(px)||!Float.isFinite(py))throw new org.json.JSONException("Invalid position");indoors=root.optBoolean("indoors",false);currentHouse=root.optInt("currentHouse",0);guildFloor=Math.max(0,Math.min(2,root.optInt("guildFloor",0)));worldTime=(float)root.optDouble("worldTime",0);playerLevel=root.getInt("level");exp=root.getInt("exp");
     gold=root.getInt("gold");silver=root.getInt("silver");copper=root.getInt("copper");kills=root.optInt("kills");animalKills=root.optInt("animalKills");nextQuestDay=root.has("nextQuestDay")?root.optInt("nextQuestDay"):root.optInt("questsCompletedToday")>0?currentQuestDay()+2:0;questTier=root.optInt("questTier");questProgress=root.optInt("questProgress");questActive=root.optBoolean("questActive");
@@ -1467,7 +1548,7 @@ public class MainActivity extends Activity {
     nextGearId=root.optInt("nextGearId",1);org.json.JSONObject unique=root.optJSONObject("uniqueGear");if(unique!=null){java.util.Iterator<String> ids=unique.keys();while(ids.hasNext()){String id=ids.next();org.json.JSONObject o=unique.getJSONObject(id);Item item=new Item(id,o.getString("rarity"),o.getString("slot"),o.getInt("dmg"),o.getInt("armor"),o.getInt("hp"),0);item.mana=o.optInt("mana");definitions.put(id,item);}}
     org.json.JSONArray savedSmith=root.optJSONArray("smithStock");if(savedSmith!=null){smithStock=new String[savedSmith.length()];for(int j=0;j<smithStock.length;j++)smithStock[j]=savedSmith.getString(j);}
     org.json.JSONArray savedShop=root.optJSONArray("shopStock");if(savedShop!=null){shopStock=new String[savedShop.length()];for(int j=0;j<shopStock.length;j++)shopStock[j]=savedShop.getString(j);}
-    inventory.clear();org.json.JSONObject bag=root.getJSONObject("inventory");java.util.Iterator<String> keys=bag.keys();while(keys.hasNext()){String k=keys.next();int count=bag.getInt(k);if(count>0&&definitions.containsKey(k))inventory.put(k,Math.min(count,999999));}
+    ensureClassStock();clearRanged();manaRegen=0;inventory.clear();org.json.JSONObject bag=root.getJSONObject("inventory");java.util.Iterator<String> keys=bag.keys();while(keys.hasNext()){String k=keys.next();int count=bag.getInt(k);if(count>0&&definitions.containsKey(k))inventory.put(k,Math.min(count,999999));}
     equipped.clear();org.json.JSONObject gear=root.getJSONObject("equipped");keys=gear.keys();while(keys.hasNext()){String k=keys.next();String item=gear.getString(k);if(definitions.containsKey(item))equipped.put(k,item);}
     java.util.Arrays.fill(hotbar,null);selectedHotbar=-1;org.json.JSONArray bar=root.getJSONArray("hotbar");for(int i=0;i<Math.min(hotbar.length,bar.length());i++)if(!bar.isNull(i))hotbar[i]=bar.getString(i);
     recalcStats();hp=Math.max(0,Math.min(maxHp,root.getInt("hp")));mana=Math.max(0,Math.min(maxMana,root.optInt("mana",maxMana)));cleanupHotbar();
@@ -1521,8 +1602,8 @@ public class MainActivity extends Activity {
    drawRect(col("#1a3033"),left+249,top+73,290,29);
    paint.setColor(Color.WHITE);paint.setTextSize(15);
    canvas.drawText(characterName,left+394,top+94,paint);
-   String[] names={"GESCHLECHT","FRISUR","HAUTFARBE","HAARFARBE","KAMPFSTIL"};
-   String[] values={characterGender==0?"Maennlich":"Weiblich",new String[]{"Bob","Kurzhaar","Zoepfe","Locken","Dutt","Langhaar"}[Math.floorMod(hairType,6)],"Variante "+skinColor,"Farbe "+hairColor,new String[]{"Schwert + Schild","Axt + Schild","Streitkolben + Schild"}[combatStyle]};
+   String[] names={"GESCHLECHT","FRISUR","HAUTFARBE","HAARFARBE","KLASSE / STIL"};
+   String[] values={characterGender==0?"Maennlich":"Weiblich",new String[]{"Bob","Kurzhaar","Zoepfe","Locken","Dutt","Langzopf"}[Math.floorMod(hairType,6)],"Variante "+skinColor,"Farbe "+hairColor,new String[]{"Schwert + Schild","Axt + Schild","Streitkolben + Schild","Bogenschuetze","Magier"}[Math.floorMod(combatStyle,5)]};
    for(int i=0;i<5;i++){
     float yy=top+121+i*38;
     paint.setTextSize(12);paint.setTypeface(Typeface.DEFAULT_BOLD);
@@ -1572,7 +1653,7 @@ public class MainActivity extends Activity {
     case 1:hairType=Math.floorMod(hairType+delta,6);break;
     case 2:skinColor=Math.floorMod(skinColor+delta,11);break;
     case 3:hairColor=Math.floorMod(hairColor+delta,14);break;
-    case 4:combatStyle=Math.floorMod(combatStyle+delta,3);break;
+    case 4:combatStyle=Math.floorMod(combatStyle+delta,5);break;
     
    }
   }
@@ -1636,7 +1717,7 @@ public class MainActivity extends Activity {
    controlKey("1 - 9","Hotbar benutzen",left+28,top+204,102);
    controlKey("ESC","Pause / Zurueck",left+302,top+204,92);
    paint.setColor(col("#d7c7a8"));paint.setTextSize(13);paint.setTextAlign(Paint.Align.CENTER);
-   canvas.drawText("Auf dem Handy: Joystick und Bildschirmtasten verwenden.",vw/2,top+281,paint);
+   canvas.drawText("Bogen: Pfeile | Magier: 6 Mana pro Zauber, Mana regeneriert.",vw/2,top+281,paint);
    float backOffset=pressedControlsBack?5f:0f;
    drawRect(col(pressedControlsBack?"#716b60":"#c49b5d"),left+135,top+325+backOffset,310,49-backOffset);
    drawRect(col(pressedControlsBack?"#29332f":"#294540"),left+138,top+328+backOffset,304,43-backOffset);
@@ -1792,6 +1873,7 @@ public class MainActivity extends Activity {
    characterLayer("pONE2","7tlb",shield,1,0,0,x+dx*w/64f,y+dy*h/64f,w,h);
   }
   void drawCreatorCharacter(float x,float y,float w,float h,int facing){
+   if(characterRole()>0){drawRangedCharacter(x,y,w,h,facing,"idle",0,true);return;}
    // Body, outfit, hands and equipment share the same armed idle pose.
    String weapon=combatStyle==1?"ax01":combatStyle==2?"mc01":"sw01";
    String shield=equipped.getOrDefault("Schild","").contains("Iron")?"sh03":"sh01";
@@ -1800,7 +1882,7 @@ public class MainActivity extends Activity {
    if(shieldBehind)characterLayer("pONE2","7tlb",shield,1,facing,0,x,y,w,h);
    if(hairType==5&&facing!=1)characterLayer("pONE2","4har","longback",hairColor,facing,0,x,y,w,h);
    characterLayer("pONE2","0bas","humn",skinColor,facing,0,x,y,w,h);
-   characterLayer("pONE2","1out",equipped.containsKey("Brust")?"fstr":(characterGender==0?"boxr":"undi"),1,facing,0,x,y,w,h);
+   characterLayer("pONE2","1out",outfitType(),1,facing,0,x,y,w,h);
    if(hairType==5&&facing==1)characterLayer("pONE2","4har","longback",hairColor,facing,0,x,y,w,h);
    String hair=hairType==2?"braid":hairType==3?"curl":hairType==4?"bun":hairType==5?"long":hairType==0?"bob1":"dap1";
    if(hairType<2||hairType==5)characterLayer("pONE2","4har",hair,hairColor,facing,0,x,y,w,h);
@@ -1810,7 +1892,7 @@ public class MainActivity extends Activity {
     int dx=facing==1||facing==2?-1:facing==3?1:0,dy=facing==1?3:1;
     characterLayer("p1","4har",hair,hairColor,facing,0,x+dx*w/64f,y+dy*h/64f,w,h);
    }
-   if(equipped.containsKey("Kopf"))characterLayer("pONE2","5hat","pfht",1,facing,0,x,y,w,h);
+   if(!hatType().isEmpty())characterLayer("pONE2","5hat",hatType(),1,facing,0,x,y,w,h);
    if(!weaponBehind&&facing!=3)characterLayer("pONE2","6tla",weapon,1,facing,0,x,y,w,h);
    if(!shieldBehind){
     // The oblique shield is anchored to the native left-facing grip.
@@ -1824,7 +1906,43 @@ public class MainActivity extends Activity {
     characterLayer("pONE2","6tla",weapon,1,facing,0,x,y,w,h);
    }
   }
+  void drawRangedGrip(String page,int row,int column,float x,float y,float w,float h){
+   int[] grips=classGrips.get(page);Bitmap body=characterSheet(page,"0bas","humn",skinColor);if(grips==null||body==null)return;
+   int offset=(row*8+column)*2,gx=grips[offset],gy=grips[offset+1];
+   // Real fingers overlap the weapon grip; copy only the native palm pixels.
+   paint.setColor(Color.WHITE);paint.setColorFilter(null);paint.setAlpha(255);paint.setFilterBitmap(false);
+   canvas.drawBitmap(body,new Rect(column*64+gx-1,row*64+gy-1,column*64+gx+2,row*64+gy+2),new RectF(x-w/2+(gx-1)*w/64f,y-h/2+(gy-1)*h/64f,x-w/2+(gx+2)*w/64f,y-h/2+(gy+2)*h/64f),paint);
+  }
+  void drawRangedCharacter(float x,float y,float w,float h,int facing,String action,float time,boolean preview){
+   if(action.equals("hurt")||action.equals("death")){
+    // Discrete native-pixel reactions; quarter-turn fall keeps square pixels.
+    canvas.save();
+    if(action.equals("hurt")){float shake=((int)(time*24)%2==0?-1:1)*w/64f;canvas.translate(shake,0);}
+    else {canvas.translate(0,Math.min(3,(int)(time*10))*h/64f);if(time>=.24f)canvas.rotate(facing==3?-90:90,x,y+h*.18f);}
+    drawRangedCharacter(x,y,w,h,facing,"idle",0,preview);canvas.restore();return;
+   }
+   int role=characterRole();boolean attack=action.equals("attack"),fighting=attack||action.equals("hurt")||action.equals("death");
+   boolean moving=action.equals("walk")||action.equals("run");
+   String page=attack?(role==1?"pBOW":"pCAST"):fighting?"pONE3":"p1";
+   int row=attack?facing:fighting?(action.equals("death")?4+facing:facing):moving?4+facing:facing;
+   int column=attack?Math.min(3,Math.max(0,(int)(time*10))):fighting?Math.min(3,Math.max(0,(int)(time*10))):moving?(int)(elapsed*(action.equals("run")?12:8))%6:0;
+   String hp=attack?"pONE2":page;int hr=attack?facing:row,hc=attack?0:column;
+   String weapon=role==1?"bow1":"staf";
+   if(role==1&&facing!=1)characterLayer(page,"6tla","quvr",1,row,column,x,y,w,h);
+   if(facing==1)characterLayer(page,"6tla",weapon,1,row,column,x,y,w,h);
+   if(hairType==5&&facing!=1)characterLayer(hp,"4har","longback",hairColor,hr,hc,x,y,w,h);
+   characterLayer(page,"0bas","humn",skinColor,row,column,x,y,w,h);
+   String outfit=outfitType();boolean nativeOutfit=!outfit.equals("robe")&&!outfit.equals("rngr");
+   characterLayer(attack&&nativeOutfit?hp:page,"1out",outfit,1,attack&&nativeOutfit?hr:row,attack&&nativeOutfit?hc:column,x,y,w,h);
+   if(role==1&&facing==1)characterLayer(page,"6tla","quvr",1,row,column,x,y,w,h);
+   if(hairType==5&&facing==1)characterLayer(hp,"4har","longback",hairColor,hr,hc,x,y,w,h);
+   String hair=hairType==2?"braid":hairType==3?"curl":hairType==4?"bun":hairType==5?"long":hairType==0?"bob1":"dap1";
+   characterLayer(hp,"4har",hair,hairColor,hr,hc,x,y,w,h);
+   if(!hatType().isEmpty()){boolean nativeHat=hatType().equals("pfht");characterLayer(attack&&nativeHat?hp:page,"5hat",hatType(),1,attack&&nativeHat?hr:row,attack&&nativeHat?hc:column,x,y,w,h);}
+   if(facing!=1){characterLayer(page,"6tla",weapon,1,row,column,x,y,w,h);drawRangedGrip(page,row,column,x,y,w,h);}
+  }
   void drawCharacter(float x,float y,float w,float h,int dir,String action,float time){
+   if(characterRole()>0){int facing=dir==0?0:dir==1?1:dir==2?3:2;drawRangedCharacter(x,y,w,h,facing,action,time,creatorOpen);return;}
    boolean fighting=action.equals("attack")||action.equals("hurt")||action.equals("death");
    String page=fighting?"pONE3":"p1";
    // Mana Seed p1: rows 0-3 = stand/push/pull/jump; rows 4-7 = walk.
@@ -1839,10 +1957,10 @@ public class MainActivity extends Activity {
    int col=fighting?Math.min(3,Math.max(0,(int)(time*10))):(moving?(action.equals("run")?((int)(elapsed*12)%6):(int)(elapsed*8)%6):0);
    if(hairType==5&&facing!=1)characterLayer(page,"4har","longback",hairColor,row,col,x,y,w,h);
    characterLayer(page,"0bas","humn",skinColor,row,col,x,y,w,h);
-   characterLayer(page,"1out",equipped.containsKey("Brust")?"fstr":(characterGender==0?"boxr":"undi"),1,row,col,x,y,w,h);
+   characterLayer(page,"1out",outfitType(),1,row,col,x,y,w,h);
    if(hairType==5&&facing==1)characterLayer(page,"4har","longback",hairColor,row,col,x,y,w,h);
    characterLayer(page,"4har",hairType==2?"braid":hairType==3?"curl":hairType==4?"bun":hairType==5?"long":hairType==0?"bob1":"dap1",hairColor,row,col,x,y,w,h);
-   if(equipped.containsKey("Kopf"))characterLayer(page,"5hat","pfht",1,row,col,x,y,w,h);
+   if(!hatType().isEmpty())characterLayer(page,"5hat",hatType(),1,row,col,x,y,w,h);
    if(fighting){
     String weapon=combatStyle==1?"ax01":combatStyle==2?"mc01":"sw01";
     if(equipped.containsKey("Schild"))characterLayer("pONE3","7tlb",equipped.getOrDefault("Schild","").contains("Iron")?"sh03":"sh01",1,row,col,x,y,w,h);
@@ -1936,7 +2054,7 @@ public class MainActivity extends Activity {
   void update(float dt){
    if(!pauseMenu&&!startScreen&&!creatorOpen)buildingNameTime=Math.max(0,buildingNameTime-dt);
    if(pressedControlsBack){pressedControlsTime-=dt;if(pressedControlsTime<=0f){pressedControlsBack=false;controlsOpen=false;}}
-   if(pressedCreatorButton){pressedCreatorTime-=dt;if(pressedCreatorTime<=0f){pressedCreatorButton=false;creatorOpen=false;startScreen=false;pauseMenu=false;previous=System.nanoTime();}}
+   if(pressedCreatorButton){pressedCreatorTime-=dt;if(pressedCreatorTime<=0f){pressedCreatorButton=false;beginAdventure();}}
    gearTooltipTime=Math.max(0f,gearTooltipTime-dt);
    if(!inventoryOpen&&!shopOpen){inspectedGear=null;gearTooltipTime=0f;}
    if(pressedMenuButton>=0){pressedMenuTime-=dt;if(pressedMenuTime<=0f){int button=pressedMenuButton;pressedMenuButton=-1;runMenuButton(button);}}
@@ -1957,7 +2075,8 @@ public class MainActivity extends Activity {
    adventurerSpeechTime=Math.max(0,adventurerSpeechTime-dt);
    elapsed+=dt;noticeTime=Math.max(0,noticeTime-dt);swordTimer=Math.max(0,swordTimer-dt);sword=swordTimer>0;attackCooldown=Math.max(0,attackCooldown-dt);attackAnim=Math.max(0,attackAnim-dt);hurtAnim=Math.max(0,hurtAnim-dt);playerHealthVisible=Math.max(0,playerHealthVisible-dt);playerDamageTime=Math.max(0,playerDamageTime-dt);
    guildStairCooldown=Math.max(0,guildStairCooldown-dt);
-   if(hp<=0){deathAnim+=dt;if(!hasLoadableSave())newCharacterAfterDeath();return;}if(inventoryOpen||shopOpen||pauseMenu||startScreen||creatorOpen||calendarOpen)return;
+   if(hp<=0){clearRanged();deathAnim+=dt;if(!hasLoadableSave())newCharacterAfterDeath();return;}if(inventoryOpen||shopOpen||pauseMenu||startScreen||creatorOpen||calendarOpen){pendingRole=0;rangedWindup=0;return;}
+   updateRanged(dt);
    updateGuildResidents(dt);
    if(doorTimer>0){updateDoorTransition(dt);return;}
    float mx=joyX,my=joyY,length=(float)Math.hypot(mx,my);
@@ -2089,18 +2208,19 @@ public class MainActivity extends Activity {
    }
 
    int direction(float vx,float vy){return Math.abs(vx)>Math.abs(vy)?(vx<0?2:3):(vy<0?1:0);}
+  void damageMob(Mob m,int damage){
+   if(m.dead)return;
+   m.hp-=damage;playHit(false);m.lastDamage=damage;m.damageNumberTime=.9f;m.hurtTimer=.28f;m.healthVisible=3f;m.anim=0;
+   if(m.hp<=0){m.dead=true;m.deathTimer=0;if(m.hostile()){kills++;if(questActive&&questProgress<questGoal())questProgress++;}else animalKills++;earnExp((m.hostile()?8:3)+m.level*2);loot(m);}
+  }
   void attack(){
-   if(hp<=0||attackCooldown>0||inventoryOpen||shopOpen||pauseMenu||startScreen||creatorOpen||indoors)return;
-   attackCooldown=.42f;attackAnim=.4f;attackSequence++;swordTimer=3f;sword=true;
+   if(hp<=0||attackCooldown>0||inventoryOpen||shopOpen||pauseMenu||startScreen||creatorOpen||calendarOpen||indoors||doorTimer>0)return;
+   int role=characterRole(),cost=RangedCombat.manaCost(role);
+   if(mana<cost){pickupNotice="Nicht genug Mana (6)";noticeTime=1.5f;return;}
+   attackCooldown=RangedCombat.cooldown(role);attackDir=playerDir;attackAnim=.4f;attackSequence++;swordTimer=3f;sword=true;
    float fx=playerDir==2?-1:playerDir==3?1:0,fy=playerDir==1?-1:playerDir==0?1:0;
-   for(Mob m:mobs){
-    if(m.dead)continue;
-    float dx=m.x-px,dy=m.y-py,d=(float)Math.hypot(dx,dy);
-    if(d>64||d<.01f)continue;
-    if((dx*fx+dy*fy)/d<-.1f)continue;
-    m.hp-=attackPower;playHit(false);m.lastDamage=attackPower;m.damageNumberTime=.9f;m.hurtTimer=.28f;m.healthVisible=3f;m.anim=0;
-    if(m.hp<=0){m.dead=true;m.deathTimer=0;if(m.hostile()){kills++;if(questActive&&questProgress<questGoal())questProgress++;}else animalKills++;earnExp((m.hostile()?8:3)+m.level*2);loot(m);}
-   }
+   if(role>0){mana-=cost;manaRegen=0;pendingRole=role;rangedWindup=.20f;pendingFx=fx;pendingFy=fy;pendingDamage=attackPower;return;}
+   for(Mob m:mobs){if(m.dead)continue;float dx=m.x-px,dy=m.y-py,d=(float)Math.hypot(dx,dy);if(d>64||d<.01f)continue;if((dx*fx+dy*fy)/d<-.1f)continue;damageMob(m,attackPower);}
   }
   int calendarDay(){return Math.max(0,(int)(worldTime/240f));}
   String calendarEvent(int absoluteDay){return ""; /* Future timed events use absolute game days. */}
@@ -2127,6 +2247,7 @@ public class MainActivity extends Activity {
    paint.setTypeface(Typeface.DEFAULT);paint.setTextAlign(Paint.Align.LEFT);
   }
   void restart(){
+   clearRanged();manaRegen=0;
    residentSystem.reset();
    creatorFacing=0;hairType=0;hairColor=1;skinColor=1;eyeColor=0;combatStyle=0;armorStyle=0;characterGender=0;characterName="Abenteurer";creatorOpen=false;calendarOpen=false;sprintHeld=false;attackSequence=0;
    indoors=false;currentHouse=0;guildFloor=0;playerLevel=1;exp=0;attackPower=3;maxHp=12;hp=maxHp;maxMana=20;mana=20;worldTime=0;stockRefreshTimer=0;buildingNameTime=0;doorTimer=0;refreshMerchantStocks();equipped.clear();copper=silver=gold=0;java.util.Arrays.fill(hotbar,null);selectedHotbar=-1;playerDamageTime=0;px=SPAWN_X;py=SPAWN_Y;joyX=joyY=0;deathAnim=0;swordTimer=0;sword=false;attackAnim=0;playerHealthVisible=0;kills=animalKills=0;questTier=questProgress=nextQuestDay=0;questActive=false;mobs.clear();drops.clear();inventory.clear();inventoryOpen=false;shopOpen=false;pauseMenu=false;spawnMobs();
@@ -2193,7 +2314,8 @@ public class MainActivity extends Activity {
   void drawPlayerWorld(){
    String playerKind=sword?"player_sword":"player_unarmed";
    String playerAction=hp<=0?"death":doorTimer>0?"walk":hurtAnim>0?"hurt":attackAnim>0&&sword?"attack":Math.abs(joyX)+Math.abs(joyY)>.08f?(sprintHeld?"run":"walk"):"idle";
-   if(hp>0){groundShadow(px,py+24,13.3f,4.2f);billboard(playerKind,playerAction,playerDir,px,py,80.64f,80.64f,attackAnim>0?.4f-attackAnim:elapsed,false);}
+   if(hp>0)groundShadow(px,py+24,13.3f,4.2f);
+   if(hp>0||characterRole()>0)billboard(playerKind,playerAction,characterRole()>0&&attackAnim>0&&hp>0&&hurtAnim<=0?attackDir:playerDir,px,py,80.64f,80.64f,hp<=0?deathAnim:hurtAnim>0?.32f-hurtAnim:attackAnim>0?.4f-attackAnim:elapsed,hp<=0&&deathAnim>.8f);
    if(playerHealthVisible>0)healthBar(px,py-56,52,hp,maxHp);
    damageText(px,py-66,lastPlayerDamage,playerDamageTime);
 
@@ -2225,8 +2347,10 @@ public class MainActivity extends Activity {
    for(VillageResidents.Resident n:guildResidents)if(n.floor==VillageResidents.OUTSIDE)world.add(new WorldEntry(n.y,()->drawGuildResident(n,0,0,true)));
    for(Mob m:mobs)world.add(new WorldEntry(m.y+18,()->drawMobWorld(m,vw,vh)));
    world.add(new WorldEntry(py+24,()->drawPlayerWorld()));
+   if(!indoors)for(RangedCombat.Shot shot:rangedCombat.shots)world.add(new WorldEntry(shot.y+8,()->drawProjectile(shot)));
    Collections.sort(world,(a,b)->Float.compare(a.depth,b.depth));
    for(WorldEntry entry:world)entry.draw.run();
+
    Drop nearby=nearestDrop();
    if(nearby!=null&&!inventoryOpen){drawRect(col("#182923"),px-87,py-78,174,25);paint.setColor(col("#fff0c5"));paint.setTextSize(13);paint.setTextAlign(Paint.Align.CENTER);
     canvas.drawText("E  "+nearby.item+" aufheben",px,py-60,paint);paint.setTextAlign(Paint.Align.LEFT);}
@@ -2241,7 +2365,7 @@ public class MainActivity extends Activity {
    }
    drawEnteredBuilding(vw,vh);
    drawRect(col("#142b24"),0,0,vw,37);paint.setColor(Color.WHITE);paint.setTextSize(18);
-   c.drawText("Lv. "+playerLevel+" EXP "+exp+"/"+expNeeded()+" DMG "+attackPower+" DEF "+armorValue(),12,25,paint);
+   c.drawText(classTitle()+" Lv. "+playerLevel+" EXP "+exp+"/"+expNeeded()+" DMG "+attackPower+" DEF "+armorValue(),12,25,paint);
    itemIcon("Golden Coin",vw-202,7,.85f);itemIcon("Silver Coin",vw-137,7,.85f);itemIcon("Copper Coin",vw-72,7,.85f);
    paint.setColor(Color.WHITE);paint.setTextSize(15);c.drawText(""+gold,vw-178,25,paint);c.drawText(""+silver,vw-113,25,paint);c.drawText(""+copper,vw-48,25,paint);
    // Quest tracker only while exploring the outdoor world.
@@ -2392,7 +2516,7 @@ public class MainActivity extends Activity {
    if(creatorOpen){
     if(key==KeyEvent.KEYCODE_A||key==KeyEvent.KEYCODE_DPAD_LEFT)rotateCreator(-1);
     else if(key==KeyEvent.KEYCODE_D||key==KeyEvent.KEYCODE_DPAD_RIGHT)rotateCreator(1);
-    else if(key==KeyEvent.KEYCODE_ENTER){creatorOpen=false;startScreen=false;pauseMenu=false;}
+    else if(key==KeyEvent.KEYCODE_ENTER){beginAdventure();}
     return true;
    }
    if(startScreen||pauseMenu){if(key==KeyEvent.KEYCODE_ENTER){if(startScreen)creatorOpen=true;else pauseMenu=false;}return true;}

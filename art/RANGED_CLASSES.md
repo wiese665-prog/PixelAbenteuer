@@ -1,0 +1,14 @@
+# Archer and mage
+
+Choose Bogenschuetze or Magier under Klasse / Stil during creation. New characters receive their equipped starter kit. Existing characters can buy Jagdbogen and Magierstab from Borin or Grom; Maela stocks both class outfits and headpieces. Loading an old save ensures these offers without rerolling the remaining stock. Class behavior follows the equipped weapon; clothing and hats can be mixed independently. Both weapons use two hands and return a shield to the bag, subject to free inventory space.
+
+- Archer: Jagdbogen, Waldlaeuferwams, Waldlaeuferkapuze, visible quiver. Unlimited basic arrows, 400px range, 0.65s cooldown.
+- Mage: Magierstab, Magierrobe (+16 mana), Magierhut (+12 mana). Magic bolts cost 6 mana, reach 330px and have 0.75s cooldown. Mana regenerates at two per second during active play, including interiors.
+
+Both attacks use a 0.20s windup and four dedicated native body frames: ready, draw/channel, release and recover. Facing is captured for the animation and projectile. Stand, six-frame walk/run and all four views have fitted outfit, hat, weapon and quiver sheets. Hit reactions use discrete source-pixel shakes. Falling uses a discrete quarter-turn, retaining square pixels rather than filtered arbitrary-angle rotation. Hats, clothing, hairstyles and skin colors remain attached during reactions. Projectiles pause with menus and clear at doors, death and load; pending casts cancel on interruption or weapon changes.
+
+`RangedCombat` bounds active projectiles at 12, samples movement at <=3px intervals, stops at terrain and applies damage to one closest living target only. Melee and ranged kills use the same damage/XP/quest/loot handler. Headless tests cover four directions, swept hits, wall occlusion, single damage, expiry, capacity and reset. Android/device playtesting is still needed for feel and balance.
+
+Production art is drawn on the original 64x64 frame grid. Colors are exact members of the supplied Mana Seed outfit, Mage1, Fighter2 and grass-detail palettes; no AI image is scaled into a game character. `build_class_sprites.py` creates the native equipment, 11-tone bow/cast bodies and inventory icons. `verify_class_sprites.py` checks all 2240 equipped cells, preserved visible head pixels, distinct attack poses, palette membership and the new inn's cutout/door bounds.
+
+The design reference at `source/ranged-classes-design.png` was generated with the built-in image tool. Prompt: two classes in four views using the uploaded native humanoid proportions and Mage1 style; forest-green hooded archer with leather tunic, bow and quiver; midnight-blue split robe, crooked pointed hat and crystal staff for mage; loose half-up long ponytail with side-swept fringe. Native tiny pixel clusters, original muted palettes, no text or scene. This is a design reference only; production pixels are authored by the native-grid builder.

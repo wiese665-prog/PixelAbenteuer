@@ -1,4 +1,4 @@
-"""Redrawn long haircut: per-pose native head anchors, continuous locks, 14 palettes.
+"""Half-up long ponytail: per-pose native head anchors, continuous locks, 14 palettes.
 
 The bob reference supplies head coverage/pose only, never rendered hair pixels.
 All shading, bangs, side locks and animated tapered ends are drawn anew.
@@ -15,67 +15,43 @@ def palette(variant):
  return sorted([rgb for rgb,_ in colors.most_common(6)],key=lambda p:sum(a*b for a,b in zip(p,(.2126,.7152,.0722))))
 
 def pose(cap,facing,phase):
- """Draw a fresh connected haircut, anchored to the exact native pose mask."""
+ """Loose half-up ponytail, side-swept fringe and fitted crown in every pose."""
  front=Image.new('L',(64,64),255);back=Image.new('L',(64,64),255)
- x0,y0,x1,y1=cap.getbbox();width=x1-x0;mid=(x0+x1-1)/2
- # A continuous, softly shaded curtain; no old short-hair bottom outline.
- def shade(x,y):
-  u=(x-x0)*14//width;v=y-y0
-  # Curved, broken highlight clusters: no full-height striped cylinder.
-  s=[1,2,3,4,4,3,2,3,4,4,3,3,2,1][u]
-  if v<2:s=2
-  elif v<4:s=min(4,s+1) if 3<=u<=10 else min(s,2)
-  elif v<7 and u in (3,4,8,9):s=5
-  elif 8<=v<=11 and u in (3,8):s=4
-  elif v>=12:
-   s=[1,2,3,3,2,2,2,3,4,3,2,3,2,1][u]
-   if v>19:s=max(1,s-1)
-  return s
- def put(im,x,y,s):
-  if 0<=x<64 and 0<=y<64:im.putpixel((x,y),s)
- # Exact opaque head coverage follows movement, lean and combat pose.
- # Old bob colors/contours are discarded, including its black lower hem.
+ x0,y0,x1,y1=cap.getbbox();cx=(x0+x1-1)//2;width=x1-x0
+ def put(im,x,y,v):
+  if 0<=x<64 and 0<=y<64:im.putpixel((x,y),v)
+ # Follow native head coverage but redraw a diagonal side part and curved locks.
  for y in range(y0,y1):
   for x in range(x0,x1):
-   if cap.getpixel((x,y))[3]>=128:put(front,x,y,shade(x,y))
- # New parting and curved crown highlights stay attached to the head.
- for x in range(x0+2,x1-2):
-  ys=[y for y in range(y0,y1) if cap.getpixel((x,y))[3]>=128]
-  if ys:
-   yy=ys[0]
-   put(front,x,yy,2)
-   if yy+1<y1 and cap.getpixel((x,yy+1))[3]>=128:put(front,x,yy+1,3)
- # Draw lengths as one connected silhouette, not stretched columns of bob pixels.
- # The rear curtain goes behind the body; foreground locks cover neck seams.
- for x in range(x0,x1):
-  u=(x-x0)*14//width
-  if facing==0:allowed=u<=3 or u>=10
-  elif facing==1:allowed=True
-  elif facing==2:allowed=u<=6
-  else:allowed=u>=7
-  if not allowed:continue
-  outer=min(u,13-u)
-  end=y0+24-(4 if outer==0 else 2 if outer==1 else 0)-(1 if u in (3,8,11) else 0)
-  if facing in (2,3):end-=1
-  start=y0+7
-  for y in range(start,end):
-   sway=phase if y>=y0+18 else 0
-   # Taper the final three pixels so the hem cannot become a straight block.
-   if y>=end-2 and ((u+facing)%3==0):continue
-   s=shade(x,y)
-   if y>=end-1:s=max(1,s-1)
-   put(back,x+sway,y,s)
-   # Front strands descend beside the face; profile locks cover the rear neck
-   # but never obscure nose, eyes or the weapon-side forearm.
-   foreground=(facing==0 and (u<=2 or u>=11) and y<y0+19)
-   foreground|=(facing==2 and u<=4 and y<y0+18)
-   foreground|=(facing==3 and u>=9 and y<y0+18)
-   if foreground:put(front,x,y,s)
- # Back-facing crown/curtain are one surface, with no bob seam at the neck.
- if facing==1:
-  for y in range(y0+7,y1):
-   for x in range(x0,x1):
-    if front.getpixel((x,y))!=255:put(front,x,y,shade(x,y))
+   if cap.getpixel((x,y))[3]<128:continue
+   u=(x-x0)*14//width;v=y-y0
+   shade=2 if u<2 or u>11 else 3
+   if 2<=u<=6 and 2<=v<=6:shade=4
+   if 3<=u<=5 and 3<=v<=4:shade=5
+   if v>=6 and (u+v//2)%6 in (1,2):shade=4
+   if v>=10:shade=max(1,shade-1)
+   # Side-swept fringe crosses the forehead diagonally, without filling the face.
+   if facing!=1 and 4<=u<=10 and v==5+(u-4)//2:shade=2
+   put(front,x,y,shade)
+ # Narrow loose tail tied at nape; the old full-width straight curtain is gone.
+ tx=cx if facing in (0,1) else x0+1 if facing==2 else x1-2
+ for v in range(9,26):
+  bend=(0 if v<15 else phase)+(1 if 16<=v<=20 else 0)
+  center=tx+bend
+  half=2 if v<13 else 4 if v<19 else 3 if v<23 else 2 if v<25 else 0
+  for dx in range(-half,half+1):
+   shade=1 if abs(dx)==half else 4 if dx in (-2,-1) and v<22 else 3 if dx<2 else 2
+   if v in (10,11):shade=1 if dx%2 else 2 # hair tie, native hair ramp
+   put(back,center+dx,y0+v,shade)
+   # In profile the upper rear lock must cover the neck/scalp seam above torso.
+   if facing in (2,3) and v<=17 and ((facing==2 and dx<=0) or (facing==3 and dx>=0)):
+    put(front,center+dx,y0+v,shade)
+ # Two loose front face-framing locks stop at the shoulder, not the waist.
+ if facing==0:
+  for side in (-1,1):
+   for v in range(9,18):
+    x=cx+side*(6 if v<14 else 5)
+    put(front,x,y0+v,2);put(front,x-side,y0+v,3 if v<16 else 2)
  return front,back
 
 for page in ['p1','pONE2','pONE3']:
