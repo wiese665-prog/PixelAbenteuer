@@ -11,3 +11,13 @@ Furniture is depth sorted with residents and the player. Only small base rectang
 `python scripts/import_guild_pack.py /path/to/original/sheets` imports/composes native assets. It requires Pillow, NumPy and SciPy. `python scripts/verify_guild_layout.py` checks frame bounds, traversable stairs and every resident route segment and writes a visual review sheet outside the checkout.
 
 Validation does not replace an in-game movement and visual test in BlueStacks.
+
+## Village and additional interiors
+
+Kraeuterhaus, Gasthaus, Wohnhaus and Baeckerei have separate furnished interiors (room IDs 3..6). All six house entrances use a timed six-frame native door animation and automatic entry/exit. Guild stairs and house transitions have no E-key icons. The inn uses a distinct long, twin-gabled yellow facade; the herb house is moved north to clear the road. Bakery and herb-house chimneys use the complete original smoke/chimney animation.
+
+Roads sample a verified opaque 48x48 material block, with dark north / light south grass edges from the original atlas. Small native plants are placed only on clear grass, away from roads, houses, beds and the spawn pad. Decorative forest extends beyond all playable map edges while future passage corridors stay open. The former market armor stand and scattered shield/fence signs are no longer placed.
+
+Resident animation selects only populated direction cells, including the six-frame rear idle rows. Night tint is drawn over the full viewport after camera transforms, before UI. New characters start in daylight. The spawn pad and its paving opening share one center.
+
+Rebuild the final tower with `python scripts/build_native_watchtower.py`, then apply the village assets with `python scripts/import_village_refinement.py` after the base pack importer. The APK workflow verifies room routes and native sprite integrity before compiling.

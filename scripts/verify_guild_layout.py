@@ -7,9 +7,9 @@ ROOT=Path(__file__).resolve().parents[1]
 s=(ROOT/'app/src/main/java/de/pixelabenteuer/game/MainActivity.java').read_text();base=ROOT/'app/src/main/assets/village';objects=[]
 for args in re.findall(r'guildFurniture\((\d+,"[^"]+",[^;]+)\);',s):
  vals=args.split(',');f=int(vals[0]);name=vals[1].strip('"');v=[float(x.rstrip('f')) for x in vals[2:]];objects.append((f,name,v))
-for floor in range(3):
+for floor in range(7):
  im=Image.open(base/'guild'/f'floor{floor}.png').convert('RGBA').resize((672,352),Image.Resampling.NEAREST)
- for x in ([544] if floor==0 else [32] if floor==2 else [32,544]):
+ for x in ([544] if floor==0 else [32] if floor==2 else [32,544] if floor==1 else []):
   stairs=Image.open(base/'guild/Interior.png').crop((0,0,48,64)).resize((96,128),Image.Resampling.NEAREST);im.alpha_composite(stairs,(x,88))
  for f,n,v in sorted(objects,key=lambda q:q[2][5]):
   if f!=floor:continue
@@ -27,7 +27,7 @@ for floor in range(3):
   x,y=q.popleft()
   for xy in [(x-4,y),(x+4,y),(x,y-4),(x,y+4)]:
    if xy not in seen and not blocked(*xy):seen.add(xy);q.append(xy)
- for x,y in [(336,312)]+([(592,216),(592,256)] if floor<2 else [])+([(80,216),(80,256)] if floor>0 else []):assert (x,y) in seen,(floor,x,y)
+ for x,y in [(336,312),(336,328)]+([(592,216),(592,256)] if floor<2 else [])+([(80,216),(80,256)] if 0<floor<3 else []):assert (x,y) in seen,(floor,x,y)
  for route in re.findall(r'guildWalker\('+str(floor)+r',[^;]+new float\[\]\[\]\{([^;]+)\}\);',s):
   pts=[tuple(map(float,m)) for m in re.findall(r'\{([\d.]+),([\d.]+)\}',route)]
   for i,(x,y) in enumerate(pts):
@@ -35,8 +35,8 @@ for floor in range(3):
    for k in range(101):assert not blocked(x+(tx-x)*k/100,y+(ty-y)*k/100),(floor,i,x,y,tx,ty,k)
   x,y=pts[0];a=Image.open(base/'guild/Citizen1_Idle_without_shadow.png').crop((0,0,32,32)).resize((51,51),Image.Resampling.NEAREST);im.alpha_composite(a,(round(x-25.6),round(y-48)))
  im.save(ROOT.parent/f'guild-floor-{floor}.png')
- print('Floor',floor,': stairs reachable; all roaming segments collision-free;',len(seen),'reachable foot-grid positions')
-o=Image.new('RGB',(1344,768),'#18141a');d=ImageDraw.Draw(o)
-for f in range(3):
- x=(f%2)*672;y=(f//2)*384;d.text((x+8,y+4),['EG: Empfang / Training','1. OG: Bibliothek','2. OG: Gildenleitung / Magie'][f],fill='white');o.paste(Image.open(ROOT.parent/f'guild-floor-{f}.png'),(x,y+24))
+ print('Floor',floor,': exits/landings reachable; all roaming segments collision-free;',len(seen),'reachable foot-grid positions')
+o=Image.new('RGB',(1344,1536),'#18141a');d=ImageDraw.Draw(o)
+for f in range(7):
+ x=(f%2)*672;y=(f//2)*384;d.text((x+8,y+4),['Gilde: Empfang / Training','Gilde: Bibliothek','Gilde: Gildenleitung / Magie','Kraeuterhaus','Gasthaus','Wohnhaus','Baeckerei'][f],fill='white');o.paste(Image.open(ROOT.parent/f'guild-floor-{f}.png'),(x,y+24))
 o.save(ROOT.parent/'guild-preview.png')

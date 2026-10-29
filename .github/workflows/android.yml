@@ -35,6 +35,10 @@ jobs:
         run: |
           python3 -m pip install Pillow
           python3 scripts/convert_sprites.py
+      - name: Verify village assets and room routes
+        run: |
+          python3 scripts/verify_guild_layout.py
+          python3 scripts/verify_village_refinement.py
       - name: Build APK
         run: |
           echo "sdk.dir=$ANDROID_HOME" > local.properties

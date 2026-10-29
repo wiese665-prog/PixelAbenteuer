@@ -64,7 +64,8 @@ public class MainActivity extends Activity {
   String[] sellerStock={"Apple","Green Apple","Ham","Cheese","Mushroom","Healthpotion","Healthpotion large","Healpotion med"};
   String pickupNotice="";float noticeTime=0;
   HashMap<String,Bitmap> sprites=new HashMap<>();HashMap<String,Bitmap> characterSheets=new HashMap<>();
-  float px=180,py=180,joyX=0,joyY=0,elapsed=0,worldTime=0,attackAnim=0,hurtAnim=0,deathAnim=0,attackCooldown=0,playerHealthVisible=0;
+  static final float SPAWN_X=208,SPAWN_Y=191;
+  float px=SPAWN_X,py=SPAWN_Y,joyX=0,joyY=0,elapsed=0,worldTime=0,attackAnim=0,hurtAnim=0,deathAnim=0,attackCooldown=0,playerHealthVisible=0;
   int hp=12,maxHp=12,kills=0,animalKills=0,playerDir=0,playerLevel=1,exp=0,attackPower=3,lastPlayerDamage=0;float playerDamageTime=0;float swordTimer=0;boolean sword=false;
   long previous=System.nanoTime();
   AudioTrack[] musicTracks=new AudioTrack[3];
@@ -212,7 +213,7 @@ public class MainActivity extends Activity {
     }catch(Exception ignored){}
    }
   }
-  Game(){super(MainActivity.this);setFocusable(true);setFocusableInTouchMode(true);paint.setFilterBitmap(false);loadSprites();loadBuildings();loadVillage();loadGuild();loadClouds();loadItems();loadDecorations();spawnMobs();masterMusicVolume=getContext().getSharedPreferences("pixel_settings",MODE_PRIVATE).getFloat("music_volume",0.05f);startMusic();initHitSounds();}
+  Game(){super(MainActivity.this);setFocusable(true);setFocusableInTouchMode(true);paint.setFilterBitmap(false);loadSprites();loadBuildings();loadVillage();loadGuild();loadOtherRooms();loadClouds();loadItems();loadDecorations();spawnMobs();masterMusicVolume=getContext().getSharedPreferences("pixel_settings",MODE_PRIVATE).getFloat("music_volume",0.05f);startMusic();initHitSounds();}
   void spawnMobs(){
    String[] types={"boar","deer","orc1","orc2","orc3","fox","black_grouse"};
    int animals=0,orcs=0;
@@ -287,8 +288,8 @@ public class MainActivity extends Activity {
   final float forgeX=550,forgeY=300,homeX=300,homeY=500;
   boolean safeZone(float x,float y){return villageZone(x,y,0);}
   // World coordinates shared by rendering, collision, paths and wildlife guards.
-  final float[][] villageHouses={{550,300},{270,380},{830,300},{270,690},{550,690},{830,690}};
-  final float[] villageDoorOffsets={0,64,-3.2f,0,64,0};
+  final float[][] villageHouses={{550,300},{270,320},{830,300},{270,690},{550,690},{830,690}};
+  final float[] villageDoorOffsets={0,64,0,0,64,0};
   final String[] villageNames={"Schmiede","Kraeuterhaus","Gasthaus","Wohnhaus","Baeckerei","Gilde"};
   final float[][] villageRoads={{160,195,450,235},{386,195,434,932},{666,450,714,932},{180,450,1210,490},{180,820,930,860},{430,442,666,570}};
   final ArrayList<VillageProp> villageProps=new ArrayList<>();
@@ -300,6 +301,7 @@ public class MainActivity extends Activity {
   class WorldEntry {float depth;Runnable draw;WorldEntry(float y,Runnable action){depth=y;draw=action;}}
   boolean villageZone(float x,float y,float padding){return x>100-padding&&x<1020+padding&&y>96-padding&&y<890+padding;}
   boolean roadAt(float x,float y,float margin){
+   if(Math.pow((x-SPAWN_X)/40,2)+Math.pow((y-(SPAWN_Y+24))/24,2)<1)return false;
    if((Math.abs(y-470)<24&&(x<190||x>920))||(Math.abs(x-410)<24&&y<220))return true;
    if(Math.abs(x-1010)<18&&y>385&&y<470)return true;
    for(float[] r:villageRoads)if(x>=r[0]-margin&&x<=r[2]+margin&&y>=r[1]-margin&&y<=r[3]+margin)return true;
@@ -316,7 +318,7 @@ public class MainActivity extends Activity {
    villageProps.add(new VillageProp(atlas,sx,sy,sw,sh,x,y,w,h,radius,frames));
   }
   void loadVillage(){
-   for(String name:new String[]{"exterior","Trees_animation","house_details","Smoke_animation","bird_jump_animation","bird_fly_animation","walls_floor","Interior","tower","market","quests","shrine","sign","lantern","cottage","inn","bakery","path","herb","guildhall","residence"})
+   for(String name:new String[]{"exterior","Trees_animation","house_details","Smoke_animation","bird_jump_animation","bird_fly_animation","walls_floor","Interior","tower","market","quests","shrine","sign","lantern","cottage","inn","bakery","path","herb","guildhall","residence","grass_edges","grass_details","chimney_animation","door0","door1","door2","door3","door4","door5"})
     try(InputStream in=getAssets().open("village/"+name+".png")){Bitmap b=BitmapFactory.decodeStream(in);if(b!=null)villageArt.put(name,b);}catch(Exception e){android.util.Log.e("PixelVillage","Missing "+name,e);}
    // Hand-placed orchard: wide lanes, trunks rather than canopies collide.
    float[][] trees={{110,310},{104,630},{106,820},{335,150},{690,150},{1000,220},{1000,575},{1010,800},{150,935},{360,945},{600,944},{840,947}};
@@ -329,6 +331,14 @@ public class MainActivity extends Activity {
     if(x>1560||y>995)continue;
     int type=(i+side+lane)%3;
     addVillageProp("Trees_animation",new int[]{0,192,352}[type],0,type==2?88:64,80,x,y,104,130,10,13);
+   }
+   // Decorative forest continues beyond the playable limits, with future exits open.
+   for(int gx=-480;gx<=WORLD_W+480;gx+=72)for(int gy=-480;gy<=WORLD_H+480;gy+=64){
+    if(gx>=0&&gx<=WORLD_W&&gy>=0&&gy<=WORLD_H)continue;
+    if((gx<0||gx>WORLD_W)&&Math.abs(gy-470)<76)continue;
+    if(gy<0&&Math.abs(gx-410)<76)continue;
+    int kind=Math.floorMod(gx/72+gy/64,3);float tx=gx+Math.floorMod(gy*13+gx*7,23)-11,ty=gy+Math.floorMod(gx*11,19)-9;
+    addVillageProp("Trees_animation",new int[]{0,192,352}[kind],0,kind==2?88:64,80,tx,ty,104,130,0,13);
    }
    // Atlas crops are measured from the supplied exterior sheet.
    addVillageProp("exterior",48,496,40,40,610,525,56,56,17,1); // well
@@ -343,13 +353,18 @@ public class MainActivity extends Activity {
    for(float[] f:new float[][]{{350,530},{960,430},{350,885},{960,850},{700,210}})
     addVillageProp("exterior",208,768,16,32,f[0],f[1],24,40,0,1);
    fantasyProp("tower",1010,350,154,256,40);
-   fantasyProp("market",735,510,92,75,23);
-   fantasyProp("quests",460,530,43,49,10);
-   fantasyProp("shrine",190,220,55,70,0);
-   fantasyProp("sign",135,440,30,44,7);
-   fantasyProp("sign",1195,440,30,44,7);
-   fantasyProp("sign",455,110,30,44,7);
+   fantasyProp("quests",730,530,43,49,10);
+   addVillageProp("shrine",0,0,80,48,SPAWN_X,SPAWN_Y+48,80,48,0,1);
    for(float[] light:new float[][]{{790,790},{870,790},{1000,340}})addVillageProp("guild/Flags_animation",0,0,48,48,light[0],light[1],62,62,0,12);
+   java.util.Random gardenRandom=new java.util.Random(310729L);int placed=0;
+   for(int attempt=0;attempt<3000&&placed<64;attempt++){
+    float x=100+gardenRandom.nextInt(920),y=115+gardenRandom.nextInt(770);boolean free=Math.hypot(x-SPAWN_X,y-(SPAWN_Y+24))>80;
+    for(int dx=-24;dx<=24;dx+=12)for(int dy=-40;dy<=16;dy+=14)if(roadAt(x+dx,y+dy,0))free=false;
+    for(float[] h:villageHouses)if(Math.abs(x-h[0])<132&&y>h[1]-132&&y<h[1]+145)free=false;
+    for(float[] bed:new float[][]{{170,540},{430,560},{730,560}})if(x>bed[0]-20&&x<bed[0]+125&&y>bed[1]-10&&y<bed[1]+85)free=false;
+    for(VillageProp p:villageProps)if(Math.hypot(x-p.x,y-p.y)<30)free=false;
+    if(!free)continue;addVillageProp("grass_details",(placed%(villageArt.get("grass_details").getWidth()/32))*32,0,32,32,x,y,40,40,0,1);placed++;
+   }
   }
   void fantasyProp(String name,float x,float y,float w,float h,float radius){
    Bitmap art=villageArt.get(name);if(art!=null)addVillageProp(name,0,0,art.getWidth(),art.getHeight(),x,y,art.getWidth()*1.6f,art.getHeight()*1.6f,radius,1);
@@ -358,8 +373,14 @@ public class MainActivity extends Activity {
    for(int x=startX;x<endX;x+=16)for(int y=startY;y<endY;y+=16){
     int n=Math.floorMod(x*73+y*113+(x/48)*19,31);
     drawRect(col("#759e53"),x,y,16,16);
-    if(roadAt(x+8,y+8,0))villageTile("path",Math.floorMod(x,240),Math.floorMod(y,96),16,16,x,y,16,16);
+    if(roadAt(x+8,y+8,0))villageTile("path",Math.floorMod(x,48),Math.floorMod(y,48),16,16,x,y,16,16);
     else if(n==7){drawRect(col("#92af61"),x+3,y+6,2,3);drawRect(col("#557d43"),x+10,y+10,3,2);}
+   }
+   for(int x=startX;x<endX;x+=16)for(int y=startY;y<endY;y+=16)if(roadAt(x+8,y+8,0)){
+    if(!roadAt(x+8,y-8,0))villageTile("grass_edges",0,0,16,16,x,y-8,16,16);
+    if(!roadAt(x+8,y+24,0))villageTile("grass_edges",16,0,16,16,x,y+8,16,16);
+    if(!roadAt(x-8,y+8,0))villageTile("grass_edges",32,0,16,16,x-8,y,16,16);
+    if(!roadAt(x+24,y+8,0))villageTile("grass_edges",48,0,16,16,x+8,y,16,16);
    }
    for(float[] g:new float[][]{{170,540},{430,560},{730,560}}){
     drawRect(col("#6a5137"),g[0],g[1],105,64);
@@ -372,7 +393,8 @@ public class MainActivity extends Activity {
    else {
     String houseArt=index==5?"guildhall":index==2?"inn":index==4?"bakery":index==3?"residence":"cottage";
     Bitmap sprite=villageArt.get(houseArt);
-    if(sprite!=null)villageTile(houseArt,0,0,sprite.getWidth(),sprite.getHeight(),h[0]-sprite.getWidth()*.8f,h[1]+115-sprite.getHeight()*1.6f,sprite.getWidth()*1.6f,sprite.getHeight()*1.6f);
+    if(sprite!=null)villageTile(doorTimer>0&&doorHouse==index?"door"+index:houseArt,0,doorTimer>0&&doorHouse==index?doorFrame()*sprite.getHeight():0,sprite.getWidth(),sprite.getHeight(),h[0]-sprite.getWidth()*.8f,h[1]+115-sprite.getHeight()*1.6f,sprite.getWidth()*1.6f,sprite.getHeight()*1.6f);
+    if(index==1||index==4)villageTile("chimney_animation",0,((int)(elapsed*5)%6)*48,48,48,h[0]-144*.8f+17*1.6f,h[1]+115-128*1.6f+2*1.6f,48*1.6f,48*1.6f);
     paint.setTextAlign(Paint.Align.CENTER);paint.setTextSize(13);fantasyName(villageNames[index],h[0],h[1]+105-(sprite==null?205:sprite.getHeight()*1.6f));paint.setTextAlign(Paint.Align.LEFT);
    }
    // Six 48px cells: crop only the smoke above the embedded chimney/roof.
@@ -385,7 +407,7 @@ public class MainActivity extends Activity {
    villageTile(p.atlas,p.sx,sy,p.sw,p.sh,p.x-p.w/2,p.y-p.h,p.w,p.h);canvas.restore();
   }
   boolean villageObstacle(float x,float y){
-   for(int i=1;i<villageHouses.length;i++){float[] h=villageHouses[i];if(i==5&&Math.abs(x-guildX)<20&&y>guildY+94)continue;if(x>h[0]-111&&x<h[0]+112&&y>h[1]+48&&y<h[1]+116)return true;}
+   for(int i=1;i<villageHouses.length;i++){float[] h=villageHouses[i];if(Math.abs(x-h[0]-villageDoorOffsets[i])<20&&y>h[1]+94)continue;if(x>h[0]-111&&x<h[0]+112&&y>h[1]+48&&y<h[1]+116)return true;}
    for(VillageProp p:villageProps)if(p.radius>0&&Math.hypot(x-p.x,y-p.y)<p.radius+7)return true;
    return false;
   }
@@ -497,9 +519,20 @@ public class MainActivity extends Activity {
     n.row=Math.abs(dx)>Math.abs(dy)?(dx<0?1:2):(dy<0?3:0);n.x=nx;n.y=ny;n.moving=true;
    }
   }
+  final HashMap<String,int[]> residentFrames=new HashMap<>();
+  int[] validResidentFrames(String name,Bitmap b,int row,int cw,int ch,int columns){
+   String key=name+":"+row;int[] cached=residentFrames.get(key);if(cached!=null)return cached;
+   ArrayList<Integer> frames=new ArrayList<>();
+   for(int f=0;f<columns;f++){
+    boolean visible=false;
+    for(int y=0;y<ch&&!visible;y++)for(int x=0;x<cw;x++)if(Color.alpha(b.getPixel(f*cw+x,row*ch+y))>32){visible=true;break;}
+    if(visible)frames.add(f);
+   }
+   int[] result=new int[frames.size()];for(int i=0;i<result.length;i++)result[i]=frames.get(i);residentFrames.put(key,result);return result;
+  }
   void drawGuildResident(GuildResident n,float l,float t,boolean outdoor){
    String name=n.moving?n.walk:n.idle;Bitmap b=villageArt.get(name);if(b==null)return;
-   int columns=n.moving?6:n.columns,frame=(int)(n.anim*(n.moving?9:5))%columns,row=n.rows==1?0:n.row;
+   int columns=n.moving?6:n.columns,row=n.rows==1?0:n.row;int[] frames=validResidentFrames(name,b,row,n.cw,n.ch,columns);if(frames.length==0)return;int frame=frames[(int)(n.anim*(n.moving?9:5))%frames.length];
    float x=l+n.x,y=t+n.y;canvas.save();if(outdoor)canvas.scale(1f,1f/CAMERA_GROUND_Y,x,y);
    groundShadow(x,y,8,2.5f);
    villageTile(name,frame*n.cw,row*n.ch,n.cw,n.ch,x-n.cw*n.scale/2,y-n.foot*n.scale,n.cw*n.scale,n.ch*n.scale);
@@ -531,28 +564,101 @@ public class MainActivity extends Activity {
     if(guildFloor==0&&Math.abs(px-396)<30&&py>499&&my>0){enterOrLeave();return;}
    }
   }
-  void drawGuild(float vw,float vh){
+  void drawGuild(float vw,float vh){drawFurnishedRoom(vw,vh,guildFloor,true);}
+  void drawFurnishedRoom(float vw,float vh,int room,boolean guild){
    float l=vw/2-336,t=Math.max(42,vh/2-176);
    drawRect(col("#18141a"),0,0,vw,vh);
-   villageTile("guild/floor"+guildFloor,0,0,336,176,l,t,672,352);
+   villageTile("guild/floor"+room,0,0,336,176,l,t,672,352);
    // Stairs are passable surfaces. Each floor's opposite landing is kept clear.
-   if(guildFloor<2)villageTile("guild/Interior",0,0,48,64,l+544,t+88,96,128);
-   if(guildFloor>0)villageTile("guild/Interior",0,0,48,64,l+32,t+88,96,128);
+   if(guild&&room<2)villageTile("guild/Interior",0,0,48,64,l+544,t+88,96,128);
+   if(guild&&room>0)villageTile("guild/Interior",0,0,48,64,l+32,t+88,96,128);
    ArrayList<WorldEntry> entries=new ArrayList<>();
-   for(GuildFurniture p:guildFurniture)if(p.floor==guildFloor)entries.add(new WorldEntry(p.y,()->villageTile(p.atlas,p.sx,p.sy,p.sw,p.sh,l+p.x-p.sw*p.scale/2,t+p.y-p.sh*p.scale,p.sw*p.scale,p.sh*p.scale)));
-   for(GuildResident n:guildResidents)if(n.floor==guildFloor)entries.add(new WorldEntry(n.y,()->drawGuildResident(n,l,t,false)));
+   for(GuildFurniture p:guildFurniture)if(p.floor==room)entries.add(new WorldEntry(p.y,()->villageTile(p.atlas,p.sx,p.sy,p.sw,p.sh,l+p.x-p.sw*p.scale/2,t+p.y-p.sh*p.scale,p.sw*p.scale,p.sh*p.scale)));
+   for(GuildResident n:guildResidents)if(n.floor==room)entries.add(new WorldEntry(n.y,()->drawGuildResident(n,l,t,false)));
    entries.add(new WorldEntry(py-174,()->{
     float x=l+px-60,y=t+py-174;groundShadow(x,y,8,2.5f);
-    String action=Math.abs(joyX)+Math.abs(joyY)>.08f?(sprintHeld?"run":"walk"):"idle";
+    String action=doorTimer>0?"walk":Math.abs(joyX)+Math.abs(joyY)>.08f?(sprintHeld?"run":"walk"):"idle";
     drawSprite(sword?"player_sword":"player_unarmed",action,playerDir,x,y-16.6f,88.704f,88.704f,elapsed,false);
    }));
    Collections.sort(entries,(a,b)->Float.compare(a.depth,b.depth));for(WorldEntry e:entries)e.draw.run();
    paint.setTextAlign(Paint.Align.CENTER);paint.setTextSize(12);paint.setColor(col("#fff2d5"));
-   if(guildFloor<2){fantasyName("Treppe nach oben",l+592,t+230);if(guildNearStair(true))drawInteractionKey(l+592,t+178);}
-   if(guildFloor>0){fantasyName("Treppe nach unten",l+80,t+230);if(guildNearStair(false))drawInteractionKey(l+80,t+178);}
-   paint.setTextSize(13);fantasyName("GILDE · "+guildFloorNames[guildFloor],l+336,t+18);
-   if(guildFloor==0){fantasyName("Ausgang",l+336,t+344);if(Math.abs(px-396)<38&&py>478)drawInteractionKey(l+336,t+300);}
+   if(guild&&room<2){fantasyName("Treppe nach oben",l+592,t+230);}
+   if(guild&&room>0){fantasyName("Treppe nach unten",l+80,t+230);}
+   paint.setTextSize(13);fantasyName(guild?"GILDE · "+guildFloorNames[room]:villageNames[interiorHouseIndex()],l+336,t+18);
+   if(!guild||room==0)fantasyName("Ausgang",l+336,t+344);
    paint.setTextAlign(Paint.Align.LEFT);
+  }
+
+  void loadOtherRooms(){
+   // Room IDs 3..6 are independent interiors; 0..2 remain guild floors.
+   guildFurniture(3,"Interior",6,85,51,55,160,174,1.6f,70,18);
+   guildFurniture(3,"Interior_objects(2)",300,226,56,34,336,176,2,96,20);
+   guildFurniture(3,"Interior",163,81,26,44,528,164,2,42,16);
+   guildFurniture(3,"Interior",84,36,26,38,516,288,1.6f,34,16);
+   guildFurniture(3,"Interior_objects(2)",228,309,18,33,130,306,1.6f,18,10);
+   guildPose(3,"Citizen1_Idle_without_shadow","Kraeuterkundlerin",32,32,12,30,336,128,1.6f);
+   guildWalker(3,"Citizen2","Kunde",new float[][]{{250,224},{414,224},{414,310},{250,310}});
+   guildFurniture(4,"Interior_objects(2)",300,226,56,34,336,176,2,96,20);
+   guildFurniture(4,"Interior",117,176,39,35,156,286,1.6f,52,18);
+   guildFurniture(4,"Interior",117,176,39,35,516,286,1.6f,52,18);
+   guildFurniture(4,"Interior",51,0,23,39,132,168,2,36,16);
+   guildFurniture(4,"Interior",51,0,23,39,540,168,2,36,16);
+   guildFurniture(4,"Interior_objects(2)",228,309,18,33,616,300,1.6f,18,10);
+   guildPose(4,"Citizen2_Idle_without_shadow","Gastwirt",32,32,12,30,336,128,1.6f);
+   guildPose(4,"Talking_people_without_shadow","Gaeste",48,48,12,39,156,258,1.6f);
+   guildPose(4,"Reader1","Reisender",32,48,11,40,516,258,1.4f);
+   guildWalker(4,"Fighter2","Reisende Wache",new float[][]{{250,224},{418,224},{418,308},{250,308}});
+   guildFurniture(5,"Interior",51,0,23,39,516,170,2,36,16);
+   guildFurniture(5,"Interior",163,81,26,44,156,170,2,42,16);
+   guildFurniture(5,"Interior",86,2,19,27,520,292,1.6f,26,16);
+   guildFurniture(5,"Interior_objects(2)",156,270,47,25,176,282,1.6f,64,16);
+   guildFurniture(5,"Interior_objects(2)",296,309,18,33,602,180,1.6f,18,10);
+   guildWalker(5,"Citizen1","Bewohnerin",new float[][]{{274,222},{398,222},{398,310},{274,310}});
+   guildFurniture(6,"Forge",8,14,45,78,160,176,1.6f,60,18);
+   guildFurniture(6,"Interior",6,85,51,55,520,176,1.6f,70,18);
+   guildFurniture(6,"Interior_objects(2)",300,226,56,34,336,180,2,96,20);
+   guildFurniture(6,"Interior",112,231,16,22,120,306,1.6f,20,12);
+   guildFurniture(6,"Interior",86,2,19,27,536,300,1.6f,26,16);
+   guildPose(6,"Citizen1_Idle_without_shadow","Baeckerin",32,32,12,30,336,132,1.6f);
+   guildWalker(6,"Citizen2","Baecker",new float[][]{{254,230},{416,230},{416,310},{254,310}});
+  }
+  int interiorHouseIndex(){return currentHouse==1?0:currentHouse==GUILD_HOUSE?5:currentHouse-10;}
+  int furnishedRoom(){return currentHouse==GUILD_HOUSE?guildFloor:currentHouse-8;}
+  int nearbyHouse(){
+   for(int i=0;i<villageHouses.length;i++){
+    float[] h=villageHouses[i];if(Math.abs(px-(h[0]+villageDoorOffsets[i]))<23&&py>h[1]+80&&py<h[1]+130)return i;
+   }return -1;
+  }
+  float doorTimer=0,doorStartX=0,doorStartY=0;int doorHouse=-1;boolean doorEntering=false,doorSwitched=false;
+  int doorFrame(){
+   float elapsedDoor=.96f-doorTimer;
+   if(elapsedDoor<.48f)return Math.min(3,(int)(elapsedDoor/.12f));
+   return doorTimer>.32f?3:doorTimer>.12f?4:5;
+  }
+  void updateDoorTransition(float dt){
+   doorTimer=Math.max(0,doorTimer-dt);
+   if(doorEntering&&!doorSwitched){float p=Math.min(1,(.96f-doorTimer)/.48f);px=doorStartX+(villageHouses[doorHouse][0]+villageDoorOffsets[doorHouse]-doorStartX)*p;py=doorStartY+(villageHouses[doorHouse][1]+95-doorStartY)*p;}
+   if(!doorSwitched&&doorTimer<=.48f){
+    doorSwitched=true;
+    if(doorEntering){
+     indoors=true;currentHouse=doorHouse==0?1:doorHouse==5?GUILD_HOUSE:10+doorHouse;
+     if(doorHouse==0){px=DOOR_IN_X;py=DOOR_IN_Y-31;}else{px=396;py=484;guildFloor=0;guildStairCooldown=.8f;}
+    }else{
+     indoors=false;currentHouse=0;px=villageHouses[doorHouse][0]+villageDoorOffsets[doorHouse];py=villageHouses[doorHouse][1]+105;
+    }
+    joyX=joyY=0;
+   }
+   if(!doorEntering&&doorSwitched&&!indoors)py=villageHouses[doorHouse][1]+105+40*(1-doorTimer/.48f);
+  }
+  void updateOtherRoom(float mx,float my,float dt){
+   int room=furnishedRoom();if(Math.abs(mx)+Math.abs(my)>.08f)playerDir=direction(mx,my);
+   float step=(sprintHeld?205:140)*dt/3;
+   for(int i=0;i<3;i++){
+    float nx=px+mx*step,ny=py+my*step;
+    if(!guildBlocked(room,nx-60,py-174))px=nx;
+    if(!guildBlocked(room,px-60,ny-174))py=ny;
+    if(Math.abs(px-396)<30&&py>499&&my>0){enterOrLeave();return;}
+   }
   }
 
   void loadBuildings(){
@@ -614,7 +720,7 @@ public class MainActivity extends Activity {
   void drawHouse(float x,float y,boolean smithy){
    // Exact source rectangles measured against Exterior_house.png (400x208).
    // The facade is a complete single sprite in x=0..145, y=0..162.
-   tile("Exterior_house",0,0,145,163,x-116,y-140,232,261);
+   if(doorTimer>0&&doorHouse==0)villageTile("door0",0,doorFrame()*163,145,163,x-116,y-140,232,261);else tile("Exterior_house",0,0,145,163,x-116,y-140,232,261);
    // The loose props are separate cells on the bottom of the same atlas.
    tile("Exterior_house",70,162,32,38,x-117,y+113,50,52); // crates
    tile("Exterior_house",116,160,34,34,x+97,y+66,55,55); // complete cart
@@ -625,19 +731,9 @@ public class MainActivity extends Activity {
   final float DOOR_OUT_X=0f,DOOR_OUT_Y=102f;
   final float DOOR_IN_X=555f,DOOR_IN_Y=518f;
   void enterOrLeave(){
-   if(indoors){
-    boolean guild=currentHouse==GUILD_HOUSE;indoors=false;currentHouse=0;
-    px=guild?guildX:forgeX+DOOR_OUT_X;py=guild?guildY+145:forgeY+DOOR_OUT_Y+43f;
-    joyX=joyY=0;return;
-   }
-   if(Math.abs(px-guildX)<22&&py>guildY+80&&py<guildY+128){
-    indoors=true;currentHouse=GUILD_HOUSE;guildFloor=0;px=396;py=484;guildStairCooldown=.8f;joyX=joyY=0;return;
-   }
-   if(Math.abs(px-(forgeX+DOOR_OUT_X))<22&&
-      py>forgeY+DOOR_OUT_Y-22&&py<forgeY+DOOR_OUT_Y+10){
-    indoors=true;currentHouse=1;px=DOOR_IN_X;py=DOOR_IN_Y-31f;
-    joyX=joyY=0;
-   }
+   if(doorTimer>0)return;
+   int index=indoors?interiorHouseIndex():nearbyHouse();if(index<0||index>=villageHouses.length)return;
+   doorHouse=index;doorEntering=!indoors;doorStartX=px;doorStartY=py;playerDir=doorEntering?1:0;doorSwitched=false;doorTimer=.96f;joyX=joyY=0;
   }
   // The player's Tiled map is read once, preserving the exact CSV layer order.
   long[][] smithyLayers;
@@ -700,6 +796,7 @@ public class MainActivity extends Activity {
   }
   void drawInterior(float vw,float vh){
    if(currentHouse==GUILD_HOUSE){drawGuild(vw,vh);return;}
+   if(currentHouse>=11&&currentHouse<=14){drawFurnishedRoom(vw,vh,furnishedRoom(),false);return;}
    float l=vw/2-340,t=vh/2-176;
    drawRect(col("#18141a"),0,0,vw,vh);
    // Render the exact nine user-designed Tiled layers instead of the old hardcoded interior.
@@ -745,7 +842,7 @@ public class MainActivity extends Activity {
    }
    paint.setTextAlign(Paint.Align.LEFT);paint.setTypeface(Typeface.DEFAULT);
    float cx=l+340+(px-400),cy=t+176+(py-350);
-   String indoorAction=hp<=0?"death":hurtAnim>0?"hurt":attackAnim>0&&sword?"attack":Math.abs(joyX)+Math.abs(joyY)>.08f?(sprintHeld?"run":"walk"):"idle";
+   String indoorAction=hp<=0?"death":doorTimer>0?"walk":hurtAnim>0?"hurt":attackAnim>0&&sword?"attack":Math.abs(joyX)+Math.abs(joyY)>.08f?(sprintHeld?"run":"walk"):"idle";
    drawSprite(sword?"player_sword":"player_unarmed",indoorAction,playerDir,cx,cy,88.704f,88.704f,hp<=0?deathAnim:attackAnim>0?.4f-attackAnim:elapsed,hp<=0&&deathAnim>.8f);
    paint.setColor(col("#fff2d5"));paint.setTextSize(13);
    canvas.drawText("SCHMIEDE  |  Ausgang unten mittig",l+221,t+345,paint);
@@ -801,7 +898,7 @@ public class MainActivity extends Activity {
   }
   boolean decorationSpaceFree(float x,float y,float w,float h,float houseRadius){
    if(villageZone(x,y,70)||roadAt(x,y,60))return false;
-   if(Math.hypot(x-180f,y-180f)<145f)return false;
+   if(Math.hypot(x-SPAWN_X,y-SPAWN_Y)<145f)return false;
    if(Math.hypot(x-merchantX,y-merchantY)<85f)return false;
    float left=x-w/2f,right=x+w/2f,top=y-h*.8f,bottom=top+h;
    for(Decoration d:decorations){
@@ -1357,7 +1454,8 @@ public class MainActivity extends Activity {
     mobs.clear();org.json.JSONArray enemies=root.getJSONArray("mobs");for(int i=0;i<enemies.length();i++){org.json.JSONObject o=enemies.getJSONObject(i);
      Mob m=new Mob(o.getString("kind"),(float)o.getDouble("x"),(float)o.getDouble("y"));m.hp=o.getInt("hp");m.maxHp=o.getInt("maxHp");m.level=o.getInt("level");m.damage=o.getInt("damage");m.dead=o.getBoolean("dead");mobs.add(m);}
     drops.clear();org.json.JSONArray ground=root.getJSONArray("drops");for(int i=0;i<ground.length();i++){org.json.JSONObject o=ground.getJSONObject(i);drops.add(new Drop(o.getString("item"),(float)o.getDouble("x"),(float)o.getDouble("y"),0));}
-    if(indoors&&currentHouse==GUILD_HOUSE&&guildBlocked(guildFloor,px-60,py-174)){px=396;py=484;}
+    doorTimer=0;doorHouse=-1;doorSwitched=false;
+    if(indoors&&(currentHouse==GUILD_HOUSE||currentHouse>=11&&currentHouse<=14)&&guildBlocked(furnishedRoom(),px-60,py-174)){px=396;py=484;}
     if(!indoors&&blocked(px,py)){px=550;py=470;}
     for(Mob m:mobs)if(!m.dead&&wildlifeBlocked(m.x,m.y))moveWildlifeOutside(m);
     startScreen=false;pauseMenu=false;inventoryOpen=false;shopOpen=false;calendarOpen=false;joyX=joyY=0;previous=System.nanoTime();
@@ -1721,7 +1819,7 @@ public class MainActivity extends Activity {
    smithyCollisionPixels=mask;
   }
   boolean interiorObstacle(float x,float y){
-   if(currentHouse==GUILD_HOUSE)return guildBlocked(guildFloor,x-60,y-174);
+   if(currentHouse==GUILD_HOUSE||currentHouse>=11&&currentHouse<=14)return guildBlocked(furnishedRoom(),x-60,y-174);
    float tx=x-60f,ty=y-174f;
    // The player has a small circular foot area.
    if(tx<8||tx>=664||ty<8||ty>=344)return true;
@@ -1767,10 +1865,12 @@ public class MainActivity extends Activity {
    guildStairCooldown=Math.max(0,guildStairCooldown-dt);
    if(hp<=0){deathAnim+=dt;if(!hasLoadableSave())newCharacterAfterDeath();return;}if(inventoryOpen||shopOpen||pauseMenu||startScreen||creatorOpen||calendarOpen)return;
    updateGuildResidents(dt);
+   if(doorTimer>0){updateDoorTransition(dt);return;}
    float mx=joyX,my=joyY,length=(float)Math.hypot(mx,my);
    if(length>1){mx/=length;my/=length;}
    if(indoors){
     if(currentHouse==GUILD_HOUSE){updateGuildMovement(mx,my,dt);return;}
+    if(currentHouse>=11&&currentHouse<=14){updateOtherRoom(mx,my,dt);return;}
     if(Math.abs(mx)+Math.abs(my)>.08f)playerDir=direction(mx,my);
     float nx=Math.max(72,Math.min(718,px+mx*(sprintHeld?205:140)*dt));
     float ny=Math.max(194,Math.min(525,py+my*(sprintHeld?205:140)*dt));
@@ -1788,8 +1888,7 @@ public class MainActivity extends Activity {
      float nx=px+mx*step,ny=py+my*step;
      if(!blocked(nx,py)&&!mobFootBlocked(nx,py,null,12f))px=nx;
      if(!blocked(px,ny)&&!mobFootBlocked(px,ny,null,12f))py=ny;
-     if(Math.abs(px-guildX)<22&&py>guildY+80&&py<guildY+128&&my<0){enterOrLeave();break;}
-     if(Math.abs(px-(forgeX+DOOR_OUT_X))<22&&py>forgeY+DOOR_OUT_Y-22&&py<forgeY+DOOR_OUT_Y+10&&my<0){enterOrLeave();break;}
+     if(my<0&&nearbyHouse()>=0){enterOrLeave();break;}
     }
    }
    if(indoors)return;
@@ -1943,7 +2042,7 @@ public class MainActivity extends Activity {
   }
   void restart(){
    hairType=0;hairColor=1;skinColor=1;eyeColor=0;combatStyle=0;armorStyle=0;characterGender=0;characterName="Abenteurer";creatorOpen=false;calendarOpen=false;sprintHeld=false;attackSequence=0;
-   indoors=false;currentHouse=0;guildFloor=0;playerLevel=1;exp=0;attackPower=3;maxHp=12;hp=maxHp;maxMana=20;mana=20;worldTime=0;stockRefreshTimer=0;refreshMerchantStocks();equipped.clear();copper=silver=gold=0;java.util.Arrays.fill(hotbar,null);selectedHotbar=-1;playerDamageTime=0;px=180;py=180;joyX=joyY=0;deathAnim=0;swordTimer=0;sword=false;attackAnim=0;playerHealthVisible=0;kills=animalKills=0;questTier=questProgress=nextQuestDay=0;questActive=false;mobs.clear();drops.clear();inventory.clear();inventoryOpen=false;shopOpen=false;pauseMenu=false;spawnMobs();
+   indoors=false;currentHouse=0;guildFloor=0;playerLevel=1;exp=0;attackPower=3;maxHp=12;hp=maxHp;maxMana=20;mana=20;worldTime=0;stockRefreshTimer=0;doorTimer=0;refreshMerchantStocks();equipped.clear();copper=silver=gold=0;java.util.Arrays.fill(hotbar,null);selectedHotbar=-1;playerDamageTime=0;px=SPAWN_X;py=SPAWN_Y;joyX=joyY=0;deathAnim=0;swordTimer=0;sword=false;attackAnim=0;playerHealthVisible=0;kills=animalKills=0;questTier=questProgress=nextQuestDay=0;questActive=false;mobs.clear();drops.clear();inventory.clear();inventoryOpen=false;shopOpen=false;pauseMenu=false;spawnMobs();
   }
   // Experimental fixed 2.5D camera: ground is foreshortened, sprites stay upright.
   static final float CAMERA_GROUND_Y=0.82f;
@@ -2006,7 +2105,7 @@ public class MainActivity extends Activity {
   }
   void drawPlayerWorld(){
    String playerKind=sword?"player_sword":"player_unarmed";
-   String playerAction=hp<=0?"death":hurtAnim>0?"hurt":attackAnim>0&&sword?"attack":Math.abs(joyX)+Math.abs(joyY)>.08f?(sprintHeld?"run":"walk"):"idle";
+   String playerAction=hp<=0?"death":doorTimer>0?"walk":hurtAnim>0?"hurt":attackAnim>0&&sword?"attack":Math.abs(joyX)+Math.abs(joyY)>.08f?(sprintHeld?"run":"walk"):"idle";
    if(hp>0){groundShadow(px,py+24,13.3f,4.2f);billboard(playerKind,playerAction,playerDir,px,py,80.64f,80.64f,attackAnim>0?.4f-attackAnim:elapsed,false);}
    if(playerHealthVisible>0)healthBar(px,py-56,52,hp,maxHp);
    damageText(px,py-66,lastPlayerDamage,playerDamageTime);
@@ -2044,20 +2143,20 @@ public class MainActivity extends Activity {
    for(GuildResident n:guildResidents)if(n.floor<0)world.add(new WorldEntry(n.y,()->drawGuildResident(n,0,0,true)));
    for(Mob m:mobs)world.add(new WorldEntry(m.y+18,()->drawMobWorld(m,vw,vh)));
    world.add(new WorldEntry(py+24,()->drawPlayerWorld()));
-   if(Math.abs(px-guildX)<48&&Math.abs(py-(guildY+118))<50)world.add(new WorldEntry(guildY+160,()->{canvas.save();canvas.scale(1f,1f/CAMERA_GROUND_Y,guildX,guildY+125);drawInteractionKey(guildX,guildY+70);canvas.restore();}));
    Collections.sort(world,(a,b)->Float.compare(a.depth,b.depth));
    for(WorldEntry entry:world)entry.draw.run();
-   // Day-night tint covers the complete world, before UI overlays.
-   float phase=(worldTime%240f)/240f;
-   float night=(float)Math.max(0,Math.min(1,(-Math.cos(phase*6.2831853f)-.10f)/.85f));
-   paint.setColor(Color.argb((int)(night*70),13,21,52));paint.setStyle(Paint.Style.FILL);
-   c.drawRect(px-vw/2-8,py-vh/2-8,px+vw/2+8,py+vh/2+8,paint);
    Drop nearby=nearestDrop();
    if(nearby!=null&&!inventoryOpen){drawRect(col("#182923"),px-87,py-78,174,25);paint.setColor(col("#fff0c5"));paint.setTextSize(13);paint.setTextAlign(Paint.Align.CENTER);
     canvas.drawText("E  "+nearby.item+" aufheben",px,py-60,paint);paint.setTextAlign(Paint.Align.LEFT);}
    c.restore();
    c.restore(); // End world-only zoom; UI stays at original screen scale.
-   if(indoors)drawInterior(vw,vh);else drawClouds(vw,vh);
+   if(indoors)drawInterior(vw,vh);else{
+    drawClouds(vw,vh);
+    float phase=(worldTime%240f)/240f;
+    float night=(float)Math.max(0,Math.min(1,(-Math.cos(phase*6.2831853f)-.10f)/.85f));
+    paint.setColor(Color.argb((int)(night*70),13,21,52));paint.setStyle(Paint.Style.FILL);
+    c.drawRect(0,0,vw,vh,paint);
+   }
    drawRect(col("#142b24"),0,0,vw,37);paint.setColor(Color.WHITE);paint.setTextSize(18);
    c.drawText("Lv. "+playerLevel+" EXP "+exp+"/"+expNeeded()+" DMG "+attackPower+" DEF "+armorValue(),12,25,paint);
    itemIcon("Golden Coin",vw-202,7,.85f);itemIcon("Silver Coin",vw-137,7,.85f);itemIcon("Copper Coin",vw-72,7,.85f);
@@ -2217,9 +2316,8 @@ public class MainActivity extends Activity {
     case KeyEvent.KEYCODE_E:
      if(shopOpen)shopOpen=false;
      else if(indoors){
-      if(currentHouse==GUILD_HOUSE)guildInteract();else if(!openInteriorMerchant()&&py>DOOR_IN_Y-35&&Math.abs(px-DOOR_IN_X)<25)enterOrLeave();
-     }else if(Math.hypot(px-guildX,py-(guildY+112))<48)enterOrLeave();
-     else if(Math.hypot(px-forgeX,py-(forgeY+84))<65)enterOrLeave();
+      if(currentHouse==GUILD_HOUSE)guildInteract();else if(currentHouse>=11&&currentHouse<=14){if(Math.abs(px-396)<38&&py>478)enterOrLeave();}else if(!openInteriorMerchant()&&py>DOOR_IN_Y-35&&Math.abs(px-DOOR_IN_X)<25)enterOrLeave();
+     }else if(nearbyHouse()>=0)enterOrLeave();
      else if(Math.hypot(px-merchantX,py-merchantY)<50)openShop();
      else pickup();
      break;
