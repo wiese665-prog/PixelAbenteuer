@@ -39,6 +39,12 @@ jobs:
         run: |
           python3 scripts/verify_guild_layout.py
           python3 scripts/verify_village_refinement.py
+      - name: Simulate unique village residents
+        run: |
+          python3 scripts/export_resident_world.py /tmp/pixel-resident-world.bin
+          mkdir -p /tmp/pixel-resident-tests
+          javac -encoding UTF-8 -d /tmp/pixel-resident-tests app/src/main/java/de/pixelabenteuer/game/VillageResidents.java tests/VillageResidentsTest.java
+          java -cp /tmp/pixel-resident-tests de.pixelabenteuer.game.VillageResidentsTest /tmp/pixel-resident-world.bin
       - name: Build APK
         run: |
           echo "sdk.dir=$ANDROID_HOME" > local.properties

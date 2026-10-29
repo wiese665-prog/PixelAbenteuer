@@ -201,8 +201,9 @@ public class MainActivity extends Activity {
   }
   void updateMusic(float dt){
    int target=0;
-   if(indoors)target=2;
-   else if(!safeZone(px,py))for(Mob m:mobs)
+   boolean menuMusic=startScreen||pauseMenu||creatorOpen||controlsOpen;
+   if(!menuMusic&&indoors)target=2;
+   else if(!menuMusic&&!safeZone(px,py))for(Mob m:mobs)
     if(!m.dead&&m.hostile()&&!safeZone(m.x,m.y)&&Math.hypot(px-m.x,py-m.y)<285){target=1;break;}
    for(int i=0;i<3;i++){
     float goal=i==target?.85f:0f;
@@ -356,6 +357,8 @@ public class MainActivity extends Activity {
    fantasyProp("quests",730,530,43,49,10);
    addVillageProp("shrine",0,0,80,48,SPAWN_X,SPAWN_Y+38.4f,48,28.8f,0,1);
    for(float[] light:new float[][]{{790,790},{870,790},{1000,340}})addVillageProp("guild/Flags_animation",0,0,48,48,light[0],light[1],62,62,0,12);
+   addVillageProp("guild/Attacked_Manequin2_without_shadow",0,0,32,32,982,562,51.2f,51.2f,8,1);
+   addVillageProp("guild/Attacked_Manequin3_without_shadow",0,0,32,32,984,612,51.2f,51.2f,8,1);
    java.util.Random gardenRandom=new java.util.Random(310729L);int placed=0;
    for(int attempt=0;attempt<3000&&placed<64;attempt++){
     float x=100+gardenRandom.nextInt(920),y=115+gardenRandom.nextInt(770);boolean free=Math.hypot(x-SPAWN_X,y-(SPAWN_Y+24))>80;
@@ -393,7 +396,7 @@ public class MainActivity extends Activity {
    else {
     String houseArt=index==5?"guildhall":index==2?"inn":index==4?"bakery":index==3?"residence":"cottage";
     Bitmap sprite=villageArt.get(houseArt);
-    if(sprite!=null)villageTile(doorTimer>0&&doorHouse==index?"door"+index:houseArt,0,doorTimer>0&&doorHouse==index?doorFrame()*sprite.getHeight():0,sprite.getWidth(),sprite.getHeight(),h[0]-sprite.getWidth()*.8f,h[1]+115-sprite.getHeight()*1.6f,sprite.getWidth()*1.6f,sprite.getHeight()*1.6f);
+    if(sprite!=null)villageTile(houseDoorFrame(index)>0?"door"+index:houseArt,0,houseDoorFrame(index)*sprite.getHeight(),sprite.getWidth(),sprite.getHeight(),h[0]-sprite.getWidth()*.8f,h[1]+115-sprite.getHeight()*1.6f,sprite.getWidth()*1.6f,sprite.getHeight()*1.6f);
     if(index==1||index==4)villageTile("chimney_animation",0,((int)(elapsed*5)%6)*48,48,48,h[0]-144*.8f+17*1.6f,h[1]+115-128*1.6f+2*1.6f,48*1.6f,48*1.6f);
     paint.setTextAlign(Paint.Align.CENTER);paint.setTextSize(13);fantasyName(villageNames[index],h[0],h[1]+105-(sprite==null?205:sprite.getHeight()*1.6f));paint.setTextAlign(Paint.Align.LEFT);
    }
@@ -432,20 +435,52 @@ public class MainActivity extends Activity {
   final float guildX=830,guildY=690;
   final String[] guildFloorNames={"EG · Empfang und Training","1. OG · Bibliothek","2. OG · Gildenleitung und Magie"};
   final ArrayList<GuildFurniture> guildFurniture=new ArrayList<>();
-  final ArrayList<GuildResident> guildResidents=new ArrayList<>();
   class GuildFurniture {
    String atlas;int floor,sx,sy,sw,sh;float x,y,scale,footW,footH;
    GuildFurniture(int f,String a,int xx,int yy,int w,int h,float px,float py,float s,float fw,float fh){floor=f;atlas="guild/"+a;sx=xx;sy=yy;sw=w;sh=h;x=px;y=py;scale=s;footW=fw;footH=fh;}
   }
-  class GuildResident {
-   String idle,walk,label;int floor,cw,ch,columns,rows,foot,row=0,target=1;float x,y,scale,pause=0,anim=0;boolean moving=false;float[][] route;
-   GuildResident(int f,String i,String w,String n,int cellW,int cellH,int cols,int rr,int fy,float s,float[][] points){floor=f;idle="guild/"+i;walk=w==null?null:"guild/"+w;label=n;cw=cellW;ch=cellH;columns=cols;rows=rr;foot=fy;scale=s;route=points;x=points[0][0];y=points[0][1];}
+  final VillageResidents residentSystem=new VillageResidents();
+  final ArrayList<VillageResidents.Resident> guildResidents=residentSystem.people;
+  final VillageResidents.World residentWorld=new VillageResidents.World(){
+   public boolean blocked(int room,float x,float y){return room==VillageResidents.OUTSIDE?outdoorTerrainBlocked(x,y):room>=0?guildBlocked(room,x,y):false;}
+   public boolean road(float x,float y){return roadAt(x,y,0);}
+   public int playerFloor(){return currentResidentRoom();}
+   public float playerX(){return indoors&&currentHouse!=1?px-60:px;}
+   public float playerY(){return !indoors?py+24:currentHouse==1?py:py-174;}
+  };
+  int currentResidentRoom(){return !indoors?VillageResidents.OUTSIDE:currentHouse==1?VillageResidents.SMITHY:furnishedRoom();}
+  boolean roomObstacle(int room,float x,float y){return guildBlocked(room,x,y)||residentSystem.occupied(room,x,y,null,7);}
+  void updateGuildResidents(float dt){
+   residentSystem.update(dt,residentWorld);VillageResidents.Resident grom=residentSystem.get("grom");
+   if(grom.floor==VillageResidents.OUTSIDE){merchantX=grom.x;merchantY=grom.y;}
+  }
+  boolean interactResident(){
+   VillageResidents.Resident n=residentSystem.nearby(residentWorld);if(n==null)return false;
+   if(n.id.equals("tarek")){talkAdventurer();return true;}
+   if(n.mobile){float dx=residentWorld.playerX()-n.x,dy=residentWorld.playerY()-n.y;n.row=Math.abs(dx)>Math.abs(dy)?(dx<0?1:2):(dy<0?3:0);}
+   n.speak();if(n.merchant>=0)showMerchant(n.merchant);return true;
+  }
+  void drawNameTitle(String name,String title,float x,float y){
+   Paint.Align align=paint.getTextAlign();Typeface face=paint.getTypeface();float size=paint.getTextSize();int color=paint.getColor();
+   paint.setTextAlign(Paint.Align.CENTER);paint.setTypeface(Typeface.DEFAULT_BOLD);paint.setTextSize(12);paint.setColor(col("#fff0c8"));outlinedText(name,x,y);
+   paint.setTextSize(10);paint.setColor(col("#c28aff"));outlinedText(title,x,y+12);
+   paint.setTextAlign(align);paint.setTypeface(face);paint.setTextSize(size);paint.setColor(color);
+  }
+  void drawResidentSpeech(VillageResidents.Resident n,float x,float y){
+   if(n.speechTime<=0||n.speech.isEmpty())return;
+   Paint.Align align=paint.getTextAlign();Typeface face=paint.getTypeface();float size=paint.getTextSize();int color=paint.getColor();
+   paint.setTypeface(Typeface.DEFAULT);paint.setTextSize(12);ArrayList<String> lines=new ArrayList<>();String line="";
+   for(String word:n.speech.split(" ")){String candidate=line.isEmpty()?word:line+" "+word;if(paint.measureText(candidate)>212&&!line.isEmpty()){lines.add(line);line=word;}else line=candidate;}
+   if(!line.isEmpty())lines.add(line);float width=0;for(String value:lines)width=Math.max(width,paint.measureText(value));width+=16;float height=lines.size()*15+12;
+   drawRect(col("#bba578"),x-width/2-1,y-height-1,width+2,height+2);drawRect(col("#182823"),x-width/2,y-height,width,height);
+   paint.setTextAlign(Paint.Align.CENTER);paint.setColor(col("#fff3d4"));for(int i=0;i<lines.size();i++)canvas.drawText(lines.get(i),x,y-height+17+i*15,paint);
+   paint.setTextAlign(align);paint.setTypeface(face);paint.setTextSize(size);paint.setColor(color);
+  }
+  int houseDoorFrame(int index){
+   if(doorTimer>0&&doorHouse==index)return doorFrame();
+   for(VillageResidents.Resident n:guildResidents)if(n.doorway()&&n.doorHouse==index)return n.doorFrame();return 0;
   }
   void guildFurniture(int f,String a,int sx,int sy,int sw,int sh,float x,float y,float s,float fw,float fh){guildFurniture.add(new GuildFurniture(f,a,sx,sy,sw,sh,x,y,s,fw,fh));}
-  void guildWalker(int floor,String type,String name,float[][] route){
-   guildResidents.add(new GuildResident(floor,type+"_Idle_without_shadow",type+"_Walk_without_shadow",name,32,32,12,4,type.equals("Fighter2")?28:30,1.6f,route));
-  }
-  void guildPose(int floor,String art,String name,int cw,int ch,int cols,int foot,float x,float y,float scale){guildResidents.add(new GuildResident(floor,art,null,name,cw,ch,cols,1,foot,scale,new float[][]{{x,y}}));}
   void loadGuild(){
    try{String[] names=getAssets().list("village/guild");if(names!=null)for(String filename:names)if(filename.endsWith(".png")){
     try(InputStream in=getAssets().open("village/guild/"+filename)){Bitmap b=BitmapFactory.decodeStream(in);if(b!=null)villageArt.put("guild/"+filename.substring(0,filename.length()-4),b);}
@@ -461,12 +496,7 @@ public class MainActivity extends Activity {
    guildFurniture(0,"Interior_objects(2)",128,10,32,35,220,96,1,0,0);
    guildFurniture(0,"Interior_objects(2)",160,1,32,35,452,96,1,0,0);
    // A complete sword rack and training dummies, using their full animation cells.
-   guildPose(0,"Guildmaster","Empfang",48,32,6,26,336,124,2);
-   guildPose(0,"Fighter_sword_without_shadow","Schwerttraining",64,64,6,40,484,218,1.8f);
-   guildPose(0,"Attacked_Manequin1_without_shadow","Trainingspuppe",32,32,4,28,540,220,1.6f);
-   guildWalker(0,"Citizen1","Abenteurerin",new float[][]{{240,222},{432,222},{432,310},{240,310}});
-   guildWalker(0,"Fighter2","Gildenwache",new float[][]{{420,310},{252,310},{252,238},{420,238}});
-   guildWalker(0,"Citizen2","Auftragssucher",new float[][]{{300,250},{380,250},{380,294},{300,294}});
+   guildFurniture(0,"Attacked_Manequin1_without_shadow",0,0,32,32,540,220,1.6f,20,10);
    // Library: shelves, two reading desks, a full dragon skeleton on the rear wall.
    guildFurniture(1,"Interior_objects(2)",268,100,46,58,146,164,2,80,18);
    guildFurniture(1,"Interior_objects(2)",332,100,46,58,526,164,2,80,18);
@@ -475,11 +505,6 @@ public class MainActivity extends Activity {
    guildFurniture(1,"Interior_objects(2)",156,270,47,25,482,282,2,82,18);
    guildFurniture(1,"Interior_objects(2)",228,309,18,33,100,322,1.6f,18,10);
    guildFurniture(1,"Interior_objects(2)",296,309,18,33,572,322,1.6f,18,10);
-   guildPose(1,"Reader1","Chronist",32,48,11,40,190,252,1.4f);
-   guildPose(1,"Reader2","Leserin",16,32,2,30,482,252,1.6f);
-   guildWalker(1,"Citizen1","Bibliothekarin",new float[][]{{274,214},{398,214},{398,310},{274,310}});
-   guildWalker(1,"Citizen2","Forscher",new float[][]{{380,298},{292,298},{292,234},{380,234}});
-   guildWalker(1,"Fighter2","Bote",new float[][]{{320,216},{360,216},{360,304},{320,304}});
    // Council chamber: original desk, banner, books and four casting sheets.
    guildFurniture(2,"Interior_objects(2)",75,100,47,58,144,164,2,80,18);
    guildFurniture(2,"Interior_objects(2)",135,100,47,58,528,164,2,80,18);
@@ -487,37 +512,13 @@ public class MainActivity extends Activity {
    guildFurniture(2,"Interior_objects(2)",178,309,45,42,336,94,1,0,0);
    guildFurniture(2,"Interior_objects(2)",122,311,52,41,144,304,1.6f,70,12);
    guildFurniture(2,"Interior_objects(2)",268,308,16,34,534,306,1.6f,16,10);
-   guildPose(2,"Guildmaster","Gildenmeister",48,32,6,26,336,126,2);
    // Mage fronts have seven 48x64 cells, NOT a uniform 7x4 grid.
-   guildPose(2,"Mage1_without_shadow","Feuermagier",48,64,7,40,214,226,1.5f);
-   guildPose(2,"Mage2_without_shadow","Zauberlehrling",48,64,7,40,458,226,1.5f);
-   guildPose(2,"Mage3_without_shadow","Arkanist",48,64,7,40,226,310,1.5f);
-   guildPose(2,"Mage4_without_shadow","Magierin",48,64,7,40,458,310,1.5f);
-   guildWalker(2,"Citizen2","Schreiber",new float[][]{{284,222},{388,222},{388,310},{284,310}});
-   guildWalker(2,"Citizen1","Gesandte",new float[][]{{372,298},{300,298},{300,240},{372,240}});
    // Original animated townsfolk on the public lanes; no wildlife enters the village.
-   guildWalker(-1,"Citizen1","Dorfbewohnerin",new float[][]{{410,440},{410,500},{490,500},{490,470},{410,470}});
-   guildWalker(-1,"Citizen2","Dorfbewohner",new float[][]{{690,470},{690,780},{690,840},{700,840},{700,500}});
-   guildPose(-1,"Talking_people_without_shadow","Abenteurer",48,48,12,39,760,552,1.6f);
-   guildPose(-1,"Fighter_sword_without_shadow","Wache",64,64,6,40,940,560,1.8f);
-   guildPose(-1,"Attacked_Manequin2_without_shadow","Trainingspuppe",32,32,4,28,982,562,1.6f);
-   guildPose(-1,"Attacked_Manequin3_without_shadow","Trainingspuppe",32,32,4,28,984,612,1.6f);
   }
   boolean guildBlocked(int floor,float x,float y){
    if(x<14||x>658||y<108||y>332)return true;
    for(GuildFurniture p:guildFurniture)if(p.floor==floor&&p.footW>0&&x>p.x-p.footW/2-6&&x<p.x+p.footW/2+6&&y>p.y-p.footH-6&&y<p.y+6)return true;
    return false;
-  }
-  void updateGuildResidents(float dt){
-   for(GuildResident n:guildResidents){n.anim+=dt;n.moving=false;if(n.walk==null)continue;
-    n.pause=Math.max(0,n.pause-dt);if(n.pause>0)continue;
-    float[] point=n.route[n.target%n.route.length];float dx=point[0]-n.x,dy=point[1]-n.y,d=(float)Math.hypot(dx,dy);
-    if(d<1){n.x=point[0];n.y=point[1];n.target=(n.target+1)%n.route.length;n.pause=.6f+(n.target%3)*.4f;continue;}
-    float step=Math.min(d,dt*32),nx=n.x+dx/d*step,ny=n.y+dy/d*step;
-    boolean blocked=n.floor<0?villageObstacle(nx,ny):guildBlocked(n.floor,nx,ny);
-    if(blocked){n.pause=.3f;n.target=(n.target+1)%n.route.length;continue;}
-    n.row=Math.abs(dx)>Math.abs(dy)?(dx<0?1:2):(dy<0?3:0);n.x=nx;n.y=ny;n.moving=true;
-   }
   }
   final HashMap<String,int[]> residentFrames=new HashMap<>();
   int[] validResidentFrames(String name,Bitmap b,int row,int cw,int ch,int columns){
@@ -530,13 +531,21 @@ public class MainActivity extends Activity {
    }
    int[] result=new int[frames.size()];for(int i=0;i<result.length;i++)result[i]=frames.get(i);residentFrames.put(key,result);return result;
   }
-  void drawGuildResident(GuildResident n,float l,float t,boolean outdoor){
-   String name=n.moving?n.walk:n.idle;Bitmap b=villageArt.get(name);if(b==null)return;
-   int columns=n.moving?6:n.columns,row=n.rows==1?0:n.row;int[] frames=validResidentFrames(name,b,row,n.cw,n.ch,columns);if(frames.length==0)return;int frame=frames[(int)(n.anim*(n.moving?9:5))%frames.length];
+  void drawGuildResident(VillageResidents.Resident n,float l,float t,boolean outdoor){
    float x=l+n.x,y=t+n.y;canvas.save();if(outdoor)canvas.scale(1f,1f/CAMERA_GROUND_Y,x,y);
-   groundShadow(x,y,8,2.5f);
-   villageTile(name,frame*n.cw,row*n.ch,n.cw,n.ch,x-n.cw*n.scale/2,y-n.foot*n.scale,n.cw*n.scale,n.ch*n.scale);
-   canvas.restore();
+   float visibleHeight;
+   if(n.kind!=null){
+    int dir=n.row==0?0:n.row==3?1:n.row==1?2:3;groundShadow(x,y,12,3);
+    drawSprite(n.kind,n.moving?"walk":"idle",dir,x,y-24,79,79,n.anim,false);visibleHeight=52;
+   }else{
+    String name=n.moving?n.walk:n.idle;Bitmap b=villageArt.get(name);if(b==null){canvas.restore();return;}
+    int columns=n.moving?6:n.columns,row=n.rows==1?0:n.row;int[] frames=validResidentFrames(name,b,row,n.cw,n.ch,columns);if(frames.length==0){canvas.restore();return;}
+    int frame=frames[(int)(n.anim*(n.moving?9:5))%frames.length];groundShadow(x,y,8,2.5f);
+    villageTile(name,frame*n.cw,row*n.ch,n.cw,n.ch,x-n.cw*n.scale/2,y-n.foot*n.scale,n.cw*n.scale,n.ch*n.scale);visibleHeight=n.id.equals("aldric")?40:n.id.equals("alwin")?41:n.kind==null?40:52;
+   }
+   drawNameTitle(n.name,n.title,x,y-visibleHeight-22);
+   if(residentSystem.nearby(residentWorld)==n&&!shopOpen)drawInteractionKey(x+26,y-8);
+   drawResidentSpeech(n,x,y-visibleHeight-34);canvas.restore();
   }
   boolean guildNearStair(boolean up){float x=px-60,y=py-174;return Math.abs(x-(up?592:80))<38&&y>190&&y<244;}
   boolean guildUseStair(){
@@ -558,8 +567,8 @@ public class MainActivity extends Activity {
    float step=(sprintHeld?205:140)*dt/3;
    for(int i=0;i<3;i++){
     float nx=px+mx*step,ny=py+my*step;
-    if(!guildBlocked(guildFloor,nx-60,py-174))px=nx;
-    if(!guildBlocked(guildFloor,px-60,ny-174))py=ny;
+    if(!roomObstacle(guildFloor,nx-60,py-174))px=nx;
+    if(!roomObstacle(guildFloor,px-60,ny-174))py=ny;
     if(my<0&&guildUseStair())return;
     if(guildFloor==0&&Math.abs(px-396)<30&&py>499&&my>0){enterOrLeave();return;}
    }
@@ -574,7 +583,7 @@ public class MainActivity extends Activity {
    if(guild&&room>0)villageTile("guild/Interior",0,0,48,64,l+32,t+88,96,128);
    ArrayList<WorldEntry> entries=new ArrayList<>();
    for(GuildFurniture p:guildFurniture)if(p.floor==room)entries.add(new WorldEntry(p.y,()->villageTile(p.atlas,p.sx,p.sy,p.sw,p.sh,l+p.x-p.sw*p.scale/2,t+p.y-p.sh*p.scale,p.sw*p.scale,p.sh*p.scale)));
-   for(GuildResident n:guildResidents)if(n.floor==room)entries.add(new WorldEntry(n.y,()->drawGuildResident(n,l,t,false)));
+   for(VillageResidents.Resident n:guildResidents)if(n.floor==room)entries.add(new WorldEntry(n.y,()->drawGuildResident(n,l,t,false)));
    entries.add(new WorldEntry(py-174,()->{
     float x=l+px-60,y=t+py-174;groundShadow(x,y,8,2.5f);
     String action=doorTimer>0?"walk":Math.abs(joyX)+Math.abs(joyY)>.08f?(sprintHeld?"run":"walk"):"idle";
@@ -596,31 +605,22 @@ public class MainActivity extends Activity {
    guildFurniture(3,"Interior",163,81,26,44,528,164,2,42,16);
    guildFurniture(3,"Interior",84,36,26,38,516,288,1.6f,34,16);
    guildFurniture(3,"Interior_objects(2)",228,309,18,33,130,306,1.6f,18,10);
-   guildPose(3,"Citizen1_Idle_without_shadow","Kraeuterkundlerin",32,32,12,30,336,128,1.6f);
-   guildWalker(3,"Citizen2","Kunde",new float[][]{{250,224},{414,224},{414,310},{250,310}});
    guildFurniture(4,"Interior_objects(2)",300,226,56,34,336,176,2,96,20);
    guildFurniture(4,"Interior",117,176,39,35,156,286,1.6f,52,18);
    guildFurniture(4,"Interior",117,176,39,35,516,286,1.6f,52,18);
    guildFurniture(4,"Interior",51,0,23,39,132,168,2,36,16);
    guildFurniture(4,"Interior",51,0,23,39,540,168,2,36,16);
    guildFurniture(4,"Interior_objects(2)",228,309,18,33,616,300,1.6f,18,10);
-   guildPose(4,"Citizen2_Idle_without_shadow","Gastwirt",32,32,12,30,336,128,1.6f);
-   guildPose(4,"Talking_people_without_shadow","Gaeste",48,48,12,39,156,258,1.6f);
-   guildPose(4,"Reader1","Reisender",32,48,11,40,516,258,1.4f);
-   guildWalker(4,"Fighter2","Reisende Wache",new float[][]{{250,224},{418,224},{418,308},{250,308}});
    guildFurniture(5,"Interior",51,0,23,39,516,170,2,36,16);
    guildFurniture(5,"Interior",163,81,26,44,156,170,2,42,16);
    guildFurniture(5,"Interior",86,2,19,27,520,292,1.6f,26,16);
    guildFurniture(5,"Interior_objects(2)",156,270,47,25,176,282,1.6f,64,16);
    guildFurniture(5,"Interior_objects(2)",296,309,18,33,602,180,1.6f,18,10);
-   guildWalker(5,"Citizen1","Bewohnerin",new float[][]{{274,222},{398,222},{398,310},{274,310}});
    guildFurniture(6,"Forge",8,14,45,78,160,176,1.6f,60,18);
    guildFurniture(6,"Interior",6,85,51,55,520,176,1.6f,70,18);
    guildFurniture(6,"Interior_objects(2)",300,226,56,34,336,180,2,96,20);
    guildFurniture(6,"Interior",112,231,16,22,120,306,1.6f,20,12);
    guildFurniture(6,"Interior",86,2,19,27,536,300,1.6f,26,16);
-   guildPose(6,"Citizen1_Idle_without_shadow","Baeckerin",32,32,12,30,336,132,1.6f);
-   guildWalker(6,"Citizen2","Baecker",new float[][]{{254,230},{416,230},{416,310},{254,310}});
   }
   int interiorHouseIndex(){return currentHouse==1?0:currentHouse==GUILD_HOUSE?5:currentHouse-10;}
   int furnishedRoom(){return currentHouse==GUILD_HOUSE?guildFloor:currentHouse-8;}
@@ -655,8 +655,8 @@ public class MainActivity extends Activity {
    float step=(sprintHeld?205:140)*dt/3;
    for(int i=0;i<3;i++){
     float nx=px+mx*step,ny=py+my*step;
-    if(!guildBlocked(room,nx-60,py-174))px=nx;
-    if(!guildBlocked(room,px-60,ny-174))py=ny;
+    if(!roomObstacle(room,nx-60,py-174))px=nx;
+    if(!roomObstacle(room,px-60,ny-174))py=ny;
     if(Math.abs(px-396)<30&&py>499&&my>0){enterOrLeave();return;}
    }
   }
@@ -720,7 +720,7 @@ public class MainActivity extends Activity {
   void drawHouse(float x,float y,boolean smithy){
    // Exact source rectangles measured against Exterior_house.png (400x208).
    // The facade is a complete single sprite in x=0..145, y=0..162.
-   if(doorTimer>0&&doorHouse==0)villageTile("door0",0,doorFrame()*163,145,163,x-116,y-140,232,261);else tile("Exterior_house",0,0,145,163,x-116,y-140,232,261);
+   if(houseDoorFrame(0)>0)villageTile("door0",0,houseDoorFrame(0)*163,145,163,x-116,y-140,232,261);else tile("Exterior_house",0,0,145,163,x-116,y-140,232,261);
    // The loose props are separate cells on the bottom of the same atlas.
    tile("Exterior_house",70,162,32,38,x-117,y+113,50,52); // crates
    tile("Exterior_house",116,160,34,34,x+97,y+66,55,55); // complete cart
@@ -807,8 +807,8 @@ public class MainActivity extends Activity {
    paint.setTextAlign(Paint.Align.CENTER);
    paint.setTypeface(Typeface.DEFAULT_BOLD);
    paint.setTextSize(13);paint.setColor(col("#ffe7aa"));
-   fantasyName("Schmied",l+177,t+77);
-   fantasyName("Händlerin",l+510,t+114);
+   drawNameTitle("Borin","Schmied",l+177,t+65);
+   drawNameTitle("Maela","Händlerin",l+510,t+108);
    paint.setTypeface(Typeface.DEFAULT);paint.setTextSize(11);
    paint.setColor(col("#ffffff"));
    if(Math.hypot(px-237,py-337)<53)drawInteractionKey(l+177,t+104);
@@ -817,29 +817,19 @@ public class MainActivity extends Activity {
    characterTile("Customer",3,2,(int)(elapsed*3)%3,l+562,t+288,52);
    paint.setTextAlign(Paint.Align.CENTER);paint.setTypeface(Typeface.DEFAULT_BOLD);
    paint.setColor(col("#ffe7aa"));paint.setTextSize(13);
-   fantasyName("Abenteurer",l+562,t+241);
+   drawNameTitle("Tarek","Abenteurer",l+562,t+225);
    if(questAvailable()){
     paint.setColor(col("#50ef78"));paint.setTextSize(25);
-    outlinedText("?",l+562,t+235);
+    outlinedText("?",l+596,t+237);
     paint.setColor(col("#ffe7aa"));paint.setTextSize(13);
    }
    if(Math.hypot(px-622,py-462)<37.5f){
     paint.setTextSize(11);paint.setColor(Color.WHITE);
     drawInteractionKey(l+562,t+250);
    }
-   if(adventurerSpeechTime>0&&!adventurerSpeech.isEmpty()){
-    int alpha=(int)(255*Math.min(1f,adventurerSpeechTime/.85f));
-    paint.setTextAlign(Paint.Align.CENTER);paint.setTypeface(Typeface.DEFAULT_BOLD);
-    paint.setTextSize(12);paint.setColor(Color.argb(alpha,255,246,214));
-    String[] words=adventurerSpeech.split(" ");
-    String line="",second="";
-    for(String word:words){
-     if(second.isEmpty()&&(line+" "+word).trim().length()<=23)line=(line+" "+word).trim();
-     else second=(second+" "+word).trim();
-    }
-    canvas.drawText(line,l+562,t+205,paint);
-    if(!second.isEmpty())canvas.drawText(second,l+562,t+219,paint);
-   }
+   drawResidentSpeech(residentSystem.get("borin"),l+177,t+49);
+   drawResidentSpeech(residentSystem.get("maela"),l+510,t+92);
+   drawResidentSpeech(residentSystem.get("tarek"),l+562,t+209);
    paint.setTextAlign(Paint.Align.LEFT);paint.setTypeface(Typeface.DEFAULT);
    float cx=l+340+(px-400),cy=t+176+(py-350);
    String indoorAction=hp<=0?"death":doorTimer>0?"walk":hurtAnim>0?"hurt":attackAnim>0&&sword?"attack":Math.abs(joyX)+Math.abs(joyY)>.08f?(sprintHeld?"run":"walk"):"idle";
@@ -937,9 +927,8 @@ public class MainActivity extends Activity {
    }
    return false;
   }
-  boolean blocked(float x,float y){
-   // Orc merchant: solid body, but still reachable using E from nearby.
-   if(Math.hypot(x-merchantX,y-merchantY)<25f)return true;
+  boolean blocked(float x,float y){return outdoorTerrainBlocked(x,y)||residentSystem.occupied(VillageResidents.OUTSIDE,x,y+24,null,7);}
+  boolean outdoorTerrainBlocked(float x,float y){
    if(x<18||y<18||x>WORLD_W-18||y>WORLD_H-18)return true;
    for(Decoration d:decorations)if(d.solid&&Math.abs(d.x-x)<d.w*.5f+12f&&Math.abs(d.y-y)<d.h+14f&&collides(d,x,y))return true;
    if(villageObstacle(x,y))return true;
@@ -1095,7 +1084,7 @@ public class MainActivity extends Activity {
    stockRotation++;
   }
   String[] activeStock(){return activeMerchant==1?smithStock:activeMerchant==2?sellerStock:shopStock;}
-  String merchantTitle(){return activeMerchant==1?"SCHMIED":activeMerchant==2?"HAENDLERIN":"ORC-HAENDLER";}
+  String merchantTitle(){return activeMerchant==1?"Borin":activeMerchant==2?"Maela":"Grom";}
   void showMerchant(int merchant){activeMerchant=merchant;shopOpen=true;inventoryOpen=false;hoverSlot=-1;joyX=joyY=0;}
   String adventurerSpeech="";float adventurerSpeechTime=0f;
   // One active contract at a time. New contracts appear 2 or 3 game days after turn-in.
@@ -1125,25 +1114,25 @@ public class MainActivity extends Activity {
      "Ein guter Helm rettet Leben.","Ich habe schon bessere Klingen gesehen.",
      "Pass auf die Wildschweine auf!","Die Ruinen bergen alte Geheimnisse.",
      "Heute ist es ungewoehnlich ruhig.","Meine Stiefel sind voellig durchgelaufen.",
-     "Der Schmied kennt sein Handwerk.","Hast du genug Proviant dabei?",
+     "Borin kennt sein Handwerk.","Hast du genug Proviant dabei?",
      "Ein mutiger Held kennt auch den Rueckzug.","Im Wald raschelt es nachts seltsam.",
      "Ich suche noch nach einer alten Karte.","Gold ist nicht alles, aber es hilft.",
-     "Der Haendler feilscht wie ein Fuchs.","Manche Orks tragen seltene Beute.",
+     "Grom feilscht wie ein Fuchs.","Manche Orks tragen seltene Beute.",
      "Eine scharfe Klinge ist die halbe Miete.","Die besten Geschichten beginnen am Lagerfeuer.",
      "Ich brauche noch etwas Ruhe.","Nicht jede Ruine ist verlassen."
     };
     adventurerSpeech=lines[random.nextInt(lines.length)];
    }
-   adventurerSpeechTime=4f;
+   adventurerSpeechTime=4f;residentSystem.get("tarek").speak(adventurerSpeech);
   }
   boolean openInteriorMerchant(){
    if(!indoors||currentHouse!=1)return false;
    if(Math.hypot(px-622,py-462)<37.5f){talkAdventurer();return true;}
    if(Math.hypot(px-237,py-337)<53){showMerchant(1);return true;}
-   if(Math.abs(px-570)<58&&py>344&&py<409){showMerchant(2);return true;}
+   if(Math.abs(px-570)<58&&py>344&&py<409){residentSystem.get("maela").speak();showMerchant(2);return true;}
    return false;
   }
-  void openShop(){if(Math.hypot(px-merchantX,py-merchantY)<50)showMerchant(0);}
+  void openShop(){if(residentSystem.nearby(residentWorld)==residentSystem.get("grom"))showMerchant(0);}
   int armorValue(){int total=0;for(String name:equipped.values()){Item i=definitions.get(name);if(i!=null)total+=i.armor;}return total;}
   int bonusHealth(){int total=0;for(String name:equipped.values()){Item i=definitions.get(name);if(i!=null)total+=i.hp;}return total;}
   int maxMana=20,mana=20;
@@ -1354,6 +1343,7 @@ public class MainActivity extends Activity {
    float left=vw/2-365,top=vh/2-185;
    panel(left,top,730,370);drawRect(col("#c5a36a"),left+365,top+48,2,302);
    fantasyHeading(merchantTitle(),left+17,top+30,23);
+   paint.setColor(col("#c28aff"));paint.setTextSize(11);outlinedText(activeMerchant==1?"Schmied":activeMerchant==2?"Händlerin":"Händler",left+17,top+48);
    if(activeMerchant!=2){
     paint.setTextSize(10);paint.setColor(col("#9fc2c0"));
     canvas.drawText("Neues Sortiment in "+Math.max(1,(int)Math.ceil((STOCK_REFRESH_SECONDS-stockRefreshTimer)/60f))+" Min.",left+17,top+44,paint);
@@ -1411,6 +1401,7 @@ public class MainActivity extends Activity {
     org.json.JSONObject root=new org.json.JSONObject();
     root.put("characterName",characterName);root.put("armorStyle",armorStyle);root.put("characterGender",characterGender);root.put("hairType",hairType);root.put("hairCatalog",2);root.put("hairColor",hairColor);root.put("skinColor",skinColor);root.put("eyeColor",eyeColor);root.put("combatStyle",combatStyle);
     root.put("px",px);root.put("py",py);root.put("indoors",indoors);root.put("currentHouse",currentHouse);root.put("guildFloor",guildFloor);root.put("worldTime",worldTime);root.put("mana",mana);root.put("hp",hp);root.put("level",playerLevel);root.put("exp",exp);
+    org.json.JSONArray residents=new org.json.JSONArray();for(VillageResidents.Resident n:guildResidents){org.json.JSONObject state=new org.json.JSONObject();state.put("id",n.id);state.put("floor",n.floor);state.put("x",n.x);state.put("y",n.y);state.put("visit",n.visitIndex);residents.put(state);}root.put("residents",residents);
     root.put("gold",gold);root.put("silver",silver);root.put("copper",copper);root.put("kills",kills);root.put("animalKills",animalKills);root.put("nextQuestDay",nextQuestDay);root.put("questTier",questTier);root.put("questProgress",questProgress);root.put("questActive",questActive);
     org.json.JSONObject unique=new org.json.JSONObject();for(String key:definitions.keySet())if(key.matches(".* \\{[0-9]+\\}$")){Item i=definitions.get(key);org.json.JSONObject o=new org.json.JSONObject();o.put("rarity",i.rarity);o.put("slot",i.slot);o.put("dmg",i.dmg);o.put("armor",i.armor);o.put("hp",i.hp);o.put("mana",i.mana);unique.put(key,o);}root.put("uniqueGear",unique);root.put("nextGearId",nextGearId);
     root.put("smithStock",new org.json.JSONArray(java.util.Arrays.asList(smithStock)));root.put("shopStock",new org.json.JSONArray(java.util.Arrays.asList(shopStock)));
@@ -1454,6 +1445,7 @@ public class MainActivity extends Activity {
     mobs.clear();org.json.JSONArray enemies=root.getJSONArray("mobs");for(int i=0;i<enemies.length();i++){org.json.JSONObject o=enemies.getJSONObject(i);
      Mob m=new Mob(o.getString("kind"),(float)o.getDouble("x"),(float)o.getDouble("y"));m.hp=o.getInt("hp");m.maxHp=o.getInt("maxHp");m.level=o.getInt("level");m.damage=o.getInt("damage");m.dead=o.getBoolean("dead");mobs.add(m);}
     drops.clear();org.json.JSONArray ground=root.getJSONArray("drops");for(int i=0;i<ground.length();i++){org.json.JSONObject o=ground.getJSONObject(i);drops.add(new Drop(o.getString("item"),(float)o.getDouble("x"),(float)o.getDouble("y"),0));}
+    residentSystem.reset();org.json.JSONArray residentStates=root.optJSONArray("residents");if(residentStates!=null)for(int i=0;i<residentStates.length();i++){org.json.JSONObject state=residentStates.getJSONObject(i);residentSystem.restore(state.optString("id"),state.optInt("floor",-1),(float)state.optDouble("x"),(float)state.optDouble("y"),state.optInt("visit",0),residentWorld);}
     doorTimer=0;doorHouse=-1;doorSwitched=false;
     if(indoors&&(currentHouse==GUILD_HOUSE||currentHouse>=11&&currentHouse<=14)&&guildBlocked(furnishedRoom(),px-60,py-174)){px=396;py=484;}
     if(!indoors&&blocked(px,py)){px=550;py=470;}
@@ -1663,7 +1655,7 @@ public class MainActivity extends Activity {
    drawRect(col("#e8b975"),fx-5,fy-5,10,10);
    for(int i=1;i<villageHouses.length;i++){float[] house=villageHouses[i];float hx=x+size/2+(house[0]-px)*zoom,hy=y+size/2+(house[1]-py)*zoom;drawRect(col("#c6d5b4"),hx-4,hy-4,8,8);}
    float tx=x+size/2+(merchantX-px)*zoom,ty=y+size/2+(merchantY-py)*zoom;
-   drawRect(col("#e6d05f"),tx-3,ty-3,6,6);
+   if(residentSystem.get("grom").floor==VillageResidents.OUTSIDE)drawRect(col("#e6d05f"),tx-3,ty-3,6,6);
    for(Decoration d:decorations){
     float dx=x+size/2+(d.x-px)*zoom,dy=y+size/2+(d.y-py)*zoom;
     if(dx<x||dx>x+size||dy<y||dy>y+size)continue;
@@ -1819,7 +1811,7 @@ public class MainActivity extends Activity {
    smithyCollisionPixels=mask;
   }
   boolean interiorObstacle(float x,float y){
-   if(currentHouse==GUILD_HOUSE||currentHouse>=11&&currentHouse<=14)return guildBlocked(furnishedRoom(),x-60,y-174);
+   if(currentHouse==GUILD_HOUSE||currentHouse>=11&&currentHouse<=14)return roomObstacle(furnishedRoom(),x-60,y-174);
    float tx=x-60f,ty=y-174f;
    // The player has a small circular foot area.
    if(tx<8||tx>=664||ty<8||ty>=344)return true;
@@ -1836,7 +1828,7 @@ public class MainActivity extends Activity {
    // NPCs have separate small footprints.
    if(Math.hypot(x-237f,y-321f)<17f)return true;
    if(Math.hypot(x-570f,y-335f)<16f)return true;
-   if(Math.hypot(x-622f,y-431f)<21f)return true;
+   if(Math.hypot(x-622f,y-462f)<14f)return true;
    return false;
   }
   // Attack animation window; the next group can act immediately afterward.
@@ -2041,6 +2033,7 @@ public class MainActivity extends Activity {
    paint.setTypeface(Typeface.DEFAULT);paint.setTextAlign(Paint.Align.LEFT);
   }
   void restart(){
+   residentSystem.reset();
    hairType=0;hairColor=1;skinColor=1;eyeColor=0;combatStyle=0;armorStyle=0;characterGender=0;characterName="Abenteurer";creatorOpen=false;calendarOpen=false;sprintHeld=false;attackSequence=0;
    indoors=false;currentHouse=0;guildFloor=0;playerLevel=1;exp=0;attackPower=3;maxHp=12;hp=maxHp;maxMana=20;mana=20;worldTime=0;stockRefreshTimer=0;doorTimer=0;refreshMerchantStocks();equipped.clear();copper=silver=gold=0;java.util.Arrays.fill(hotbar,null);selectedHotbar=-1;playerDamageTime=0;px=SPAWN_X;py=SPAWN_Y;joyX=joyY=0;deathAnim=0;swordTimer=0;sword=false;attackAnim=0;playerHealthVisible=0;kills=animalKills=0;questTier=questProgress=nextQuestDay=0;questActive=false;mobs.clear();drops.clear();inventory.clear();inventoryOpen=false;shopOpen=false;pauseMenu=false;spawnMobs();
   }
@@ -2135,12 +2128,7 @@ public class MainActivity extends Activity {
    for(VillageProp p:villageProps)if(Math.abs(p.x-px)<vw/2+180&&Math.abs(p.y-py)<vh+180)world.add(new WorldEntry(p.y,()->drawVillageProp(p)));
    for(Decoration d:decorations)if(d.image!=null&&Math.abs(d.x-px)<vw/2+150&&Math.abs(d.y-py)<vh+150)world.add(new WorldEntry(d.y+d.h*.2f,()->{
     paint.setColor(Color.WHITE);paint.setColorFilter(null);paint.setAlpha(255);canvas.save();canvas.scale(1f,1f/CAMERA_GROUND_Y,d.x,d.y+d.h*.2f);canvas.drawBitmap(d.image,null,new RectF(d.x-d.w/2,d.y-d.h*.8f,d.x+d.w/2,d.y+d.h*.2f),paint);canvas.restore();}));
-   world.add(new WorldEntry(merchantY+24,()->{
-    billboard("orc2","idle",0,merchantX,merchantY,79,79,elapsed,false);
-    paint.setTextAlign(Paint.Align.CENTER);paint.setTextSize(13);fantasyName("Orc-Haendler",merchantX,merchantY-39);paint.setTextAlign(Paint.Align.LEFT);
-    if(Math.hypot(px-merchantX,py-merchantY)<50&&!shopOpen)drawInteractionKey(merchantX,merchantY-58);
-   }));
-   for(GuildResident n:guildResidents)if(n.floor<0)world.add(new WorldEntry(n.y,()->drawGuildResident(n,0,0,true)));
+   for(VillageResidents.Resident n:guildResidents)if(n.floor==VillageResidents.OUTSIDE)world.add(new WorldEntry(n.y,()->drawGuildResident(n,0,0,true)));
    for(Mob m:mobs)world.add(new WorldEntry(m.y+18,()->drawMobWorld(m,vw,vh)));
    world.add(new WorldEntry(py+24,()->drawPlayerWorld()));
    Collections.sort(world,(a,b)->Float.compare(a.depth,b.depth));
@@ -2169,9 +2157,9 @@ public class MainActivity extends Activity {
     paint.setTypeface(Typeface.DEFAULT_BOLD);paint.setTextSize(14);
     paint.setColor(col("#f3d18a"));canvas.drawText("AKTIVE QUEST",qx+10,qy+22,paint);
     paint.setTypeface(Typeface.DEFAULT);paint.setTextSize(13);
-    paint.setColor(Color.WHITE);canvas.drawText("Abenteurer: Orkjagd",qx+10,qy+42,paint);
+    paint.setColor(Color.WHITE);canvas.drawText("Tarek: Orkjagd",qx+10,qy+42,paint);
     paint.setColor(questProgress>=questGoal()?col("#9bf09c"):col("#d7e4db"));
-    canvas.drawText(questProgress>=questGoal()?"Fertig! Beim Abenteurer abgeben":("Orks besiegt: "+questProgress+" / "+questGoal()),qx+10,qy+60,paint);
+    canvas.drawText(questProgress>=questGoal()?"Fertig! Bei Tarek abgeben":("Orks besiegt: "+questProgress+" / "+questGoal()),qx+10,qy+60,paint);
    }
    if(!indoors&&!startScreen&&!pauseMenu&&!inventoryOpen&&!shopOpen)drawMinimap(vw,vh);
    if(!inventoryOpen)drawHotbar(vw,vh);
@@ -2315,6 +2303,7 @@ public class MainActivity extends Activity {
     case KeyEvent.KEYCODE_SPACE:attack();break;
     case KeyEvent.KEYCODE_E:
      if(shopOpen)shopOpen=false;
+     else if(interactResident()){}
      else if(indoors){
       if(currentHouse==GUILD_HOUSE)guildInteract();else if(currentHouse>=11&&currentHouse<=14){if(Math.abs(px-396)<38&&py>478)enterOrLeave();}else if(!openInteriorMerchant()&&py>DOOR_IN_Y-35&&Math.abs(px-DOOR_IN_X)<25)enterOrLeave();
      }else if(nearbyHouse()>=0)enterOrLeave();
