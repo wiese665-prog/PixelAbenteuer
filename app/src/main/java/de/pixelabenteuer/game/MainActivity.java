@@ -64,7 +64,7 @@ public class MainActivity extends Activity {
   String[] sellerStock={"Apple","Green Apple","Ham","Cheese","Mushroom","Healthpotion","Healthpotion large","Healpotion med"};
   String pickupNotice="";float noticeTime=0;
   HashMap<String,Bitmap> sprites=new HashMap<>();HashMap<String,Bitmap> characterSheets=new HashMap<>();
-  static final float SPAWN_X=208,SPAWN_Y=191;
+  static final float SPAWN_X=410,SPAWN_Y=191;
   float px=SPAWN_X,py=SPAWN_Y,joyX=0,joyY=0,elapsed=0,worldTime=0,attackAnim=0,hurtAnim=0,deathAnim=0,attackCooldown=0,playerHealthVisible=0;
   int hp=12,maxHp=12,kills=0,animalKills=0,playerDir=0,playerLevel=1,exp=0,attackPower=3,lastPlayerDamage=0;float playerDamageTime=0;float swordTimer=0;boolean sword=false;
   long previous=System.nanoTime();
@@ -301,7 +301,7 @@ public class MainActivity extends Activity {
   class WorldEntry {float depth;Runnable draw;WorldEntry(float y,Runnable action){depth=y;draw=action;}}
   boolean villageZone(float x,float y,float padding){return x>100-padding&&x<1020+padding&&y>96-padding&&y<890+padding;}
   boolean roadAt(float x,float y,float margin){
-   if(Math.pow((x-SPAWN_X)/40,2)+Math.pow((y-(SPAWN_Y+24))/24,2)<1)return false;
+   if(Math.pow((x-SPAWN_X)/25,2)+Math.pow((y-(SPAWN_Y+24))/16,2)<1)return false;
    if((Math.abs(y-470)<24&&(x<190||x>920))||(Math.abs(x-410)<24&&y<220))return true;
    if(Math.abs(x-1010)<18&&y>385&&y<470)return true;
    for(float[] r:villageRoads)if(x>=r[0]-margin&&x<=r[2]+margin&&y>=r[1]-margin&&y<=r[3]+margin)return true;
@@ -354,7 +354,7 @@ public class MainActivity extends Activity {
     addVillageProp("exterior",208,768,16,32,f[0],f[1],24,40,0,1);
    fantasyProp("tower",1010,350,154,256,40);
    fantasyProp("quests",730,530,43,49,10);
-   addVillageProp("shrine",0,0,80,48,SPAWN_X,SPAWN_Y+48,80,48,0,1);
+   addVillageProp("shrine",0,0,80,48,SPAWN_X,SPAWN_Y+38.4f,48,28.8f,0,1);
    for(float[] light:new float[][]{{790,790},{870,790},{1000,340}})addVillageProp("guild/Flags_animation",0,0,48,48,light[0],light[1],62,62,0,12);
    java.util.Random gardenRandom=new java.util.Random(310729L);int placed=0;
    for(int attempt=0;attempt<3000&&placed<64;attempt++){
