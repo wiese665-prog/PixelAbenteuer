@@ -1059,7 +1059,7 @@ public class MainActivity extends Activity {
    definitions.put(name,new Item(name,rarity,slot,dmg,armor,bonusHp,heal));
   }
   void loadItems(){
-   String[] filenames={"Healthpotion.png","Healthpotion large.png","Healpotion med.png","Green Apple.png","Ham.png","Apple.png","Mushroom.png","Cheese.png","Bag.png","Belt.png","Helm.png","Iron Armor.png","Iron Boot.png","Iron Helmet.png","Leather Armor.png","Leather Boot.png","Leather Helmet.png","Wizard Hat.png","Wooden Armor.png","Wood Log.png","Wool.png","Copper Coin.png","Gear.png","Golden Coin.png","Silver Coin.png","Rune Stone.png","Map.png","Bone.png","Egg.png","Feather.png","Monster Egg.png","Monster Eye.png","Monster Meat.png","Skull.png","Slime Gel.png","Coal.png","Copper Ingot.png","Copper Nugget.png","Crystal.png","Cut Emerald.png","Cut Ruby.png","Cut Sapphire.png","Cut Topaz.png","Diamond.png","Emerald.png","Gold Nugget.png","Golden Ingot.png","Obsidian.png","Pearl.png","Ruby.png","Sapphire.png","Silver Ingot.png","Silver Nugget.png","Topaz.png","Iron Sword.png","Silver Sword.png","Wooden Sword.png","Golden Sword.png"};
+   String[] filenames={"Healthpotion.png","Healthpotion large.png","Healpotion med.png","Green Apple.png","Ham.png","Apple.png","Mushroom.png","Cheese.png","Bag.png","Belt.png","Iron Armor.png","Iron Boot.png","Iron Helmet.png","Leather Armor.png","Leather Boot.png","Leather Helmet.png","Wizard Hat.png","Wooden Armor.png","Wood Log.png","Wool.png","Copper Coin.png","Gear.png","Golden Coin.png","Silver Coin.png","Rune Stone.png","Map.png","Bone.png","Egg.png","Feather.png","Monster Egg.png","Monster Eye.png","Monster Meat.png","Skull.png","Slime Gel.png","Coal.png","Copper Ingot.png","Copper Nugget.png","Crystal.png","Cut Emerald.png","Cut Ruby.png","Cut Sapphire.png","Cut Topaz.png","Diamond.png","Emerald.png","Gold Nugget.png","Golden Ingot.png","Obsidian.png","Pearl.png","Ruby.png","Sapphire.png","Silver Ingot.png","Silver Nugget.png","Topaz.png","Iron Sword.png","Silver Sword.png","Wooden Sword.png","Golden Sword.png"};
    for(String filename:filenames){Bitmap b=asset(filename);if(b!=null)itemImages.put(filename.substring(0,filename.length()-4),b);}
    define("Wooden Sword","Common","Waffe",1,0,0,0);
    define("Iron Sword","Uncommon","Waffe",3,0,0,0);
@@ -1077,7 +1077,6 @@ public class MainActivity extends Activity {
    define("Leather Boot","Common","Fuesse",0,1,0,0);
    define("Iron Boot","Rare","Fuesse",0,4,4,0);
    define("Belt","Uncommon","Guertel",0,1,2,0);
-   define("Helm","Uncommon","Kopf",0,2,2,0);
    define("Bag","Common","Guertel",0,0,2,0);
    define("Apple","Common","",0,0,0,3);
    define("Green Apple","Common","",0,0,0,4);
@@ -1104,7 +1103,7 @@ public class MainActivity extends Activity {
     while(pages.hasNext()){String page=pages.next();org.json.JSONArray cells=root.getJSONArray(page);int[] coords=new int[128];
      for(int i=0;i<64;i++){org.json.JSONArray point=cells.getJSONArray(i);coords[i*2]=point.getInt(0);coords[i*2+1]=point.getInt(1);}classGrips.put(page,coords);}
    }catch(Exception e){android.util.Log.e("PixelClasses","Missing hand attachment data",e);}
-   for(String name:new String[]{"Wooden Armor","Leather Armor","Iron Armor","Wooden Helmet","Leather Helmet","Iron Helmet","Helm","Leather Boot","Iron Boot","Belt","Bag"}){
+   for(String name:new String[]{"Wooden Armor","Leather Armor","Iron Armor","Wooden Helmet","Leather Helmet","Iron Helmet","Leather Boot","Iron Boot","Belt","Bag"}){
     try(InputStream in=getAssets().open("equipment_items/"+name+".png")){itemImages.put(name,BitmapFactory.decodeStream(in));}catch(Exception e){android.util.Log.e("PixelEquipment","Missing "+name,e);}
    }
    Bitmap mageHat=itemImages.get("Magierhut");if(mageHat!=null)itemImages.put("Wizard Hat",mageHat);
@@ -1113,6 +1112,7 @@ public class MainActivity extends Activity {
    refreshMerchantStocks();
   }
   String baseEquipmentName(String name){
+   name=CharacterEquipment.canonical(name);
    int unique=name.lastIndexOf(" {");if(unique>=0&&name.endsWith("}"))name=name.substring(0,unique);
    int pos=name.lastIndexOf(" [");
    return pos>=0&&name.endsWith("]")?name.substring(0,pos):name;
@@ -1252,7 +1252,6 @@ public class MainActivity extends Activity {
   int bonusMana(){int total=0;for(String name:equipped.values()){Item i=definitions.get(name);if(i!=null)total+=i.mana;}return total;}
   void setManaBonuses(){
    definitions.get("Wizard Hat").mana=20;
-   definitions.get("Helm").mana=5;
    definitions.get("Iron Helmet").mana=3;
    definitions.get("Belt").mana=4;
    definitions.get("Bag").mana=2;
@@ -1342,7 +1341,7 @@ public class MainActivity extends Activity {
      addDrop(uniqueGear(weapons[chance<.58f?0:chance<.85f?1:chance<.97f?2:3]),m.x,m.y);
     }
     if(random.nextFloat()<.28f){
-     String[] armor={"Wooden Armor","Leather Armor","Iron Armor","Leather Helmet","Iron Helmet","Leather Boot","Iron Boot","Wizard Hat","Belt","Helm","Bag"};
+     String[] armor={"Wooden Armor","Leather Armor","Iron Armor","Leather Helmet","Iron Helmet","Leather Boot","Iron Boot","Wizard Hat","Belt","Bag"};
      addDrop(uniqueGear(armor[random.nextInt(armor.length)]),m.x,m.y);
     }
     if(random.nextFloat()<.23f){
@@ -1556,16 +1555,16 @@ public class MainActivity extends Activity {
     if(!Float.isFinite(px)||!Float.isFinite(py))throw new org.json.JSONException("Invalid position");indoors=root.optBoolean("indoors",false);currentHouse=root.optInt("currentHouse",0);guildFloor=Math.max(0,Math.min(2,root.optInt("guildFloor",0)));worldTime=(float)root.optDouble("worldTime",0);playerLevel=root.getInt("level");exp=root.getInt("exp");
     gold=root.getInt("gold");silver=root.getInt("silver");copper=root.getInt("copper");kills=root.optInt("kills");animalKills=root.optInt("animalKills");nextQuestDay=root.has("nextQuestDay")?root.optInt("nextQuestDay"):root.optInt("questsCompletedToday")>0?currentQuestDay()+2:0;questTier=root.optInt("questTier");questProgress=root.optInt("questProgress");questActive=root.optBoolean("questActive");
     definitions.keySet().removeIf(k->k.matches(".* \\{[0-9]+\\}$"));
-    nextGearId=root.optInt("nextGearId",1);org.json.JSONObject unique=root.optJSONObject("uniqueGear");if(unique!=null){java.util.Iterator<String> ids=unique.keys();while(ids.hasNext()){String id=ids.next();org.json.JSONObject o=unique.getJSONObject(id);Item item=new Item(id,o.getString("rarity"),o.getString("slot"),o.getInt("dmg"),o.getInt("armor"),o.getInt("hp"),0);item.mana=o.optInt("mana");definitions.put(id,item);}}
-    org.json.JSONArray savedSmith=root.optJSONArray("smithStock");if(savedSmith!=null){smithStock=new String[savedSmith.length()];for(int j=0;j<smithStock.length;j++)smithStock[j]=savedSmith.getString(j);}
-    org.json.JSONArray savedShop=root.optJSONArray("shopStock");if(savedShop!=null){shopStock=new String[savedShop.length()];for(int j=0;j<shopStock.length;j++)shopStock[j]=savedShop.getString(j);}
-    ensureClassStock();clearRanged();manaRegen=0;inventory.clear();org.json.JSONObject bag=root.getJSONObject("inventory");java.util.Iterator<String> keys=bag.keys();while(keys.hasNext()){String k=keys.next();int count=bag.getInt(k);if(count>0&&definitions.containsKey(k))inventory.put(k,Math.min(count,999999));}
-    equipped.clear();org.json.JSONObject gear=root.getJSONObject("equipped");keys=gear.keys();while(keys.hasNext()){String k=keys.next();String item=gear.getString(k);if(definitions.containsKey(item))equipped.put(k,item);}
-    java.util.Arrays.fill(hotbar,null);selectedHotbar=-1;org.json.JSONArray bar=root.getJSONArray("hotbar");for(int i=0;i<Math.min(hotbar.length,bar.length());i++)if(!bar.isNull(i))hotbar[i]=bar.getString(i);
+    nextGearId=root.optInt("nextGearId",1);org.json.JSONObject unique=root.optJSONObject("uniqueGear");if(unique!=null){java.util.Iterator<String> ids=unique.keys();while(ids.hasNext()){String savedId=ids.next();String id=CharacterEquipment.canonical(savedId);org.json.JSONObject o=unique.getJSONObject(savedId);Item item=new Item(id,o.getString("rarity"),o.getString("slot"),o.getInt("dmg"),o.getInt("armor"),o.getInt("hp"),0);item.mana=o.optInt("mana");definitions.put(id,item);}}
+    org.json.JSONArray savedSmith=root.optJSONArray("smithStock");if(savedSmith!=null){smithStock=new String[savedSmith.length()];for(int j=0;j<smithStock.length;j++)smithStock[j]=CharacterEquipment.canonical(savedSmith.getString(j));}
+    org.json.JSONArray savedShop=root.optJSONArray("shopStock");if(savedShop!=null){shopStock=new String[savedShop.length()];for(int j=0;j<shopStock.length;j++)shopStock[j]=CharacterEquipment.canonical(savedShop.getString(j));}
+    ensureClassStock();clearRanged();manaRegen=0;inventory.clear();org.json.JSONObject bag=root.getJSONObject("inventory");java.util.Iterator<String> keys=bag.keys();while(keys.hasNext()){String savedKey=keys.next();String k=CharacterEquipment.canonical(savedKey);int count=bag.getInt(savedKey);if(count>0&&definitions.containsKey(k))inventory.put(k,Math.min(count+inventory.getOrDefault(k,0),999999));}
+    equipped.clear();org.json.JSONObject gear=root.getJSONObject("equipped");keys=gear.keys();while(keys.hasNext()){String k=keys.next();String item=CharacterEquipment.canonical(gear.getString(k));if(definitions.containsKey(item))equipped.put(k,item);}
+    java.util.Arrays.fill(hotbar,null);selectedHotbar=-1;org.json.JSONArray bar=root.getJSONArray("hotbar");for(int i=0;i<Math.min(hotbar.length,bar.length());i++)if(!bar.isNull(i))hotbar[i]=CharacterEquipment.canonical(bar.getString(i));
     recalcStats();hp=Math.max(0,Math.min(maxHp,root.getInt("hp")));mana=Math.max(0,Math.min(maxMana,root.optInt("mana",maxMana)));cleanupHotbar();
     mobs.clear();org.json.JSONArray enemies=root.getJSONArray("mobs");for(int i=0;i<enemies.length();i++){org.json.JSONObject o=enemies.getJSONObject(i);
      Mob m=new Mob(o.getString("kind"),(float)o.getDouble("x"),(float)o.getDouble("y"));m.hp=o.getInt("hp");m.maxHp=o.getInt("maxHp");m.level=o.getInt("level");m.damage=o.getInt("damage");m.dead=o.getBoolean("dead");mobs.add(m);}
-    drops.clear();org.json.JSONArray ground=root.getJSONArray("drops");for(int i=0;i<ground.length();i++){org.json.JSONObject o=ground.getJSONObject(i);drops.add(new Drop(o.getString("item"),(float)o.getDouble("x"),(float)o.getDouble("y"),0));}
+    drops.clear();org.json.JSONArray ground=root.getJSONArray("drops");for(int i=0;i<ground.length();i++){org.json.JSONObject o=ground.getJSONObject(i);drops.add(new Drop(CharacterEquipment.canonical(o.getString("item")),(float)o.getDouble("x"),(float)o.getDouble("y"),0));}
     residentSystem.reset();org.json.JSONArray residentStates=root.optJSONArray("residents");if(residentStates!=null)for(int i=0;i<residentStates.length();i++){org.json.JSONObject state=residentStates.getJSONObject(i);residentSystem.restore(state.optString("id"),state.optInt("floor",-1),(float)state.optDouble("x"),(float)state.optDouble("y"),state.optInt("visit",0),residentWorld);}
     buildingNameTime=0;doorTimer=0;doorHouse=-1;doorSwitched=false;
     if(indoors&&(currentHouse==GUILD_HOUSE||currentHouse>=11&&currentHouse<=14)&&guildBlocked(furnishedRoom(),px-60,py-174)){px=396;py=484;}

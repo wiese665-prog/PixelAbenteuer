@@ -6,7 +6,7 @@ def read(page,layer,name):return Image.open(C/f'char_a_{page}'/('' if layer=='0b
 def frame(im,r,c):return im.crop((c*64,r*64,c*64+64,r*64+64))
 from PIL import Image,ImageDraw
 OUT=ROOT/'art/reviews';OUT.mkdir(exist_ok=True)
-sets=[('Holz','wdAr','wdHl','leBt','belt'),('Leder','ltAr','leHl','leBt','bag'),('Eisen','irAr','irHl','irBt','belt'),('Helm / Eisen','irAr','stHl','irBt',''),('Waldlaeufer','rngr','hood','leBt',''),('Magier','robe','mgHt','irBt','')]
+sets=[('Holz','wdAr','wdHl','leBt','belt'),('Leder','ltAr','leHl','leBt','bag'),('Eisen','irAr','irHl','irBt','belt'),('Waldlaeufer','rngr','hood','leBt',''),('Magier','robe','mgHt','irBt','')]
 def pose(page,row,col,outfit,hat,boots,belt):
  im=Image.new('RGBA',(64,64))
  for l,n in [('0bas','humn'),('1out',outfit),('8feet',boots),('9belt',belt),('5hat',hat)]:
@@ -29,4 +29,4 @@ for tick in range(12):
    q=pose(page,row,col,*gear).resize((192,192),Image.Resampling.NEAREST);out.paste(q,(180+r*208,i*200),q)
  frames.append(out)
 frames[0].save(OUT/'all-equipment-animation.gif',save_all=True,append_images=frames[1:],duration=140,loop=0,optimize=True)
-print('Six complete equipment combinations: all directions, walk and native melee poses.')
+print('Five complete equipment combinations: all directions, walk and native melee poses.')

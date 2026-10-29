@@ -1,5 +1,7 @@
 """New native-grid headgear silhouettes. Coordinates follow each original head frame."""
 from PIL import Image,ImageDraw
+from pathlib import Path
+from functools import lru_cache
 O=(24,24,24,255)
 GREEN=[(54,74,63,255),(91,127,106,255),(168,200,152,255)]
 BLUE=[(25,51,100,255),(58,103,151,255),(89,153,189,255)]
@@ -16,43 +18,8 @@ def headgear(name,cap,facing):
  def line(pts,color):d.line([(cx+x,top+y) for x,y in pts],fill=color)
  def rect(x0,y0,x1,y1,color):d.rectangle((cx+x0,top+y0,cx+x1,top+y1),fill=color)
  profile=facing in (2,3)
- if name=='hood':
-  # A tailored hood: low brow, loose rear crown and overlapping shoulder cowl.
-  if profile:
-   poly([(-8,3),(-6,0),(-2,-1),(2,0),(5,3),(6,5),(3,6),(2,9),(3,12),(5,14),(2,16),(-4,15),(-7,12),(-8,7)],O)
-   poly([(-7,3),(-5,1),(-2,0),(1,1),(4,3),(4,4),(1,5),(0,9),(1,12),(3,14),(1,15),(-3,14),(-6,11),(-7,7)],GREEN[0])
-   poly([(-6,3),(-4,1),(-1,1),(2,3),(1,4),(-3,5),(-5,7)],GREEN[1])
-   line([(-4,2),(-2,1),(0,2)],GREEN[2])
-   line([(-6,8),(-4,9),(-3,12),(0,14)],GREEN[1])
-   line([(-5,11),(-3,13),(-1,13)],GREEN[2])
-   line([(1,5),(3,5),(4,4)],GREEN[2])
-  elif facing==1:
-   poly([(-7,3),(-5,0),(0,-1),(5,1),(7,4),(7,9),(5,12),(6,15),(2,16),(-3,16),(-7,14),(-5,11),(-7,8)],O)
-   poly([(-6,3),(-4,1),(0,0),(4,2),(6,4),(6,8),(3,12),(4,14),(1,15),(-3,15),(-5,13),(-4,10),(-6,7)],GREEN[0])
-   poly([(-5,3),(-2,1),(1,1),(3,3),(1,6),(-2,8),(-4,6)],GREEN[1])
-   line([(-3,2),(-1,1),(1,2)],GREEN[2])
-   line([(-3,9),(0,11),(2,9),(4,6)],O)
-   line([(-4,12),(-2,13),(2,14),(4,13)],GREEN[1])
-   line([(-3,12),(-1,12)],GREEN[2])
-  else:
-   poly([(-7,4),(-6,1),(-2,-1),(2,-1),(6,2),(7,5),(6,10),(5,12),(7,15),(3,16),(-3,16),(-7,14),(-5,11),(-7,8)],O)
-   poly([(-6,4),(-5,2),(-2,0),(2,0),(5,3),(6,5),(5,9),(3,12),(5,14),(2,15),(-2,15),(-5,13),(-4,10),(-6,7)],GREEN[0])
-   poly([(-5,3),(-2,1),(1,1),(3,3),(2,4),(-2,4),(-5,6)],GREEN[1])
-   line([(-3,2),(-1,1),(1,2)],GREEN[2])
-   poly([(-4,6),(-2,5),(2,5),(4,7),(3,11),(1,13),(-2,12),(-4,10)],(0,0,0,0))
-   line([(-5,6),(-3,4),(1,4),(4,6)],GREEN[1])
-   line([(-4,5),(-2,4)],GREEN[2])
-   line([(-4,12),(-1,14),(3,15)],GREEN[1])
-   line([(4,12),(1,14),(-3,15)],GREEN[2])
- elif name=='mgHt':
-  # Tapered cloth cone; short folded tip, no horizontal black antenna.
-  poly([(-6,4),(-4,0),(-3,-4),(-1,-7),(2,-8),(3,-7),(1,-5),(3,-2),(5,3),(6,5)],O)
-  poly([(-4,3),(-3,0),(-2,-4),(0,-6),(1,-6),(0,-4),(2,-1),(4,3)],BLUE[0])
-  poly([(-3,2),(-2,-1),(-1,-4),(0,-4),(1,-1),(1,2)],BLUE[1])
-  line([(-2,-1),(-1,-3)],BLUE[2]);line([(-4,4),(3,4)],BRASS[0]);line([(-3,4),(1,4)],BRASS[1])
-  width=7 if profile else 9
-  poly([(-width,6),(-width+2,5),(-4,5),(4,5),(width-1,6),(width,7),(4,8),(-3,8),(-width,7)],O)
-  line([(-width+2,6),(-3,6),(3,6),(width-2,7)],BLUE[1]);line([(-4,6),(-1,6)],BLUE[2])
+ if name in ('hood','mgHt','wdHl','leHl'):
+  return native_form(name,cap,facing)
  elif name=='irHl':
   # Ridged steel bowl, projecting brow and separate cheek plates.
   poly([(-7,4),(-5,0),(-2,-2),(2,-2),(5,0),(7,4),(7,7),(-7,7)],O)
@@ -105,7 +72,7 @@ def headgear(name,cap,facing):
   line([(-6,7),(-3,7),(0,8)],BLUE[0])
   if facing==1:line([(-2,-2),(0,0),(1,3)],BLUE[2])
  elif name=='irHl':
-  line([(-4,2),(-5,4),(-3,5)],STEEL[3])
+  line([(-4,2),(-5,4),(-3,5)],STEEL[2])
   line([(3,1),(4,3),(5,5)],STEEL[1])
   line([(0,-1),(0,3),(1,5)],STEEL[2])
   for x in (-5,4):d.point((cx+x,top+6),fill=STEEL[3])
@@ -128,6 +95,15 @@ def headgear(name,cap,facing):
   for x in (-4,-1,2,4):d.point((cx+x,top+6),fill=LEATHER[3])
   if facing==1:
    line([(-3,8),(-2,10),(1,11)],LEATHER[2]);d.point((cx+2,top+9),fill=LEATHER[3])
+ if name=='irHl':
+  native=source('pfht',2 if profile else facing);ref=source('bob1',2 if profile else facing).getbbox()
+  ox=cx-round((ref[0]+ref[2]-1)/2);oy=top-ref[1]
+  shades={(107,50,53):STEEL[0],(169,73,76):STEEL[1],(234,114,104):STEEL[2],(252,176,153):STEEL[3]}
+  for y in range(top,top+6):
+   for x in range(cx-6,cx+7):
+    if abs(x-cx)<=1 or im.getpixel((x,y)) in (O,(0,0,0,0)):continue
+    q=native.getpixel((x-ox,y-oy))
+    if q[:3] in shades:im.putpixel((x,y),shades[q[:3]])
  if facing==3:
   # Mirror about the exact source head center, not the 64px cell center.
   mirrored=Image.new('RGBA',(64,64))
@@ -137,3 +113,62 @@ def headgear(name,cap,facing):
     if 0<=xx<64:mirrored.putpixel((xx,y),im.getpixel((x,y)))
   im=mirrored
  return im
+
+@lru_cache(None)
+def source(kind,facing):
+ root=Path(__file__).resolve().parents[1]/'app/src/main/assets/sprites/ManaSeedCharacter/char_a_p1'
+ layer='4har' if kind=='bob1' else '5hat'
+ sheet=Image.open(root/layer/f'char_a_p1_{layer}_{kind}_v01.png').convert('RGBA')
+ return sheet.crop((0,facing*64,64,facing*64+64))
+
+def native_form(name,cap,facing):
+ # Original pixel clusters and lighting, fitted to the current native head pose.
+ reference=source('bob1',facing).getbbox();target=cap.getbbox()
+ sx=round((reference[0]+reference[2]-1)/2);cx=round((target[0]+target[2]-1)/2)
+ dx=cx-sx;dy=target[1]-reference[1];top=target[1]
+ kind='pnty' if name=='mgHt' else 'pfht';original=source(kind,facing)
+ colors=sorted({p[:3] for p in original.get_flattened_data() if p[3]},key=lambda p:sum(p))
+ if name=='mgHt':
+  mapping={(24,24,24):O,(33,19,33):O,(30,43,65):BLUE[0],(60,85,117):BLUE[1],(98,147,173):BLUE[2],(153,214,227):(144,160,176,255),(91,24,57):BRASS[0],(141,34,70):BRASS[1],(190,86,103):BRASS[2]}
+ else:
+  ramp={'hood':[O,GREEN[0],GREEN[1],GREEN[1],GREEN[2]],'wdHl':[O,LEATHER[0],LEATHER[1],LEATHER[2],LEATHER[3]],'leHl':[O,*LEATHER]}[name]
+  mapping=dict(zip(colors,ramp))
+ out=Image.new('RGBA',(64,64))
+ for y in range(64):
+  for x in range(64):
+   px=original.getpixel((x,y));xx=x+dx;yy=y+dy
+   if px[3] and 0<=xx<64 and 0<=yy<64:
+    # Round wooden skullcap; leather has open ears and a short rear flap.
+    if name=='wdHl' and yy>top+(11 if facing==1 else 8):continue
+    if name=='leHl' and yy>top+(13 if facing==1 else 7):continue
+    out.putpixel((xx,yy),mapping[px[:3]])
+ d=ImageDraw.Draw(out)
+ def line(pts,color):d.line([(cx+x,top+y) for x,y in pts],fill=color)
+ def poly(pts,color):d.polygon([(cx+x,top+y) for x,y in pts],fill=color)
+ if name=='hood':
+  # Wide folded opening and shoulder drape replace the tight round face ring.
+  if facing==0:
+   poly([(-5,11),(-3,13),(1,14),(5,11),(7,14),(3,16),(-4,16),(-7,14)],GREEN[0])
+   line([(-5,13),(-2,14),(2,15),(5,13)],GREEN[1]);line([(-3,14),(0,15)],GREEN[2])
+  elif facing==1:
+   poly([(-5,11),(5,11),(7,15),(2,16),(-4,16),(-7,14)],GREEN[0])
+   line([(-4,12),(-1,14),(2,15),(5,13)],GREEN[1])
+  else:
+   sign=1 if facing==2 else -1
+   poly([(sign*-5,10),(sign*0,12),(sign*4,14),(sign*2,16),(sign*-5,15),(sign*-7,13)],GREEN[0])
+   line([(sign*-5,12),(sign*-2,13),(sign*1,15)],GREEN[1])
+ elif name=='wdHl':
+  # Curved slats follow the dome, with a narrow leather fastening strap.
+  for off in (-3,2):
+   for y in range(top+2,top+7):
+    x=cx+off
+    if out.getpixel((x,y))[3]:d.point((x,y),fill=LEATHER[0])
+  line([(-5,7),(0,8),(5,7)],LEATHER[0]);d.point((cx-4,top+7),fill=BRASS[1])
+ elif name=='leHl':
+  # Padded travelling cap: cloth-like panels and an offset leather fastening.
+  line([(-3,2),(-2,4),(0,6)],LEATHER[1])
+  for x,y in [(-3,3),(-1,5),(2,6)]:d.point((cx+x,top+y),fill=LEATHER[3])
+  if facing!=1:
+   side=-1 if facing==3 else 1
+   line([(side*5,7),(side*5,10),(side*3,12)],LEATHER[0])
+ return out

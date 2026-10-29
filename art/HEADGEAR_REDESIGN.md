@@ -32,3 +32,10 @@ Alle Formen werden direkt in nativen Pixeln gezeichnet: eine Pixelreihe für Kan
 ## Detailüberarbeitung
 
 Die Kapuze erhält eine neue Kontur mit flacher Stirn, lockerem hinterem Stoffvolumen und überlappendem Kragen. Holz bekommt versetzte Segmentenden, Maserung und Befestigungen; Leder abgesetzte Nähte und Panellichter; Eisen feinere Grat-, Wangen- und Nackenkanten. Beim Magierhut trennen zusätzliche native Farbcluster die gefaltete Kegelfläche, das Band mit Schnalle und die Krempe. Die Details sind in Vorlagenfarben auf dem unveränderten nativen Raster ausgeführt. Alle 1.600 Kopf-Frames und die bestehenden Klassen-/Ausrüstungsprüfungen wurden erneut geprüft.
+
+
+## Aktuelle Neufassung nach Vorlagen
+
+Holz, Leder, Kapuze und Magierhut verwenden neu aufgebaute Formen mit den ursprünglichen Farbclustern aus `pfht` beziehungsweise `pnty`. Die Original-Kopfbewegungen bestimmen ihre Position. Holz ist gewölbt, Leder eine offene Haube, die Kapuze hat einen breiteren Stoffkragen. Der Magierhut ist jetzt der geknickten, breiteren Vorlagenform nachempfunden. Eisen behält den Mittelgrat und die Wangenplatten, erhält aber die weich abgestuften nativen Metallflächen.
+
+Der doppelte Gegenstand `Helm` und seine `stHl`-Blätter entfallen. Alte Spielstände migrieren ihn in Inventar, Ausrüstung, Schnellleiste, Händlerangeboten und Bodenobjekten zu `Iron Helmet`; Seltenheits-/Instanzsuffixe bleiben erhalten. Die Vergleichstafel zeigt nur noch fünf Ausrüstungen.

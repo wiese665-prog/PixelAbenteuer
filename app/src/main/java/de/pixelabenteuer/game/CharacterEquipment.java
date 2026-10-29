@@ -3,7 +3,12 @@ package de.pixelabenteuer.game;
 /** One shared visual resolver for inventory, creator and every world pose. */
 final class CharacterEquipment {
  private CharacterEquipment() {}
+ static String canonical(String name) {
+  if(name==null)return null;
+  return name.equals("Helm")||name.startsWith("Helm [")||name.startsWith("Helm {")?"Iron Helmet"+name.substring(4):name;
+ }
  static String base(String name) {
+  name=canonical(name);
   if(name==null)return "";
   int unique=name.lastIndexOf(" {");if(unique>=0&&name.endsWith("}"))name=name.substring(0,unique);
   int rank=name.lastIndexOf(" [");return rank>=0&&name.endsWith("]")?name.substring(0,rank):name;
@@ -24,7 +29,7 @@ final class CharacterEquipment {
    case "Wooden Helmet":return "wdHl";
    case "Leather Helmet":return "leHl";
    case "Iron Helmet":return "irHl";
-   case "Helm":return "stHl";
+   case "Helm":return "irHl";
    case "Wizard Hat":case "Magierhut":return "mgHt";
    case "Waldlaeuferkapuze":return "hood";
    case "":return "";
