@@ -75,6 +75,11 @@ jobs:
           mkdir -p /tmp/pixel-equipment-tests
           javac -encoding UTF-8 -d /tmp/pixel-equipment-tests app/src/main/java/de/pixelabenteuer/game/CharacterEquipment.java tests/CharacterEquipmentTest.java
           java -cp /tmp/pixel-equipment-tests de.pixelabenteuer.game.CharacterEquipmentTest
+      - name: Verify independent character creation and native raster
+        run: |
+          mkdir -p /tmp/pixel-creator-tests
+          javac -encoding UTF-8 -d /tmp/pixel-creator-tests app/src/main/java/de/pixelabenteuer/game/CreatorOptions.java app/src/main/java/de/pixelabenteuer/game/CharacterEquipment.java app/src/main/java/de/pixelabenteuer/game/CharacterPose.java tests/CreatorOptionsTest.java
+          java -cp /tmp/pixel-creator-tests de.pixelabenteuer.game.CreatorOptionsTest
       - name: Build APK
         run: |
           echo "sdk.dir=$ANDROID_HOME" > local.properties

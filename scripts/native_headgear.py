@@ -101,9 +101,9 @@ FORMS={
   ['....sssss....','..ssmmmmmss..','.smmhhhmmmss.','.smmhhmmmmms.','smmmmsmmmmms.','smmmmsmmmmms.','ssmmmmmmmmss.','.smmhhmmsss..','.smmmmmms....','.smmhmms.....','.smmmms......','..smms.......','...ss........']
  ],
  'hood':[
-  ['.....sss.....','...ssmmmss...','..smhhmmmms..','.smhhmmmmmms.','.smmmmmmmmms.','smmms...smmms','smms.....smms','sms.......sms','sms.......sms','sms.......sms','.sms.....sms.','.sms.....sms.','..sms...sms..','...ss...ss...'],
-  ['.....sss.....','...ssmmmss...','..smhhmmmms..','.smhhmmmmmms.','.smmmmmmmmms.','smmmmmmmmmmms','smmmmmmmmmmms','smmmmmmmmmms.','.smmmmsmmmms.','.smmmsmmmms..','..smsmmmms...','..ssmmmms....','...smmms.....','....sss......'],
-  ['.....sss.....','...ssmmmss...','..smhhmmmms..','.smhhmmmmmms.','.smmmmmmmsss.','smmmmmmms....','smmmmmmmss...','smmmmmmms....','.smmmmms.....','.smmmms......','..smmms......','..smms.......','...smss......','....ssss.....']
+  ['....sssss....','...smmmmms...','..smhhmmmms..','.smhhmmmmmms.','.smmmmmmmmms.','smmms...smmms','smms.....smms','sms.......sms','sms.......sms','sms.......sms','.sms.....sms.','.sms.....sms.','..sms...sms..','...ss...ss...'],
+  ['....sssss....','...smmmmms...','..smhhmmmms..','.smhhmmmmmms.','.smmmmmmmmms.','smmmmmmmmmmms','smmmmmmmmmmms','smmmmmmmmmms.','.smmmmsmmmms.','.smmmsmmmms..','..smsmmmms...','..ssmmmms....','...smmms.....','....sss......'],
+  ['....sssss....','...smmmmms...','..smhhmmmms..','.smhhmmmmmms.','.smmmmmmmsss.','smmmmmmms....','smmmmmmmss...','smmmmmmms....','.smmmmms.....','.smmmms......','..smmms......','..smms.......','...smss......','....ssss.....']
  ]}
 
 def tailored_form(name,cap,facing):
@@ -117,6 +117,19 @@ def tailored_form(name,cap,facing):
   assert len(row)==13,(name,facing,y,len(row))
   for x,key in enumerate(row):
    if key!='.':out.putpixel((cx+(6-x if facing==3 else x-6),top+y),palette[key])
+ # Reuse the original material clusters inside the new silhouette. Preserve
+ # seams/rims (s) instead of flattening every region into a single light ramp.
+ reference=source('pfht',2 if facing==3 else facing)
+ anchor=source('bob1',2 if facing==3 else facing).getbbox()
+ ax=round((anchor[0]+anchor[2]-1)/2);ay=anchor[1]-1
+ native_colors={(107,50,53):0,(169,73,76):1,(234,114,104):2,(252,176,153):3}
+ ramps={'irHl':STEEL,'wdHl':[WOOD[0],WOOD[1],WOOD[1],WOOD[2]],
+        'leHl':LEATHER,'hood':[GREEN[0],GREEN[1],GREEN[1],GREEN[2]]}
+ for y,row in enumerate(rows):
+  for x,key in enumerate(row):
+   if key not in ('m','h') or y>6:continue
+   shade=native_colors.get(reference.getpixel((ax+x-6,ay+y))[:3])
+   if shade is not None:out.putpixel((cx+(6-x if facing==3 else x-6),top+y),ramps[name][shade])
  # Keep the deepest recesses dark, not a heavy enclosing black outline.
  if name=='hood':
   for x,y in ([(0,7),(0,8)] if facing==1 else [(-5,8),(-5,9)] if facing==0 else [(-4,9),(-4,10)]):

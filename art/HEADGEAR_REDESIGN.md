@@ -59,3 +59,13 @@ Die nächste Fassung ersetzt die Polygonflächen durch bewusst gesetzte Pixelrei
 - Magierhut: alle fünf Blätter und das Inventarsymbol bleiben bytegenau erhalten.
 
 Die automatische Prüfung begrenzt jetzt zusätzlich die Eisenhelmbreite auf 13 Pixel. Kopfverankerung, alle fünf Animationsseiten, Originalpalette, Symmetrie der Eisenfront und unterschiedliche Silhouetten bleiben geprüft. Die Vergleichstafel zeigt Produktionssprites; ein Gerätetest steht weiter aus.
+
+## Videoabgleich: 20261030-0824-56.3722698.mp4
+
+Das Video zeigt in der Charaktererstellung sichtbare Frisurflächen innerhalb der Kapuze, besonders frontal und bei langen beziehungsweise voluminösen Frisuren. Der bisherige Renderer zeichnete die gesamte Frisur unter jede Kopfbedeckung; transparente Gesichtsöffnungen und Seitenränder ließen Haare sichtbar. Geschlossene Helme und die Kapuze unterdrücken jetzt die Haar- und Hinterhaarlayer in allen drei Zeichenpfaden. Ohne diese Kopfbedeckungen bleiben Frisuren sichtbar. Der freigegebene Magierhut wird nicht verändert.
+
+Die Kronenflächen der vier überarbeiteten Kopfbedeckungen übernehmen jetzt die ursprünglichen pfht-Lichtcluster innerhalb ihrer eigenen Konturen, mit expliziter Materialfarbzuordnung. Nähte und Ränder bleiben getrennt. Die Kapuze erhält einen flacheren Scheitel. Alle Änderungen bleiben im nativen Raster mit binärem Alpha.
+
+Der Spieler wurde bislang bereits beim Aufbau des Zwischenbilds von 64 auf 80,64 Pixel vergrößert und anschließend erneut mit Welt-/Bildschirmskalierung gezeichnet. Jetzt werden Körper und Ausrüstung zunächst 1:1 in das Zwischenbild komponiert. Erst die abschließende Darstellung skaliert sie. Der Fußpunkt bleibt gleich; Alpha-Proben für Objektverdeckung werden in die nativen Koordinaten zurückgerechnet. Nichtganzzahlige Bildschirmgrößen können weiterhin unterschiedlich breite Bildschirmpixel verursachen; eine zusätzliche Rasterisierung ist entfernt.
+
+Die Erstellung trennt Klasse (Magier, Bogenschütze, Ritter) und Kleidung (Unterkleidung, Holz, Leder, Eisen, Waldläufer, Magier). Klasse bestimmt die Waffen, Kleidung bestimmt Brust- und Kopfausrüstung. Die Wahl wird beim Spielstart übernommen. Alte Axt-/Kolben-Stilwerte werden auf Ritter normalisiert, bestehende Gegenstände bleiben erhalten. CreatorOptionsTest prüft Klassenwechsel, 18 Kombinationen, Vorschau-/Startausrüstung, Haarabdeckung und Koordinatenabbildung. Ein echter Gerätetest bleibt ausstehend.

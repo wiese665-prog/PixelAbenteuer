@@ -69,19 +69,20 @@ public class MainActivity extends Activity {
    public void hit(RangedCombat.Target target,int damage){damageMob((Mob)target,damage);}
   };
   int characterRole(){return creatorOpen?(combatStyle==3?RangedCombat.ARCHER:combatStyle==4?RangedCombat.MAGE:0):RangedCombat.role(equipped.get("Waffe"));}
-  String classTitle(){int role=characterRole();return role==1?"Bogenschuetze":role==2?"Magier":"Abenteurer";}
+  String classTitle(){int role=characterRole();return role==1?"Bogenschütze":role==2?"Magier":"Ritter";}
   String outfitType(){
-   if(creatorOpen&&characterRole()>0)return characterRole()==1?"rngr":"robe";
+   if(creatorOpen)return CharacterEquipment.outfit(CreatorOptions.chest(armorStyle),characterGender);
    return CharacterEquipment.outfit(equipped.get("Brust"),characterGender);
   }
   String hatType(){
-   if(creatorOpen&&characterRole()>0)return characterRole()==1?"hood":"mgHt";
+   if(creatorOpen)return CharacterEquipment.hat(CreatorOptions.hat(armorStyle));
    return CharacterEquipment.hat(equipped.get("Kopf"));
   }
   void beginAdventure(){
-   if(equipped.isEmpty()&&inventory.isEmpty()&&combatStyle>=3){
-    String[] kit=combatStyle==3?new String[]{"Jagdbogen","Waldlaeuferwams","Waldlaeuferkapuze"}:new String[]{"Magierstab","Magierrobe","Magierhut"};
-    for(String name:kit){Item item=definitions.get(name);equipped.put(item.slot,name);}recalcStats();hp=maxHp;mana=maxMana;
+   if(equipped.isEmpty()&&inventory.isEmpty()){
+    for(String name:CreatorOptions.weapons(combatStyle)){Item item=definitions.get(name);equipped.put(item.slot,name);}
+    for(String name:CreatorOptions.clothes(armorStyle)){Item item=definitions.get(name);equipped.put(item.slot,name);}
+    recalcStats();hp=maxHp;mana=maxMana;
    }
    creatorOpen=false;startScreen=false;pauseMenu=false;previous=System.nanoTime();
   }
@@ -1550,7 +1551,7 @@ public class MainActivity extends Activity {
     if(json==null){pickupNotice="Kein Spielstand";noticeTime=3f;return;}
     org.json.JSONObject root=new org.json.JSONObject(json);
     if(!root.has("inventory")||!root.has("equipped")||!root.has("hotbar")||!root.has("mobs")||!root.has("drops"))throw new org.json.JSONException("Incomplete save");
-    characterName=root.optString("characterName","Abenteurer");armorStyle=0;characterGender=root.optInt("characterGender",0);hairType=root.optInt("hairType",0);if(root.optInt("hairCatalog",0)<2&&hairType==2)hairType=1;hairType=Math.max(0,Math.min(5,hairType));hairColor=root.optInt("hairColor",1);skinColor=root.optInt("skinColor",1);eyeColor=root.optInt("eyeColor",0);combatStyle=Math.max(0,Math.min(4,root.optInt("combatStyle",0)));creatorOpen=false;
+    characterName=root.optString("characterName","Abenteurer");armorStyle=CreatorOptions.clothing(root.optInt("armorStyle",0));characterGender=root.optInt("characterGender",0);hairType=root.optInt("hairType",0);if(root.optInt("hairCatalog",0)<2&&hairType==2)hairType=1;hairType=Math.max(0,Math.min(5,hairType));hairColor=root.optInt("hairColor",1);skinColor=root.optInt("skinColor",1);eyeColor=root.optInt("eyeColor",0);combatStyle=CreatorOptions.normalizeStyle(root.optInt("combatStyle",0));creatorOpen=false;
     px=(float)root.getDouble("px");py=(float)root.getDouble("py");
     if(!Float.isFinite(px)||!Float.isFinite(py))throw new org.json.JSONException("Invalid position");indoors=root.optBoolean("indoors",false);currentHouse=root.optInt("currentHouse",0);guildFloor=Math.max(0,Math.min(2,root.optInt("guildFloor",0)));worldTime=(float)root.optDouble("worldTime",0);playerLevel=root.getInt("level");exp=root.getInt("exp");
     gold=root.getInt("gold");silver=root.getInt("silver");copper=root.getInt("copper");kills=root.optInt("kills");animalKills=root.optInt("animalKills");nextQuestDay=root.has("nextQuestDay")?root.optInt("nextQuestDay"):root.optInt("questsCompletedToday")>0?currentQuestDay()+2:0;questTier=root.optInt("questTier");questProgress=root.optInt("questProgress");questActive=root.optBoolean("questActive");
@@ -1612,10 +1613,10 @@ public class MainActivity extends Activity {
    drawRect(col("#1a3033"),left+249,top+73,290,29);
    paint.setColor(Color.WHITE);paint.setTextSize(15);
    canvas.drawText(characterName,left+394,top+94,paint);
-   String[] names={"GESCHLECHT","FRISUR","HAUTFARBE","HAARFARBE","KLASSE / STIL"};
-   String[] values={characterGender==0?"Maennlich":"Weiblich",new String[]{"Bob","Kurzhaar","Zoepfe","Locken","Dutt","Langzopf"}[Math.floorMod(hairType,6)],"Variante "+skinColor,"Farbe "+hairColor,new String[]{"Schwert + Schild","Axt + Schild","Streitkolben + Schild","Bogenschuetze","Magier"}[Math.floorMod(combatStyle,5)]};
-   for(int i=0;i<5;i++){
-    float yy=top+121+i*38;
+   String[] names={"GESCHLECHT","FRISUR","HAUTFARBE","HAARFARBE","KLASSE","KLEIDUNG"};
+   String[] values={characterGender==0?"Maennlich":"Weiblich",new String[]{"Bob","Kurzhaar","Zoepfe","Locken","Dutt","Langzopf"}[Math.floorMod(hairType,6)],"Variante "+skinColor,"Farbe "+hairColor,CreatorOptions.className(combatStyle),CreatorOptions.clothingName(armorStyle)};
+   for(int i=0;i<names.length;i++){
+    float yy=top+121+i*36;
     paint.setTextSize(12);paint.setTypeface(Typeface.DEFAULT_BOLD);
     paint.setTextAlign(Paint.Align.LEFT);paint.setColor(col("#fff0c7"));canvas.drawText(names[i],left+249,yy+19,paint);
     paint.setTextAlign(Paint.Align.CENTER);
@@ -1655,15 +1656,17 @@ public class MainActivity extends Activity {
     new android.app.AlertDialog.Builder(getContext()).setTitle("Charaktername").setView(edit).setPositiveButton("Uebernehmen",(d,w)->{String n=edit.getText().toString().trim();if(!n.isEmpty())characterName=n.length()>18?n.substring(0,18):n;}).setNegativeButton("Abbrechen",null).show();return;
    }
    if(x<left+357||x>left+541)return;
-   int index=(int)((y-(top+121))/38);
-   if(index<0||index>4||y>top+121+index*38+29)return;
+   if(y<top+121)return;
+   int index=(int)((y-(top+121))/36);
+   if(index<0||index>5||y>top+121+index*36+29)return;
    int delta=x<left+449?-1:1;
    switch(index){
     case 0:characterGender=Math.floorMod(characterGender+delta,2);break;
     case 1:hairType=Math.floorMod(hairType+delta,6);break;
     case 2:skinColor=Math.floorMod(skinColor+delta,11);break;
     case 3:hairColor=Math.floorMod(hairColor+delta,14);break;
-    case 4:combatStyle=Math.floorMod(combatStyle+delta,5);break;
+    case 4:combatStyle=CreatorOptions.cycleClass(combatStyle,delta);break;
+    case 5:armorStyle=CreatorOptions.clothing(armorStyle+delta);break;
     
    }
   }
@@ -1859,6 +1862,8 @@ public class MainActivity extends Activity {
    characterSheets.put(key,b);return b;
   }
   void characterLayer(String page,String layer,String type,int variant,int row,int column,float x,float y,float w,float h){
+   // Enclosed headgear tucks every hairstyle inside, including the rear hair layer.
+   if(layer.equals("4har")&&CreatorOptions.coversHair(hatType()))return;
    Bitmap b=characterSheet(page,layer,type,variant);if(b==null)return;
    int cell=b.getWidth()/8;if(cell<=0||b.getHeight()<cell*(row+1))return;
    int left=column*cell,top=row*cell;
@@ -1867,6 +1872,8 @@ public class MainActivity extends Activity {
    canvas.drawBitmap(b,new Rect(left,top,left+cell,top+cell),new RectF(x-w/2,y-h/2,x+w/2,y+h/2),paint);
   }
   void drawEquipmentDetails(String page,int row,int col,float x,float y,float w,float h){
+   // Creation previews only its independent selected wardrobe, not saved equipment.
+   if(creatorOpen)return;
    // Layered per source pose, shared by creator, interior and outside rendering.
    String boots=CharacterEquipment.boots(equipped.get("Fuesse"));
    if(!boots.isEmpty())characterLayer(page,"8feet",boots,1,row,col,x,y,w,h);
@@ -1879,7 +1886,7 @@ public class MainActivity extends Activity {
   void drawCreatorCharacter(float x,float y,float w,float h,int facing){
    if(characterRole()>0){drawRangedCharacter(x,y,w,h,facing,"idle",0,true);return;}
    // Body, outfit, hands and equipment share the same armed idle pose.
-   String weapon=combatStyle==1?"ax01":combatStyle==2?"mc01":"sw01";
+   String weapon="sw01";
    String shield=CharacterPose.shield(equipped.getOrDefault("Schild","").contains("Iron"),facing);
    boolean weaponBehind=facing==1,shieldBehind=facing==1||facing==2;
    if(weaponBehind)characterLayer("pONE2","6tla",weapon,1,facing,0,x,y,w,h);
@@ -1926,7 +1933,7 @@ public class MainActivity extends Activity {
     else {canvas.translate(0,Math.min(3,(int)(time*10))*h/64f);if(time>=.24f)canvas.rotate(facing==3?-90:90,x,y+h*.18f);}
     drawRangedCharacter(x,y,w,h,facing,action.equals("death")&&time>=.12f&&time<.24f?"crouch":"idle",0,preview);canvas.restore();return;
    }
-   int role=characterRole();boolean attack=action.equals("attack"),fighting=attack||action.equals("hurt")||action.equals("death");
+   int role=characterRole();boolean attack=preview||action.equals("attack"),fighting=attack||action.equals("hurt")||action.equals("death");
    boolean moving=action.equals("walk")||action.equals("run");
    CharacterPose.Frame pose=CharacterPose.frame(role,preview,facing,action,time,elapsed,attackSequence);
    String page=pose.page;int row=pose.row,column=pose.col;
@@ -1967,7 +1974,7 @@ public class MainActivity extends Activity {
    characterLayer(page,"4har",hairType==2?"braid":hairType==3?"curl":hairType==4?"bun":hairType==5?"long":hairType==0?"bob1":"dap1",hairColor,row,col,x,y,w,h);
    if(!hatType().isEmpty())characterLayer(page,"5hat",hatType(),1,row,col,x,y,w,h);
    if(fighting){
-    String weapon=combatStyle==1?"ax01":combatStyle==2?"mc01":"sw01";
+    String weapon="sw01";
     if(equipped.containsKey("Schild"))characterLayer("pONE3","7tlb",CharacterPose.shield(equipped.getOrDefault("Schild","").contains("Iron"),facing),1,row,col,x,y,w,h);
     characterLayer("pONE3","6tla",weapon,1,row,col,x,y,w,h);
    }
@@ -2321,7 +2328,8 @@ public class MainActivity extends Activity {
   final Paint visibilityPaint=new Paint();
   final ColorFilter playerVisibilityTint=new PorterDuffColorFilter(0xffe1b86d,PorterDuff.Mode.SRC_IN);
   final HashMap<Bitmap,VisibilityProbe.Alpha> visibilityMasks=new HashMap<>();
-  final VisibilityProbe.Alpha playerAlpha=(x,y)->Color.alpha(playerLayer.getPixel(x,y));
+  float playerLayerScale=1f;
+  final VisibilityProbe.Alpha playerAlpha=(x,y)->Color.alpha(playerLayer.getPixel(CharacterPose.layerSample(x,64,playerLayerScale),CharacterPose.layerSample(y,96,playerLayerScale)));
   final HashMap<String,Integer> bodyFootCache=new HashMap<>();
   boolean playerLayerReady=false;String playerLayerKey="";
   int bodyFoot(CharacterPose.Frame frame){
@@ -2335,16 +2343,17 @@ public class MainActivity extends Activity {
    int reaction=action.equals("hurt")?((int)(time*24)%2):action.equals("death")?Math.min(3,(int)(time*10)):0;
    String key=frame.page+":"+frame.row+":"+frame.col+":"+size+":"+characterRole()+":"+creatorOpen+":"+skinColor+":"+hairType+":"+hairColor+":"+outfitType()+":"+hatType()+":"+equipped.get("Fuesse")+":"+equipped.get("Guertel")+":"+combatStyle+":"+equipped.get("Schild")+":"+action+":"+reaction;
    if(key.equals(playerLayerKey)){playerLayerReady=true;return;}
-   float center=CharacterPose.centerY(96,bodyFoot(frame),size);Canvas previousCanvas=canvas;canvas=playerLayerCanvas;
+   playerLayerScale=size/64f;
+   float center=CharacterPose.centerY(96,bodyFoot(frame),64);Canvas previousCanvas=canvas;canvas=playerLayerCanvas;
    canvas.drawColor(Color.TRANSPARENT,PorterDuff.Mode.CLEAR);
-   drawSprite(sword?"player_sword":"player_unarmed",action,dir,64,center,size,size,time,false);
+   drawSprite(sword?"player_sword":"player_unarmed",action,dir,64,center,64,64,time,false);
    canvas=previousCanvas;playerLayerReady=true;playerLayerKey=key;
   }
   void drawPreparedPlayer(float x,float footY,boolean projected,boolean silhouette){
    if(!playerLayerReady)return;canvas.save();if(projected)canvas.scale(1,1/CAMERA_GROUND_Y,x,footY);
    visibilityPaint.reset();visibilityPaint.setFilterBitmap(false);
    if(silhouette){visibilityPaint.setColorFilter(playerVisibilityTint);visibilityPaint.setAlpha(110);}
-   canvas.drawBitmap(playerLayer,x-64,footY-96,visibilityPaint);canvas.restore();
+   canvas.drawBitmap(playerLayer,null,new RectF(x-64*playerLayerScale,footY-96*playerLayerScale,x+64*playerLayerScale,footY+32*playerLayerScale),visibilityPaint);canvas.restore();
   }
   boolean masksPlayer(Bitmap image,int sx,int sy,int sw,int sh,float left,float top,float width,float height,float x,float footY,boolean projected){
    if(image==null||!playerLayerReady)return false;
