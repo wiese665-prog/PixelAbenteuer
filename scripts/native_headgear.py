@@ -81,76 +81,48 @@ def native_form(name,cap,facing):
     if out.getpixel((x,yy))[3]:out.putpixel((x,yy),color)
  return out
 
+# Hand-placed native pixels. Every character below is one production pixel;
+# blanks expose the underlying face. Front, back and profile have separate forms.
+# Crown and light-cluster steps follow the original pfht's 14px head scale.
+FORMS={
+ 'irHl':[
+  ['....sssss....','..ssmmhmmss..','.smhhhhhhmms.','.smhmmmmmhms.','smmmmmhmmmmms','smmmmmhmmmmms','ssmmmmhmmmmss','.sssssssssss.','.sm..sss..ms.','.sm...s...ms.','.sm.......ms.','..s.......s..'],
+  ['....sssss....','..ssmmhmmss..','.smhhhhmmmms.','.smhhmmmmmmms','smmmhhmmmmmms','smmmmmmmmmmms','ssmmmmmmmmmss','.ssmmmmmmmss.','..smmmmmmms..','..ssmmmmmss..','...sssssss...'],
+  ['....sssss....','..ssmmhmmss..','.smhhhmmmmss.','.smhhmmmmmms.','smmhmmmmmmms.','smmmmmmmmmms.','ssmmmmmmmsss.','.ssmmmssss...','.smmms.......','.smhms.......','..smms.......','..sss........']
+ ],
+ 'wdHl':[
+  ['....sssss....','..ssmmmmmss..','.smhmmsmmhms.','.smhmmsmmhms.','smhmmmsmmmhms','smmmmmsmmmmms','ssmmmmmmmmmss','smmmsssssmmms','sm....s....ms','sm....m....ms','ssm...s...mss','.sm.......ms.','.smm.....mms.','..smmmmmmms..','...sssssss...'],
+  ['....sssss....','..ssmmmmmss..','.smhmmsmmmms.','.smhmmsmmhmss','smmmmmsmmmhms','smmmmmsmmmmms','ssmmmmmmmmmss','.smmmsmmmms..','.smhmsmhmmss.','.smmmsmmmmms.','..smmsmmmms..','..smmsmmmms..','..smmsmmmms..','...smsssms...','...sssssss...'],
+  ['....sssss....','..ssmmmmmss..','.smhmsmmmmss.','.smhmsmmhmms.','smmmmsmmmmms.','smmmmsmmmmms.','ssmmmmmmmmss.','.smmmmmmmms..','.smms........','.smhms.......','.smmms.......','..smms.......','..smmssssss..','...smmmmmms..','....ssssss...']
+ ],
+ 'leHl':[
+  ['....sssss....','..ssmmmmmss..','.smmhhhmmmms.','.smmhhmmmmmss','smmmmmmmmmmms','smmmmmmmmmmms','ssmmhmmmhmmss','.sssmmmmmsss.','.sm.......ms.','.sm.......ms.','.sh.......hs.','.sm.......ms.','..ss.....ss..'],
+  ['....sssss....','..ssmmmmmss..','.smmhhhmmmms.','.smmhhmmmmmss','smmmmsmmmmmms','smmmmsmmmmmms','ssmmmmmmmmmss','.smhmmmhmmms.','.smmmsmmmmms.','..smmsmmmms..','..ssmmmmmss..','...sssssss...'],
+  ['....sssss....','..ssmmmmmss..','.smmhhhmmmss.','.smmhhmmmmms.','smmmmsmmmmms.','smmmmsmmmmms.','ssmmmmmmmmss.','.smmhhmmsss..','.smmmmmms....','.smmhmms.....','.smmmms......','..smms.......','...ss........']
+ ],
+ 'hood':[
+  ['.....sss.....','...ssmmmss...','..smhhmmmms..','.smhhmmmmmms.','.smmmmmmmmms.','smmms...smmms','smms.....smms','sms.......sms','sms.......sms','sms.......sms','.sms.....sms.','.sms.....sms.','..sms...sms..','...ss...ss...'],
+  ['.....sss.....','...ssmmmss...','..smhhmmmms..','.smhhmmmmmms.','.smmmmmmmmms.','smmmmmmmmmmms','smmmmmmmmmmms','smmmmmmmmmms.','.smmmmsmmmms.','.smmmsmmmms..','..smsmmmms...','..ssmmmms....','...smmms.....','....sss......'],
+  ['.....sss.....','...ssmmmss...','..smhhmmmms..','.smhhmmmmmms.','.smmmmmmmsss.','smmmmmmms....','smmmmmmmss...','smmmmmmms....','.smmmmms.....','.smmmms......','..smmms......','..smms.......','...smss......','....ssss.....']
+ ]}
+
 def tailored_form(name,cap,facing):
- box=cap.getbbox();cx=round((box[0]+box[2]-1)/2);top=box[1]
- out=Image.new('RGBA',(64,64));d=ImageDraw.Draw(out)
- def p(pts,col):d.polygon([(cx+x,top+y) for x,y in pts],fill=col)
- def l(pts,col):d.line([(cx+x,top+y) for x,y in pts],fill=col)
- profile=facing in (2,3)
- if name=='irHl':
-  # A rounded bowl: short one-pixel steps instead of the former pointed ridge.
-  p([(-7,4),(-6,1),(-4,-1),(-2,-2),(2,-2),(4,-1),(6,1),(7,4),(7,7),(-7,7)],STEEL[0])
-  p([(-6,4),(-5,1),(-3,0),(3,0),(5,1),(6,4),(6,5),(-6,5)],STEEL[1])
-  p([(-4,2),(-2,0),(2,0),(4,2),(4,4),(-4,4)],STEEL[2])
-  l([(-2,0),(2,0)],STEEL[3]);l([(-5,5),(5,5)],STEEL[2])
-  l([(-7,7),(7,7)],O)
-  if facing==1:
-   p([(-6,8),(6,8),(5,12),(3,14),(-3,14),(-5,12)],STEEL[0])
-   p([(-5,8),(5,8),(4,11),(2,12),(-2,12),(-4,11)],STEEL[1]);l([(-4,9),(4,9)],STEEL[2])
-  elif profile:
-   p([(-6,7),(-2,8),(-2,11),(-4,13),(-6,11)],STEEL[0]);l([(-5,8),(-4,9),(-4,11)],STEEL[2])
-   l([(6,5),(8,6),(7,7)],STEEL[1])
-  else:
-   for sign in (-1,1):
-    p([(sign*6,7),(sign*4,8),(sign*4,11),(sign*5,12),(sign*7,10)],STEEL[0])
-    l([(sign*5,8),(sign*5,10)],STEEL[1])
-   l([(0,7),(0,10)],STEEL[1]);l([(0,7),(0,8)],STEEL[2])
-   for y in range(64):
-    for off in range(1,10):out.putpixel((cx+off,y),out.getpixel((cx-off,y)))
- elif name=='wdHl':
-  # Shallow segmented shell, with curved bindings; no leather-coif silhouette.
-  p([(-8,5),(-6,2),(-3,0),(2,0),(5,1),(7,3),(8,6),(6,8),(-6,8)],WOOD[0])
-  p([(-6,4),(-3,1),(2,1),(5,3),(6,5),(5,6),(-6,6)],WOOD[1])
-  l([(-5,3),(-3,2),(-2,2)],WOOD[2]);l([(0,1),(2,2),(3,4)],WOOD[2])
-  l([(-3,3),(-3,6)],WOOD[0]);l([(2,3),(2,6)],WOOD[0])
-  l([(-7,6),(-4,7),(4,7),(7,6)],LEATHER[0]);l([(-5,8),(5,8)],O)
-  if facing==1:
-   p([(-6,8),(6,8),(5,10),(2,11),(-3,11),(-6,10)],WOOD[0]);l([(-4,9),(3,9)],WOOD[1])
-  elif profile:
-   l([(-6,8),(-5,10),(-3,10)],LEATHER[0]);l([(-5,8),(-4,9)],WOOD[1])
- elif name=='leHl':
-  # A soft fitted cap with sewn panels and ear guards, not a recolored wood shell.
-  p([(-6,3),(-5,0),(-2,-1),(2,-1),(5,1),(6,4),(5,7),(-6,7)],LEATHER[0])
-  p([(-5,3),(-4,1),(-2,0),(2,0),(4,2),(4,5),(-5,5)],LEATHER[1])
-  p([(-3,1),(0,0),(2,2),(2,4),(-2,4)],LEATHER[2])
-  l([(-2,0),(-2,2),(-1,4)],LEATHER[0]);l([(-5,6),(4,6)],LEATHER[2])
-  for x in (-4,-1,2):l([(x,6),(x,6)],LEATHER[3])
-  if facing==1:
-   p([(-6,7),(5,7),(5,11),(3,14),(-3,14),(-6,12)],LEATHER[0])
-   p([(-5,8),(4,8),(3,12),(-2,13),(-4,11)],LEATHER[1]);l([(-2,8),(-1,11),(1,12)],LEATHER[2])
-  elif profile:
-   p([(-6,6),(-2,7),(-2,10),(-4,13),(-6,11)],LEATHER[0]);l([(-5,8),(-4,10),(-4,11)],LEATHER[2]);l([(-6,4),(-6,7)],O)
-  else:
-   for sign in (-1,1):
-    p([(sign*6,6),(sign*4,7),(sign*4,10),(sign*5,12),(sign*6,10)],LEATHER[0]);l([(sign*5,8),(sign*5,10)],LEATHER[1])
-   l([(-6,4),(-6,6)],O);l([(6,4),(6,6)],O)
- elif name=='hood':
-  # Cloth overhang with an open face and a loose rear fold.
-  p([(-8,5),(-7,1),(-4,-2),(0,-3),(4,-1),(6,2),(7,6),(6,12),(3,15),(-3,15),(-7,12)],GREEN[0])
-  p([(-6,3),(-4,0),(0,-1),(3,0),(5,3),(4,6),(-5,6)],GREEN[1])
-  l([(-4,1),(-1,0),(1,0),(3,2)],GREEN[2]);l([(-8,5),(-8,7)],O)
-  if facing==1:
-   p([(-5,5),(4,4),(5,9),(2,13),(-3,12),(-5,9)],GREEN[1]);l([(-3,6),(-2,9),(1,11)],GREEN[2]);l([(3,7),(2,10),(0,12)],GREEN[0])
-  elif profile:
-   p([(2,4),(6,5),(7,7),(6,11),(3,12),(1,9)],(0,0,0,0))
-   l([(1,4),(4,4),(6,5)],GREEN[2]);l([(-5,5),(-5,9),(-2,12),(2,14)],GREEN[1]);l([(-4,11),(-1,13)],GREEN[2])
-  else:
-   p([(-3,4),(2,4),(4,6),(4,10),(2,12),(-2,12),(-4,10),(-4,7)],(0,0,0,0))
-   l([(-3,3),(1,3),(3,4)],GREEN[2]);l([(-6,7),(-5,11),(-2,13),(2,14)],GREEN[1]);l([(-4,12),(-2,13)],GREEN[2])
- if facing==3:
-  mirrored=Image.new('RGBA',(64,64))
+ box=cap.getbbox();cx=round((box[0]+box[2]-1)/2);top=box[1]-1
+ palette={'irHl':{'s':STEEL[0],'m':STEEL[1],'h':STEEL[2]},
+          'wdHl':{'s':WOOD[0],'m':WOOD[1],'h':WOOD[2]},
+          'leHl':{'s':LEATHER[0],'m':LEATHER[1],'h':LEATHER[2]},
+          'hood':{'s':GREEN[0],'m':GREEN[1],'h':GREEN[2]}}[name]
+ out=Image.new('RGBA',(64,64));rows=FORMS[name][min(facing,2)]
+ for y,row in enumerate(rows):
+  assert len(row)==13,(name,facing,y,len(row))
+  for x,key in enumerate(row):
+   if key!='.':out.putpixel((cx+(6-x if facing==3 else x-6),top+y),palette[key])
+ # Keep the deepest recesses dark, not a heavy enclosing black outline.
+ if name=='hood':
+  for x,y in ([(0,7),(0,8)] if facing==1 else [(-5,8),(-5,9)] if facing==0 else [(-4,9),(-4,10)]):
+   xx=cx+(-x if facing==3 else x)
+   if out.getpixel((xx,top+y))[3]:out.putpixel((xx,top+y),O)
+ if name=='irHl' and facing==0:
   for y in range(64):
-   for x in range(64):
-    if 0<=2*cx-x<64:mirrored.putpixel((2*cx-x,y),out.getpixel((x,y)))
-  return mirrored
+   for off in range(1,7):out.putpixel((cx+off,y),out.getpixel((cx-off,y)))
  return out

@@ -47,3 +47,15 @@ Eisen hat eine abgerundete Schale mit kurzen Pixelstufen und symmetrischen Front
 Beim freigegebenen Magierhut bleibt die Form erhalten: Nur der goldene Bogen der Vorderansicht wird innerhalb seines bisherigen Bereichs nach unten gewölbt. Die anderen drei Ansichten und der Alphakanal bleiben unverändert.
 
 Alle fünf Animationsseiten und die passenden Inventarsymbole werden aus derselben Kopfverankerung erzeugt. Die Prüfung kontrolliert zusätzlich die pixelgenaue RGB- und Alpha-Symmetrie aller Eisen-Frontframes. Vergleichsbilder sind Kompositionen der Produktionssprites; ein Gerätetest steht noch aus.
+
+## Engere native Ritterformen und neue Kapuze
+
+Die nächste Fassung ersetzt die Polygonflächen durch bewusst gesetzte Pixelreihen: 13 Pixel breite Helme, ein Pixel breite Kanten, kleine zusammenhängende Lichtflächen und getrennte Front-, Rücken- und Profilformen. Grundlage bleiben die 14 Pixel breite originale `pfht`-Kopfbedeckung sowie die Materialtrennung der Rüstungsanalyse.
+
+- Eisen: von 15/17 auf höchstens 13 native Pixel Breite reduziert, ohne ausgestellten Rand; gerundete Schale, kurze Wangenplatten und schmaler Nasenschutz.
+- Holz: segmentierter Ritterhelm mit Nasen-, Wangen- und unterem Gesichtsschutz sowie längerem Nackenschutz. Er unterscheidet sich auch in der Silhouette von Eisen und Leder.
+- Leder: gerundete offene Ritterhaube mit breiteren seitlichen Schutzflächen; keine seitlich herausstehende Zacke oder schiefe Kronenspitze.
+- Kapuze: vollständig neu gesetzte, kompakte Stoffform mit engerem Scheitel, offenem Gesicht und eigenem rückwärtigem Faltenverlauf; kein großer geschlossener Ring um das Gesicht.
+- Magierhut: alle fünf Blätter und das Inventarsymbol bleiben bytegenau erhalten.
+
+Die automatische Prüfung begrenzt jetzt zusätzlich die Eisenhelmbreite auf 13 Pixel. Kopfverankerung, alle fünf Animationsseiten, Originalpalette, Symmetrie der Eisenfront und unterschiedliche Silhouetten bleiben geprüft. Die Vergleichstafel zeigt Produktionssprites; ein Gerätetest steht weiter aus.
