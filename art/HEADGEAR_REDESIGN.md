@@ -39,3 +39,11 @@ Die Kapuze erhält eine neue Kontur mit flacher Stirn, lockerem hinterem Stoffvo
 Holz, Leder, Kapuze und Magierhut verwenden neu aufgebaute Formen mit den ursprünglichen Farbclustern aus `pfht` beziehungsweise `pnty`. Die Original-Kopfbewegungen bestimmen ihre Position. Holz ist gewölbt, Leder eine offene Haube, die Kapuze hat einen breiteren Stoffkragen. Der Magierhut ist jetzt der geknickten, breiteren Vorlagenform nachempfunden. Eisen behält den Mittelgrat und die Wangenplatten, erhält aber die weich abgestuften nativen Metallflächen.
 
 Der doppelte Gegenstand `Helm` und seine `stHl`-Blätter entfallen. Alte Spielstände migrieren ihn in Inventar, Ausrüstung, Schnellleiste, Händlerangeboten und Bodenobjekten zu `Iron Helmet`; Seltenheits-/Instanzsuffixe bleiben erhalten. Die Vergleichstafel zeigt nur noch fünf Ausrüstungen.
+
+## Korrektur vom 30. Oktober 2026
+
+Eisen hat eine abgerundete Schale mit kurzen Pixelstufen und symmetrischen Frontflächen einschließlich Wangenplatten. Holz erhält eine flachere segmentierte Schale mit gebogenem Bindungsrand. Leder wird als weiche, vernähte Haube mit Ohrenschutz neu gezeichnet. Die Kapuze erhält eine asymmetrische Stoffkrone, freie Gesichtspartie und eine hintere Falte.
+
+Beim freigegebenen Magierhut bleibt die Form erhalten: Nur der goldene Bogen der Vorderansicht wird innerhalb seines bisherigen Bereichs nach unten gewölbt. Die anderen drei Ansichten und der Alphakanal bleiben unverändert.
+
+Alle fünf Animationsseiten und die passenden Inventarsymbole werden aus derselben Kopfverankerung erzeugt. Die Prüfung kontrolliert zusätzlich die pixelgenaue RGB- und Alpha-Symmetrie aller Eisen-Frontframes. Vergleichsbilder sind Kompositionen der Produktionssprites; ein Gerätetest steht noch aus.

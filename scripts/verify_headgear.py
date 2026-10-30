@@ -26,6 +26,9 @@ for page in ('p1','pONE2','pONE3','pBOW','pCAST'):
     assert actual.tobytes()==headgear(n,cap,r%4).tobytes(),(page,n,r,c,'wrong head frame')
     assert set(actual.getchannel('A').get_flattened_data())<={0,255}
     assert {px[:3] for px in actual.get_flattened_data() if px[3]}<=allowed,(page,n,'foreign palette')
+    if n=='irHl' and r%4==0:
+     for yy in range(64):
+      for off in range(1,10):assert actual.getpixel((cx-off,yy))==actual.getpixel((cx+off,yy)),(page,r,c,'asymmetric iron front')
     masks[n]=set((x,y) for y in range(64) for x in range(64) if actual.getpixel((x,y))[3]);count+=1
    # Differentiation must be in silhouette, not just RGB recoloring.
    assert len({frozenset(m) for m in masks.values()})==5,(page,r,c,'recolored duplicate')
